@@ -6,16 +6,15 @@ type Props = {
 };
 
 /**
- * White disc → black disc. Larger discs, short rim-to-rim bridge.
- * viewBox 0 0 200 80
+ * White disc ↔ black disc — bidirectional bridge pulses.
  * Circles: (36,40) r=26 and (164,40) r=26
- * Bridge: x=62 → x=138 (only the gap between rims)
+ * Bridge: x=62 → x=138
  */
 export function HumanAiMark({ size = "nav", className }: Props) {
   const hero = size === "hero";
-  const bridgeLen = 76; // 138 - 62
-  const dash = hero ? 14 : 9;
-  const gap = bridgeLen - dash;
+  const bridgeLen = 76;
+  const dash = hero ? 12 : 8;
+  const gap = bridgeLen - dash + 10;
 
   return (
     <span
@@ -38,15 +37,27 @@ export function HumanAiMark({ size = "nav", className }: Props) {
           strokeWidth={hero ? 1.5 : 1.25}
           strokeLinecap="round"
         />
+        {/* Human → AI */}
         <line
           x1="62"
           y1="40"
           x2="138"
           y2="40"
-          className="human-ai-bridge-pulse stroke-primary"
+          className="human-ai-bridge-pulse-fwd stroke-primary"
           strokeWidth={hero ? 2.25 : 1.75}
           strokeLinecap="round"
-          strokeDasharray={`${dash} ${gap + 8}`}
+          strokeDasharray={`${dash} ${gap}`}
+        />
+        {/* AI → Human */}
+        <line
+          x1="62"
+          y1="40"
+          x2="138"
+          y2="40"
+          className="human-ai-bridge-pulse-rev stroke-ink/70"
+          strokeWidth={hero ? 2 : 1.5}
+          strokeLinecap="round"
+          strokeDasharray={`${dash * 0.85} ${gap}`}
         />
 
         <circle

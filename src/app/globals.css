@@ -332,26 +332,58 @@
     background-size: 220% 100%;
     animation: pipe-slide 3.2s ease-in-out infinite;
   }
-  .human-ai-bridge-pulse {
-    animation: human-ai-bridge-pulse 1.55s linear infinite;
+  /* Bidirectional: white ↔ black — pulses shuttle both ways */
+  .human-ai-bridge-pulse-fwd {
+    animation: human-ai-bridge-shuttle-fwd 2.4s ease-in-out infinite;
   }
-  @keyframes human-ai-bridge-pulse {
+  .human-ai-bridge-pulse-rev {
+    animation: human-ai-bridge-shuttle-rev 2.4s ease-in-out infinite;
+  }
+  @keyframes human-ai-bridge-shuttle-fwd {
     0% {
       stroke-dashoffset: 0;
-      opacity: 0.35;
+      opacity: 0.25;
     }
-    40% {
+    20% {
+      opacity: 1;
+    }
+    50% {
+      stroke-dashoffset: -86;
+      opacity: 0.9;
+    }
+    70% {
       opacity: 1;
     }
     100% {
-      stroke-dashoffset: -92;
+      stroke-dashoffset: 0;
       opacity: 0.25;
     }
   }
+  @keyframes human-ai-bridge-shuttle-rev {
+    0% {
+      stroke-dashoffset: -86;
+      opacity: 0.2;
+    }
+    20% {
+      opacity: 0.95;
+    }
+    50% {
+      stroke-dashoffset: 0;
+      opacity: 0.85;
+    }
+    70% {
+      opacity: 0.95;
+    }
+    100% {
+      stroke-dashoffset: -86;
+      opacity: 0.2;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .human-ai-bridge-pulse {
+    .human-ai-bridge-pulse-fwd,
+    .human-ai-bridge-pulse-rev {
       animation: none;
-      opacity: 0.7;
+      opacity: 0.65;
       stroke-dashoffset: -40;
     }
   }

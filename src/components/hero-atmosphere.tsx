@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CursorOrbit } from "@/components/cursor-orbit";
 
 /**
  * Two independent layers:
  * 1) Full-field randomized wave — always runs, never follows the cursor
- * 2) Pointer highlighter — only tracks the mouse, fades when it leaves
+ * 2) 3D assemble/shatter orbit highlighter — cursor only
  */
 export function HeroAtmosphere() {
   const rootRef = useRef<HTMLDivElement>(null);
   const pointer = useRef({ x: 0.5, y: 0.42, visible: 0, targetVisible: 0 });
+  const [orbit, setOrbit] = useState({ x: 0.5, y: 0.42, v: 0 });
   const lobes = useRef([
     { x: 0.22, y: 0.38, tx: 0.55, ty: 0.28, phase: 0 },
     { x: 0.68, y: 0.52, tx: 0.3, ty: 0.62, phase: 2.1 },
@@ -17,6 +19,7 @@ export function HeroAtmosphere() {
   ]);
   const raf = useRef<number | null>(null);
   const tRef = useRef(0);
+  const orbitPush = useRef(0);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -71,7 +74,6 @@ export function HeroAtmosphere() {
       const t = tRef.current;
       const p = pointer.current;
 
-      // Full-field wave: three independent drifting lobes + global breath
       lobes.current.forEach((l, i) => {
         l.phase += 0.016;
         const dx = l.tx - l.x;
@@ -82,8 +84,6 @@ export function HeroAtmosphere() {
       });
 
       const breath = 0.38 + 0.14 * Math.sin(t * 0.85);
-
-      // Pointer highlighter: cursor only — never snaps to wave
       p.visible += (p.targetVisible - p.visible) * 0.12;
 
       const [a, b, c] = lobes.current;
@@ -97,6 +97,12 @@ export function HeroAtmosphere() {
       root.style.setProperty("--hx", `${(p.x * 100).toFixed(2)}%`);
       root.style.setProperty("--hy", `${(p.y * 100).toFixed(2)}%`);
       root.style.setProperty("--lit", p.visible.toFixed(3));
+
+      // Push orbit state ~30fps to React without flooding renders
+      orbitPush.current += 1;
+      if (orbitPush.current % 2 === 0) {
+        setOrbit({ x: p.x, y: p.y, v: p.visible });
+      }
 
       raf.current = requestAnimationFrame(tick);
     };
@@ -136,8 +142,10 @@ export function HeroAtmosphere() {
       <div className="hero-wash absolute inset-0" />
       <div className="hero-grid hero-grid-base absolute inset-0" />
       <div className="hero-grid hero-grid-wave absolute inset-0" />
-      <div className="hero-grid hero-grid-lit absolute inset-0" />
+      {/* Soft under-glow still tracks cursor; orbit is the main highlighter */}
+      <div className="hero-grid hero-grid-lit absolute inset-0 opacity-40" />
       <div className="hero-bloom absolute inset-0" />
+      <CursorOrbit active={orbit.v} nx={orbit.x} ny={orbit.y} />
     </div>
   );
 }
