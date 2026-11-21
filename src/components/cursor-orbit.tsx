@@ -3,22 +3,15 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Self-tracking 3D torus orbit on the hero.
- * Assembles → holds → shatters → reassembles forever while the pointer is over.
+ * Monotone dots + lines assemble into a 3D sphere, shatter, reassemble.
+ * Follows the cursor. No color rainbow — ink/slate only.
  */
 
-const SEGMENTS = 72;
-const CYCLE_MS = 4000;
-const FOV = 2.55;
-
-const PALETTE = [
-  { r: 15, g: 107, b: 99 },
-  { r: 70, g: 150, b: 140 },
-  { r: 196, g: 110, b: 95 },
-  { r: 190, g: 145, b: 95 },
-  { r: 100, g: 135, b: 165 },
-  { r: 15, g: 107, b: 99 },
-];
+const N = 96;
+const CYCLE_MS = 3800;
+const FOV = 2.7;
+const INK = { r: 13, g: 44, b: 48 };
+const MID = { r: 55, g: 78, b: 84 };
 
 type Vec3 = { x: number; y: number; z: number };
 
@@ -30,23 +23,8 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function mix(a: (typeof PALETTE)[0], b: (typeof PALETTE)[0], t: number) {
-  return {
-    r: a.r + (b.r - a.r) * t,
-    g: a.g + (b.g - a.g) * t,
-    b: a.b + (b.b - a.b) * t,
-  };
-}
-
-function samplePalette(t: number) {
-  const x = ((t % 1) + 1) % 1;
-  const s = x * (PALETTE.length - 1);
-  const i = Math.floor(s);
-  return mix(PALETTE[i], PALETTE[Math.min(i + 1, PALETTE.length - 1)], s - i);
-}
-
 function rgba(c: { r: number; g: number; b: number }, a: number) {
-  return `rgba(${c.r | 0},${c.g | 0},${c.b | 0},${Math.max(0, Math.min(1, a))})`;
+  return `rgba(${c.r},${c.g},${c.b},${Math.max(0, Math.min(1, a))})`;
 }
 
 function rotXYZ(p: Vec3, rx: number, ry: number, rz: number): Vec3 {
@@ -64,19 +42,30 @@ function rotXYZ(p: Vec3, rx: number, ry: number, rz: number): Vec3 {
   return { x: xy, y, z: zy };
 }
 
-/** Continuous loop that always returns to assemble=1 */
+/** Fibonacci sphere — even coverage on unit sphere */
+function fibSphere(i: number, n: number): Vec3 {
+  const phi = Math.acos(1 - (2 * (i + 0.5)) / n);
+  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+  return {
+    x: Math.sin(phi) * Math.cos(theta),
+    y: Math.cos(phi),
+    z: Math.sin(phi) * Math.sin(theta),
+  };
+}
+
 function assembleAmount(u: number) {
-  // assemble 0–0.30, hold 0.30–0.50, shatter 0.50–0.80, gather prep 0.80–1.00
-  if (u < 0.3) return easeInOut(u / 0.3);
-  if (u < 0.5) return 1;
-  if (u < 0.8) return 1 - easeInOut((u - 0.5) / 0.3);
-  // brief rest at 0, then next cycle reassembles from 0
+  if (u < 0.28) return easeInOut(u / 0.28);
+  if (u < 0.48) return 1;
+  if (u < 0.78) return 1 - easeInOut((u - 0.48) / 0.3);
   return 0;
 }
 
 export function CursorOrbit() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sphere = useRef<Vec3[]>([]);
   const scatter = useRef<Vec3[]>([]);
+  /** neighbor indices for each point (kNN on sphere) */
+  const links = useRef<number[][]>([]);
   const raf = useRef<number | null>(null);
   const start = useRef(0);
   const target = useRef({ x: 0.5, y: 0.42, over: false });
@@ -84,18 +73,37 @@ export function CursorOrbit() {
   const vis = useRef(0);
 
   useEffect(() => {
-    const pts: Vec3[] = [];
-    for (let i = 0; i < SEGMENTS; i++) {
+    const sph: Vec3[] = [];
+    const sca: Vec3[] = [];
+    for (let i = 0; i < N; i++) {
+      sph.push(fibSphere(i, N));
       const lon = Math.random() * Math.PI * 2;
       const lat = (Math.random() - 0.5) * Math.PI;
-      const d = 1.5 + Math.random() * 2.4;
-      pts.push({
+      const d = 1.8 + Math.random() * 2.6;
+      sca.push({
         x: Math.cos(lon) * Math.cos(lat) * d,
         y: Math.sin(lat) * d,
         z: Math.sin(lon) * Math.cos(lat) * d,
       });
     }
-    scatter.current = pts;
+    // k=5 nearest neighbors on the sphere for wireframe edges
+    const neigh: number[][] = [];
+    for (let i = 0; i < N; i++) {
+      const dists: { j: number; d: number }[] = [];
+      for (let j = 0; j < N; j++) {
+        if (i === j) continue;
+        const a = sph[i];
+        const b = sph[j];
+        const d =
+          (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2;
+        dists.push({ j, d });
+      }
+      dists.sort((a, b) => a.d - b.d);
+      neigh.push(dists.slice(0, 5).map((x) => x.j));
+    }
+    sphere.current = sph;
+    scatter.current = sca;
+    links.current = neigh;
   }, []);
 
   useEffect(() => {
@@ -137,7 +145,6 @@ export function CursorOrbit() {
       target.current.x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
       target.current.y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
     };
-
     window.addEventListener("pointermove", onMove, { passive: true });
 
     const tick = (now: number) => {
@@ -150,10 +157,9 @@ export function CursorOrbit() {
       const h = parent.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
-      current.current.x += (target.current.x - current.current.x) * 0.3;
-      current.current.y += (target.current.y - current.current.y) * 0.3;
-      const visTarget = target.current.over ? 1 : 0;
-      vis.current += (visTarget - vis.current) * 0.18;
+      current.current.x += (target.current.x - current.current.x) * 0.28;
+      current.current.y += (target.current.y - current.current.y) * 0.28;
+      vis.current += ((target.current.over ? 1 : 0) - vis.current) * 0.16;
       const v = vis.current;
       if (v < 0.015) {
         raf.current = requestAnimationFrame(tick);
@@ -162,157 +168,84 @@ export function CursorOrbit() {
 
       const cx = current.current.x * w;
       const cy = current.current.y * h;
-      const scale = Math.min(w, h) * 0.145;
+      const scale = Math.min(w, h) * 0.13;
 
       const u = reduced ? 0.4 : ((now - start.current) % CYCLE_MS) / CYCLE_MS;
       const assemble = assembleAmount(u);
 
       const t = now * 0.001;
-      const rotY = t * 1.05;
-      const rotX = 0.62 + Math.sin(t * 0.48) * 0.38;
-      const rotZ = Math.cos(t * 0.33) * 0.22;
-      const flow = t * 0.2;
-      const tubeR = 0.1;
+      const rotY = t * 0.85;
+      const rotX = 0.45 + Math.sin(t * 0.4) * 0.35;
+      const rotZ = Math.cos(t * 0.28) * 0.18;
 
-      type Proj = {
-        x: number;
-        y: number;
-        z: number;
-        i: number;
-        nz: number;
-      };
-      const projected: Proj[] = new Array(SEGMENTS);
+      type Proj = { x: number; y: number; z: number; i: number };
+      const projected: Proj[] = new Array(N);
 
-      for (let i = 0; i < SEGMENTS; i++) {
-        const theta = (i / SEGMENTS) * Math.PI * 2;
-        const ring: Vec3 = { x: Math.cos(theta), y: Math.sin(theta), z: 0 };
+      for (let i = 0; i < N; i++) {
+        const s = sphere.current[i];
         const sc = scatter.current[i];
         const local: Vec3 = {
-          x: lerp(sc.x, ring.x, assemble),
-          y: lerp(sc.y, ring.y, assemble),
-          z: lerp(sc.z, ring.z, assemble),
+          x: lerp(sc.x, s.x, assemble),
+          y: lerp(sc.y, s.y, assemble),
+          z: lerp(sc.z, s.z, assemble),
         };
         const p = rotXYZ(local, rotX, rotY, rotZ);
-        const n = rotXYZ({ x: Math.cos(theta), y: Math.sin(theta), z: 0 }, rotX, rotY, rotZ);
-        const persp = FOV / (FOV - p.z);
+        const persp = FOV / Math.max(0.4, FOV - p.z);
         projected[i] = {
           x: cx + p.x * scale * persp,
           y: cy + p.y * scale * persp,
           z: p.z,
           i,
-          nz: n.z,
         };
       }
 
-      // Under glow
-      const bloom = ctx.createRadialGradient(cx, cy, 4, cx, cy, scale * 1.85);
-      bloom.addColorStop(0, rgba(samplePalette(flow), 0.22 * v));
-      bloom.addColorStop(0.55, rgba(samplePalette(flow + 0.35), 0.08 * v));
+      // Soft monotone bloom
+      const bloom = ctx.createRadialGradient(cx, cy, 2, cx, cy, scale * 1.55);
+      bloom.addColorStop(0, rgba(INK, 0.07 * v));
       bloom.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = bloom;
       ctx.beginPath();
-      ctx.arc(cx, cy, scale * 1.85, 0, Math.PI * 2);
+      ctx.arc(cx, cy, scale * 1.55, 0, Math.PI * 2);
       ctx.fill();
 
       const order = projected
         .map((_, i) => i)
         .sort((a, b) => projected[a].z - projected[b].z);
 
+      // Edges — monotone, depth-faded, undirected (i < j)
       ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      for (const i of order) {
-        const a = projected[i];
-        const next = projected[(i + 1) % SEGMENTS];
-        const midZ = (a.z + next.z) * 0.5;
-        const depth = (midZ + 1.2) / 2.4;
-        const light = Math.max(0.2, Math.min(1, 0.4 + a.nz * 0.55));
-        const alpha = (0.45 + depth * 0.5) * v * (0.4 + assemble * 0.6);
-        if (alpha < 0.04) continue;
-
-        const c0 = samplePalette(i / SEGMENTS + flow);
-        const c1 = samplePalette((i + 1) / SEGMENTS + flow);
-        const shade = (c: { r: number; g: number; b: number }, k: number) => ({
-          r: c.r * k,
-          g: c.g * k,
-          b: c.b * k,
-        });
-        const k = 0.4 + light * 0.75;
-        const tubePx = Math.max(
-          1.2,
-          scale * tubeR * (FOV / Math.max(0.35, FOV - a.z)) * (1.15 + assemble * 0.95)
-        );
-
-        // Dark rim (volume)
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(next.x, next.y);
-        ctx.strokeStyle = rgba(shade(c0, 0.28), alpha * 0.7);
-        ctx.lineWidth = tubePx * 2.6;
-        ctx.stroke();
-
-        // Lit tube body with flowing gradient
-        const grad = ctx.createLinearGradient(a.x, a.y, next.x, next.y);
-        grad.addColorStop(0, rgba(shade(c0, k), alpha));
-        grad.addColorStop(1, rgba(shade(c1, k), alpha));
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(next.x, next.y);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = tubePx * 1.65;
-        ctx.stroke();
-
-        // Specular ridge
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(next.x, next.y);
-        ctx.strokeStyle = rgba({ r: 255, g: 255, b: 255 }, alpha * light * 0.4);
-        ctx.lineWidth = tubePx * 0.42;
-        ctx.stroke();
+      for (let i = 0; i < N; i++) {
+        for (const j of links.current[i]) {
+          if (j <= i) continue;
+          const a = projected[i];
+          const b = projected[j];
+          const midZ = (a.z + b.z) * 0.5;
+          const depth = (midZ + 1.15) / 2.3;
+          // Edges strengthen as sphere forms
+          const alpha =
+            (0.12 + depth * 0.45) * v * (0.2 + assemble * 0.85);
+          if (alpha < 0.03) continue;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = rgba(depth > 0.55 ? INK : MID, alpha);
+          ctx.lineWidth = 0.7 + depth * 0.55;
+          ctx.stroke();
+        }
       }
 
-      // Shatter beads when not fully assembled
-      if (assemble < 0.95) {
-        for (const i of order) {
-          const p = projected[i];
-          const depth = (p.z + 1.2) / 2.4;
-          const light = Math.max(0.25, 0.45 + p.nz * 0.5);
-          const alpha = (0.5 + depth * 0.45) * v * (1 - assemble * 0.5);
-          if (alpha < 0.05) continue;
-          const c = samplePalette(i / SEGMENTS + flow);
-          const rad = Math.max(
-            1.5,
-            scale * tubeR * (FOV / Math.max(0.35, FOV - p.z)) * (1.7 + (1 - assemble) * 1.1)
-          );
-          const g = ctx.createRadialGradient(
-            p.x - rad * 0.35,
-            p.y - rad * 0.4,
-            Math.max(0.01, rad * 0.08),
-            p.x,
-            p.y,
-            rad
-          );
-          g.addColorStop(0, rgba({ r: 255, g: 255, b: 255 }, alpha * 0.95));
-          g.addColorStop(
-            0.38,
-            rgba(
-              {
-                r: c.r * (0.5 + light * 0.55),
-                g: c.g * (0.5 + light * 0.55),
-                b: c.b * (0.5 + light * 0.55),
-              },
-              alpha
-            )
-          );
-          g.addColorStop(
-            1,
-            rgba({ r: c.r * 0.25, g: c.g * 0.25, b: c.b * 0.25 }, alpha * 0.9)
-          );
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-          ctx.fillStyle = g;
-          ctx.fill();
-        }
+      // Dots — monotone, size by depth (near = larger)
+      for (const idx of order) {
+        const p = projected[idx];
+        const depth = (p.z + 1.15) / 2.3;
+        const alpha = (0.35 + depth * 0.6) * v;
+        if (alpha < 0.04) continue;
+        const persp = FOV / Math.max(0.4, FOV - p.z);
+        const rad = Math.max(1.1, (1.15 + depth * 1.1) * persp * (0.85 + assemble * 0.2));
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(depth > 0.5 ? INK : MID, alpha);
+        ctx.fill();
       }
 
       raf.current = requestAnimationFrame(tick);
