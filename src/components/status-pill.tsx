@@ -2,14 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Health = {
   mode: "live" | "demo";
   message: string;
 };
 
-export function StatusPill() {
+type Props = {
+  appearance?: "light" | "dark";
+};
+
+export function StatusPill({ appearance = "light" }: Props) {
   const [health, setHealth] = useState<Health | null>(null);
+  const dark = appearance === "dark";
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +41,13 @@ export function StatusPill() {
 
   if (!health) {
     return (
-      <Badge variant="secondary" className="font-normal">
+      <Badge
+        variant="secondary"
+        className={cn(
+          "font-normal",
+          dark && "border border-white/10 bg-white/[0.04] text-zinc-400",
+        )}
+      >
         연결 확인 중…
       </Badge>
     );
@@ -44,11 +56,16 @@ export function StatusPill() {
   return (
     <Badge
       variant="secondary"
-      className={
+      className={cn(
+        "font-normal",
         health.mode === "live"
-          ? "border border-ok/30 bg-ok/10 font-normal text-ok"
-          : "border border-signal/30 bg-signal/10 font-normal text-signal"
-      }
+          ? dark
+            ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+            : "border border-ok/30 bg-ok/10 text-ok"
+          : dark
+            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
+            : "border border-signal/30 bg-signal/10 text-signal",
+      )}
       title={health.message}
     >
       {health.mode === "live" ? "Liner 연결됨" : "예시 모드"}

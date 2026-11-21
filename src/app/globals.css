@@ -165,6 +165,16 @@
   .tint-ok {
     background: linear-gradient(160deg, #dcfce7 0%, #fffcf7 70%);
   }
+  .console-surface {
+    background: #0b0d10;
+    color: #f4f4f5;
+  }
+}
+
+/* Console routes: kill landing paper gradients */
+body:has(.console-surface) {
+  background: #0b0d10;
+  background-image: none;
 }
 
 @keyframes pipe-slide {
