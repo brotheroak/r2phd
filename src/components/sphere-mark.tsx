@@ -16,19 +16,24 @@ import {
 
 type Size = "nav" | "hero" | "footer";
 
-const PRESETS: Record<Size, { px: number; n: number; scale: number }> = {
-  nav: { px: 40, n: 64, scale: 0.4 },
-  hero: { px: 112, n: 96, scale: 0.42 },
-  footer: { px: 32, n: 52, scale: 0.4 },
+/**
+ * Identical 3D fill for every mark size.
+ * Unit-sphere radius projects to ~SPHERE_SCALE * px from center
+ * → visual diameter ≈ 2 * SPHERE_SCALE * px
+ */
+const SPHERE_SCALE = 0.42;
+/** Communication glyph width as a fraction of the visual sphere diameter */
+const GLYPH_OF_SPHERE = 0.36;
+
+const PRESETS: Record<Size, { px: number; n: number }> = {
+  nav: { px: 40, n: 64 },
+  hero: { px: 112, n: 96 },
+  footer: { px: 32, n: 52 },
 };
 
-/** Same relative glyph size in every SphereMark — % of sphere diameter */
-const GLYPH_RATIO = 0.52;
-
 /**
- * Brand mark — stable rotating sphere + centered human↔AI discs.
- * Glyph uses one geometry scaled by sphere size (identical proportions).
- * Cursor assemble/shatter is CursorOrbit only.
+ * Brand mark — rotating sphere + centered discs.
+ * Disc size/spacing lock to the 3D sphere diameter, not the CSS box.
  */
 export function SphereMark({
   size = "nav",
@@ -39,7 +44,10 @@ export function SphereMark({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const preset = PRESETS[size];
-  const glyphW = Math.round(preset.px * GLYPH_RATIO);
+
+  // Visual sphere diameter in CSS px (unit radius * 2 * scale)
+  const sphereDiameter = preset.px * SPHERE_SCALE * 2;
+  const glyphW = Math.round(sphereDiameter * GLYPH_OF_SPHERE);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,7 +77,7 @@ export function SphereMark({
 
       const cx = px / 2;
       const cy = px / 2;
-      const scale = px * preset.scale;
+      const scale = px * SPHERE_SCALE;
       const t = reduced ? 0 : (now - start) * 0.001;
       const rotY = t * 0.7;
       const rotX = 0.55 + Math.sin(t * 0.35) * 0.2;
@@ -116,7 +124,8 @@ export function SphereMark({
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = size === "hero" ? 0.55 : 0.45;
+          // Line weight also scales with sphere size
+          ctx.lineWidth = Math.max(0.4, sphereDiameter * 0.006);
           ctx.stroke();
         }
       }
@@ -126,8 +135,8 @@ export function SphereMark({
         const depth = (p.z + 1.15) / 2.3;
         const persp = FOV / Math.max(0.4, FOV - p.z);
         const rad = Math.max(
-          size === "hero" ? 0.85 : 0.65,
-          (size === "hero" ? 0.9 : 0.7) * persp * (0.85 + depth * 0.15)
+          0.55,
+          sphereDiameter * 0.012 * persp * (0.9 + depth * 0.15)
         );
         const c = samplePalette(surfaceT(p.local, flow));
         const tone = mix({ r: 18, g: 36, b: 40 }, c, 0.75);
@@ -144,7 +153,7 @@ export function SphereMark({
     return () => {
       if (raf != null) cancelAnimationFrame(raf);
     };
-  }, [preset, size]);
+  }, [preset, size, sphereDiameter]);
 
   return (
     <span
@@ -155,9 +164,10 @@ export function SphereMark({
       style={{ width: preset.px, height: preset.px }}
       aria-label="IntentSpec — 뜻이 모이는 소통"
       title="뜻이 모이는 소통"
+      data-sphere-d={sphereDiameter}
+      data-glyph-w={glyphW}
     >
       <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden />
-      {/* No white plate — glyph only, same geometry at every size */}
       <span className="pointer-events-none relative z-[1] flex items-center justify-center">
         <HumanAiMark width={glyphW} quiet />
       </span>
