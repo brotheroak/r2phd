@@ -18,6 +18,7 @@ type Ctx = {
   setTheme: (t: ConsoleAppearance) => void;
   toggleTheme: () => void;
   isDark: boolean;
+  ready: boolean;
 };
 
 const ConsoleThemeContext = createContext<Ctx | null>(null);
@@ -50,8 +51,16 @@ export function ConsoleThemeProvider({
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+    setThemeState((prev) => {
+      const next: ConsoleAppearance = prev === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -59,25 +68,10 @@ export function ConsoleThemeProvider({
       setTheme,
       toggleTheme,
       isDark: theme === "dark",
+      ready,
     }),
-    [theme, setTheme, toggleTheme],
+    [theme, setTheme, toggleTheme, ready],
   );
-
-  // Avoid flash: render light until hydrated preference loads
-  if (!ready) {
-    return (
-      <ConsoleThemeContext.Provider
-        value={{
-          theme: "light",
-          setTheme,
-          toggleTheme,
-          isDark: false,
-        }}
-      >
-        {children}
-      </ConsoleThemeContext.Provider>
-    );
-  }
 
   return (
     <ConsoleThemeContext.Provider value={value}>
@@ -94,6 +88,7 @@ export function useConsoleTheme() {
       setTheme: () => {},
       toggleTheme: () => {},
       isDark: false,
+      ready: true,
     };
   }
   return ctx;

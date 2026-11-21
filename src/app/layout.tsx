@@ -21,9 +21,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IntentSpec · 의도명세 | .EXE-THON",
+  title: "IntentSpec · 인간 ↔ AI 소통 | .EXE-THON",
   description:
-    "실행은 되는데 기준이 다른 분석을 잡는 IntentSpec. 헷갈리는 기준을 정리한 뒤 SQL과 결과를 맞춰 봅니다.",
+    "애매한 질문을 선택지로 구체화해 사람과 AI의 간극을 줄입니다. 분석·연구·일상에 같은 소통 에이전트를 붙입니다.",
 };
 
 export default function RootLayout({
