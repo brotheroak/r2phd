@@ -41,7 +41,7 @@ export function ScopeShell({
             >
               케이스
             </Link>
-            <ConsoleEntryButton size="nav" />
+            <ConsoleEntryButton />
           </div>
         </div>
 

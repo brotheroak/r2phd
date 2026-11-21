@@ -21,65 +21,66 @@ const FLOW = [
 export default function HomePage() {
   return (
     <main>
-      <nav className="sticky top-0 z-40 border-b border-border/70 bg-[color-mix(in_oklab,var(--background)_88%,white)]/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-5">
-          <div className="flex items-baseline gap-2.5">
-            <span className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+      {/* Slim sticky bar — Astryx-style chrome */}
+      <nav className="sticky top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
+          <div className="flex items-baseline gap-3">
+            <span className="font-display text-2xl tracking-tight text-ink">
               IntentSpec
             </span>
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+            <span className="hidden text-sm text-muted-foreground md:inline">
               인간 ↔ AI 소통
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <StatusPill />
             <a
               href="#cases"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+              className="hidden text-sm font-medium text-foreground/80 hover:text-foreground sm:inline"
             >
               케이스
             </a>
-            <ConsoleEntryButton size="nav" />
+            <ConsoleEntryButton />
           </div>
         </div>
       </nav>
 
+      {/* Centered hero — equal vertical air */}
       <header className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 grid-atmosphere" />
-        <div className="pointer-events-none absolute inset-x-0 top-[40%] h-px pipe-flow opacity-70" />
-
-        <div className="relative z-10 mx-auto max-w-7xl px-3 pb-16 pt-10 sm:px-5 sm:pb-20 sm:pt-14">
-          <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.16em] text-primary uppercase">
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-24 text-center sm:px-8 sm:py-28 lg:py-32">
+          <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.14em] text-primary uppercase">
             <Sparkles className="size-4" />
             Communication first
           </p>
 
-          <h1 className="rise-in-delay-1 mt-5 max-w-5xl font-display text-[2.75rem] leading-[1.2] text-ink sm:text-6xl sm:leading-[1.15] lg:text-7xl lg:leading-[1.12]">
+          <h1 className="rise-in-delay-1 mt-6 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
             결국 문제는 소통입니다.
             <br />
             뜻이 맞으면 일이 풀립니다
           </h1>
-          <p className="rise-in-delay-2 mt-6 max-w-3xl text-lg leading-relaxed text-foreground/85 sm:text-xl">
+
+          <p className="rise-in-delay-2 mt-6 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
             애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
             분석·조사·추천·실행으로 넘어갑니다.
           </p>
 
-          <div className="rise-in-delay-2 mt-14">
-            <h2 className="text-center font-display text-4xl leading-snug tracking-tight text-ink sm:text-5xl lg:text-6xl">
+          <div className="rise-in-delay-2 mt-16 w-full max-w-5xl">
+            <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
               소통 → 합의 → 실행
             </h2>
-            <div className="mt-7 w-full rounded-2xl border border-border bg-white px-4 py-7 shadow-sm sm:px-6 sm:py-8">
-              <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-3">
+            <div className="mt-8 rounded-xl border border-border bg-white px-5 py-8 sm:px-8 sm:py-10">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
                 {FLOW.map((n, i) => (
-                  <span key={n.t} className="inline-flex items-center gap-2.5">
+                  <span key={n.t} className="inline-flex items-center gap-3">
                     <span
-                      className={`rounded-full px-4 py-2.5 text-base font-semibold sm:px-5 sm:py-3 sm:text-lg ${n.c}`}
+                      className={`rounded-full px-4 py-2.5 text-sm font-semibold sm:px-5 sm:py-3 sm:text-base ${n.c}`}
                     >
                       {n.t}
                     </span>
                     {i < FLOW.length - 1 ? (
                       <span
-                        className="text-lg font-semibold text-muted-foreground sm:text-xl"
+                        className="text-base font-semibold text-muted-foreground sm:text-lg"
                         aria-hidden
                       >
                         →
@@ -93,92 +94,100 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section id="cases" className="mx-auto max-w-7xl scroll-mt-24 px-3 py-12 sm:px-5">
-        <div className="border-b border-border/70 pb-7">
-          <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
-            같은 소통, 여러 케이스
-          </h2>
-          <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            사람↔AI · 조사·분석 · 운영·연동. 각 카드를 열어 선택·잠금까지
-            바로 시험할 수 있습니다. 콘솔은 위쪽 헤더에서 들어갑니다.
-          </p>
-        </div>
+      {/* Cases — centered section heads, balanced card grid */}
+      <section
+        id="cases"
+        className="scroll-mt-20 border-t border-border/60 bg-white/40"
+      >
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
+              같은 소통, 여러 케이스
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              사람↔AI · 조사·분석 · 운영·연동. 카드를 열어 선택·잠금까지
+              바로 시험할 수 있습니다.
+            </p>
+          </div>
 
-        <div className="mt-10 space-y-14">
-          {WORK_CASE_CATEGORIES.map((cat) => {
-            const cases = casesByCategory(cat.id);
-            return (
-              <div key={cat.id}>
-                <div className="mb-5">
-                  <h3 className="font-display text-2xl leading-snug text-ink sm:text-3xl">
-                    {cat.label}
-                  </h3>
-                  <p className="mt-1.5 text-base text-muted-foreground">
-                    {cat.blurb}
-                  </p>
-                </div>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {cases.map((s) => {
-                    const n = WORK_CASES.findIndex((c) => c.id === s.id) + 1;
-                    return (
-                      <Link
-                        key={s.id}
-                        href={s.href}
-                        className="group flex h-full min-h-[300px] flex-col rounded-2xl border-2 bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                        style={{ borderColor: `${s.swatch}55` }}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-3xl leading-none">{s.emoji}</span>
-                          <span
-                            className="rounded-full px-2.5 py-1 text-xs font-bold text-white"
-                            style={{ backgroundColor: s.swatch }}
-                          >
-                            {String(n).padStart(2, "0")}
+          <div className="mt-16 space-y-16">
+            {WORK_CASE_CATEGORIES.map((cat) => {
+              const cases = casesByCategory(cat.id);
+              return (
+                <div key={cat.id}>
+                  <div className="mb-6 text-center sm:text-left">
+                    <h3 className="font-display text-2xl leading-snug text-ink sm:text-[1.75rem]">
+                      {cat.label}
+                    </h3>
+                    <p className="mt-2 text-base text-muted-foreground">
+                      {cat.blurb}
+                    </p>
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
+                    {cases.map((s) => {
+                      const n = WORK_CASES.findIndex((c) => c.id === s.id) + 1;
+                      return (
+                        <Link
+                          key={s.id}
+                          href={s.href}
+                          className="group flex h-full flex-col rounded-xl border border-border bg-card p-6 transition hover:border-primary/35"
+                          style={{ borderColor: `${s.swatch}40` }}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-2xl leading-none">
+                              {s.emoji}
+                            </span>
+                            <span
+                              className="rounded-full px-2.5 py-1 text-xs font-bold text-white"
+                              style={{ backgroundColor: s.swatch }}
+                            >
+                              {String(n).padStart(2, "0")}
+                            </span>
+                          </div>
+                          <h4 className="mt-5 text-xl font-semibold leading-snug text-ink">
+                            {s.label}
+                          </h4>
+                          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                            {s.blurb}
+                          </p>
+                          <p className="mt-5 rounded-lg border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+                            간극 · {s.gap}
+                          </p>
+                          <p className="mt-3 flex-1 rounded-lg bg-mist/70 px-4 py-3 text-sm leading-relaxed text-foreground">
+                            <span className="font-semibold">예 · </span>
+                            {s.example}
+                          </p>
+                          <span className="mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-primary group-hover:gap-2">
+                            이 케이스 열기
+                            <ArrowRight className="size-4" />
                           </span>
-                        </div>
-                        <h4 className="mt-4 text-xl font-semibold leading-snug text-ink">
-                          {s.label}
-                        </h4>
-                        <p className="mt-2 min-h-[2.75rem] text-sm leading-relaxed text-muted-foreground">
-                          {s.blurb}
-                        </p>
-                        <p className="mt-4 min-h-[3.5rem] rounded-lg border border-dashed border-border px-3.5 py-2.5 text-sm leading-relaxed text-muted-foreground">
-                          간극 · {s.gap}
-                        </p>
-                        <p className="mt-3 min-h-[4.5rem] flex-1 rounded-xl bg-mist/80 px-3.5 py-3 text-sm leading-relaxed text-foreground">
-                          <span className="font-semibold">예 · </span>
-                          {s.example}
-                        </p>
-                        <span className="mt-5 inline-flex items-center gap-1.5 text-base font-semibold text-primary group-hover:gap-2.5">
-                          이 케이스 열기
-                          <ArrowRight className="size-4" />
-                        </span>
-                      </Link>
-                    );
-                  })}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <section className="border-t border-border/60 bg-card/50">
-        <div className="mx-auto max-w-7xl px-3 py-12 sm:px-5">
-          <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
+      <section className="border-t border-border/60">
+        <div className="mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 sm:py-24">
+          <h2 className="max-w-3xl font-display text-3xl leading-snug text-ink sm:text-4xl">
             답이 틀린 게 아니라,
             <br />
             뜻이 안 맞은 겁니다
           </h2>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             모델이 더 똑똑해져도, 사람이 맞추지 않은 애매함은 조용히 채워집니다.
             IntentSpec은 그 채움을 멈추고, 대화를 합의로 바꿉니다.
           </p>
         </div>
       </section>
 
-      <footer className="border-t border-border/70 bg-card/80">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-7 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <footer className="border-t border-border/70 bg-white/70">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:px-8">
           <p className="font-display text-xl text-ink">IntentSpec</p>
           <p>인간 ↔ AI 소통 · 의도 잠금 · .EXE-THON</p>
         </div>
