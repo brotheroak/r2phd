@@ -151,22 +151,30 @@
   }
   .hero-grid-lit {
     opacity: 1;
+    will-change: mask-image;
     background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--primary) 28%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--primary) 28%, transparent) 1px, transparent 1px);
+      linear-gradient(to right, color-mix(in oklab, var(--primary) 42%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--primary) 42%, transparent) 1px, transparent 1px);
+    -webkit-mask-image: radial-gradient(
+      circle 260px at var(--hx) var(--hy),
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 38%,
+      transparent 72%
+    );
     mask-image: radial-gradient(
-      circle 220px at var(--hx) var(--hy),
-      black 0%,
-      color-mix(in oklab, black 55%, transparent) 35%,
-      transparent 70%
+      circle 260px at var(--hx) var(--hy),
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 38%,
+      transparent 72%
     );
   }
   .hero-bloom {
+    will-change: background;
     background: radial-gradient(
-      circle 280px at var(--hx) var(--hy),
-      color-mix(in oklab, var(--primary) 16%, transparent) 0%,
-      color-mix(in oklab, var(--ink) 4%, transparent) 42%,
-      transparent 70%
+      circle 320px at var(--hx) var(--hy),
+      color-mix(in oklab, var(--primary) 22%, transparent) 0%,
+      color-mix(in oklab, var(--ink) 6%, transparent) 40%,
+      transparent 68%
     );
   }
   .hero-stage {
@@ -185,25 +193,26 @@
     transform-style: preserve-3d;
     transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
     transition: none;
+    will-change: transform;
   }
   .hero-plane-a {
     width: min(52vw, 520px);
     height: min(28vw, 280px);
-    opacity: 0.35;
+    opacity: 0.5;
     transform: translate3d(-8%, -6%, 40px) rotateX(calc(var(--tilt-x) + 8deg))
       rotateY(calc(var(--tilt-y) - 10deg));
   }
   .hero-plane-b {
     width: min(40vw, 400px);
     height: min(22vw, 220px);
-    opacity: 0.28;
+    opacity: 0.4;
     transform: translate3d(18%, 10%, 80px) rotateX(calc(var(--tilt-x) - 6deg))
       rotateY(calc(var(--tilt-y) + 14deg));
   }
   .hero-plane-c {
     width: min(28vw, 280px);
     height: min(16vw, 160px);
-    opacity: 0.22;
+    opacity: 0.34;
     border-color: color-mix(in oklab, var(--primary) 22%, transparent);
     background: linear-gradient(
       160deg,
