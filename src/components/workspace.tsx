@@ -48,7 +48,12 @@ const STEPS: { id: Step; label: string }[] = [
   { id: "audit", label: "4 결과 점검" },
 ];
 
-export function Workspace() {
+type WorkspaceProps = {
+  /** Console embed: denser chrome, no marketing headline. */
+  variant?: "landing" | "console";
+};
+
+export function Workspace({ variant = "landing" }: WorkspaceProps) {
   const store = useConsoleStore();
   const {
     researchQuestion,
@@ -61,6 +66,7 @@ export function Workspace() {
     spec,
     report,
     hydrated,
+    linkedTables,
     setResearchQuestion,
     setGlossary,
     setSchema,
@@ -70,8 +76,10 @@ export function Workspace() {
     setDecisions,
     setSpec,
     setReport,
+    setLinkedTables,
     patch,
   } = store;
+  const isConsole = variant === "console";
 
   const [step, setStep] = useState<Step>("input");
   const [notice, setNotice] = useState<string | null>(null);
@@ -106,7 +114,8 @@ export function Workspace() {
     setGlossary(SAMPLE_PROJECT.glossary);
     setSchema(SAMPLE_PROJECT.schema);
     setResultCsv(SAMPLE_PROJECT.resultRowsCsv);
-    setNotice("로트 실패율 예시를 넣었습니다.");
+    setLinkedTables(["products", "lots", "tests", "dispositions"]);
+    setNotice("로트 실패율 예시를 넣었습니다. Catalog에 네 테이블이 연결됩니다.");
   }
 
   function chooseOption(ambiguityId: string, chosenOption: string) {
@@ -165,7 +174,9 @@ export function Workspace() {
       setStep("confirm");
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "시맨틱 콘솔에서 매핑을 확인할 수 있습니다.",
+          (isConsole
+            ? "Ontology 탭에서 매핑을 확인하세요."
+            : "시맨틱 콘솔 Ontology에서 매핑을 확인할 수 있습니다."),
       );
     });
   }
@@ -220,45 +231,69 @@ export function Workspace() {
   }
 
   return (
-    <section>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">이 페이지에서 분석하기</p>
-          <h2 className="font-display text-3xl text-ink sm:text-4xl">
-            질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
-          </h2>
+    <section className={cn(isConsole && "space-y-0")}>
+      {isConsole ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="font-normal">
+              {linkedTables.length
+                ? `연결 테이블 ${linkedTables.length}`
+                : "테이블 미연결"}
+            </Badge>
+            <Link
+              href="/console/semantic?tab=catalog"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Catalog에서 연결
+            </Link>
+          </div>
+          <Link
+            href="/console/semantic?tab=ontology"
+            className="inline-flex h-8 items-center rounded-lg border border-border bg-card px-2.5 text-xs font-medium shadow-sm hover:bg-accent/40"
+          >
+            Ontology 보기
+          </Link>
         </div>
-        <Link
-          href="/console/semantic"
-          className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium shadow-sm hover:bg-accent/40"
-        >
-          시맨틱 콘솔 열기
-        </Link>
-      </div>
+      ) : (
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">이 페이지에서 분석하기</p>
+            <h2 className="font-display text-3xl text-ink sm:text-4xl">
+              질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
+            </h2>
+          </div>
+          <Link
+            href="/console/semantic?tab=analyze"
+            className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium shadow-sm hover:bg-accent/40"
+          >
+            시맨틱 콘솔 열기
+          </Link>
+        </div>
+      )}
 
-      <ol className="mb-8 flex flex-wrap gap-2">
-          {STEPS.map((s) => (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  if (s.id === "input") setStep("input");
-                  if (s.id === "confirm" && draft) setStep("confirm");
-                  if (s.id === "spec" && spec) setStep("spec");
-                  if (s.id === "audit" && report) setStep("audit");
-                }}
-                className={cn(
-                  "rounded-md border px-3 py-1.5 text-xs transition sm:text-sm",
-                  step === s.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border/80 bg-card/60 text-muted-foreground hover:border-primary/40",
-                )}
-              >
-                {s.label}
-              </button>
-            </li>
-          ))}
-        </ol>
+      <ol className={cn("mb-6 flex flex-wrap gap-1.5", !isConsole && "mb-8 gap-2")}>
+        {STEPS.map((s) => (
+          <li key={s.id}>
+            <button
+              type="button"
+              onClick={() => {
+                if (s.id === "input") setStep("input");
+                if (s.id === "confirm" && draft) setStep("confirm");
+                if (s.id === "spec" && spec) setStep("spec");
+                if (s.id === "audit" && report) setStep("audit");
+              }}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-xs transition sm:text-sm",
+                step === s.id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border/80 bg-card/60 text-muted-foreground hover:border-primary/40",
+              )}
+            >
+              {s.label}
+            </button>
+          </li>
+        ))}
+      </ol>
 
       {notice ? (
         <Alert className="mb-6 border-primary/20 bg-primary/5">

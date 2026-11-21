@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ArrowDownRight,
+  ArrowRight,
   GitBranch,
   Layers3,
   SearchCheck,
@@ -10,81 +10,82 @@ import { Workspace } from "@/components/workspace";
 
 export default function HomePage() {
   return (
-    <main>
-      <header className="relative min-h-[100svh] overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 grid-atmosphere" />
-        <div className="pointer-events-none absolute inset-x-0 top-[42%] h-px pipe-flow opacity-80" />
-        <div className="pointer-events-none absolute inset-x-[8%] top-[38%] h-24 rounded-full bg-[radial-gradient(circle,rgba(217,119,6,0.2),transparent_70%)] blur-2xl" />
-
-        <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
-              IntentSpec
+    <main className="min-h-svh">
+      <header className="border-b border-border/70 bg-card/80">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
+              IS
             </span>
-            <span className="hidden text-sm text-muted-foreground sm:inline">
-              의도명세
-            </span>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold tracking-tight text-ink">
+                IntentSpec
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Intent → Spec → Audit
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <StatusPill />
             <Link
-              href="/console/semantic"
-              className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent/40"
+              href="/console/semantic?tab=analyze"
+              className="inline-flex h-8 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground"
             >
-              시맨틱 콘솔
+              콘솔 열기
             </Link>
           </div>
         </nav>
+      </header>
 
-        <div className="relative z-10 mx-auto flex max-w-6xl flex-col justify-center px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:min-h-[calc(100svh-5rem)] lg:pb-24">
-          <p className="rise-in text-sm font-medium text-primary">IntentSpec</p>
-          <h1 className="rise-in-delay-1 mt-4 max-w-4xl font-display text-[2.55rem] leading-[1.2] text-ink sm:text-6xl sm:leading-[1.15] lg:text-7xl">
-            잘 돌아가는 분석이
-            <br />
-            틀린 답을 줄 때
-          </h1>
-          <p className="rise-in-delay-2 mt-6 max-w-lg text-base leading-[1.75] text-foreground/80 sm:text-lg">
-            ‘최근’이 시험일인지 적재일인지, 같은 제조번호가 같은 로트인지부터
-            정리합니다. 기준을 정한 다음 SQL을 만들고, 결과도 다시 맞춰 봅니다.
-          </p>
-          <div className="rise-in-delay-2 mt-8 flex flex-wrap gap-3">
-            <Link
-              href="#workspace"
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              예제 돌려보기
-              <ArrowDownRight className="size-4" />
-            </Link>
-            <Link
-              href="/console/semantic"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm hover:bg-accent/40"
-            >
-              <Layers3 className="size-4" />
-              시맨틱 레이어
-            </Link>
+      <section className="border-b border-border/60 bg-[color-mix(in_oklab,var(--mist)_70%,white)]">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-12">
+          <div>
+            <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase">
+              Analysis console
+            </p>
+            <h1 className="mt-3 max-w-xl font-display text-3xl leading-tight text-ink sm:text-4xl lg:text-[2.75rem]">
+              잘 돌아가는 분석이 틀린 답을 줄 때
+            </h1>
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-foreground/80 sm:text-base">
+              ‘최근’·식별키·실패 정의를 먼저 고정한 뒤 SQL을 만들고, 결과까지
+              다시 맞춥니다. 소개와 분석은 여기, 카탈로그·온톨로지는 콘솔에서
+              이어집니다.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link
+                href="/console/semantic?tab=analyze"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground"
+              >
+                콘솔에서 분석
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="#workspace"
+                className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3.5 text-sm font-medium shadow-sm hover:bg-mist"
+              >
+                이 페이지에서 예제
+              </Link>
+            </div>
           </div>
 
-          <div
-            aria-hidden
-            className="mt-16 hidden overflow-hidden rounded-2xl border border-border/60 bg-ink shadow-lg lg:block"
-          >
-            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5 text-[11px] text-white/55">
-              <span className="size-2 rounded-full bg-amber" />
-              <span>질문 → 기준 확인 → SQL → 결과 점검</span>
-              <span className="ml-auto text-amber">기준과 불일치</span>
+          <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border/70 bg-mist/50 px-3 py-2 text-[11px] text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-primary" />
+              pipeline · question → confirm → sql → audit
             </div>
-            <div className="grid grid-cols-4 gap-px bg-white/10">
+            <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-4">
               {[
-                { t: "질문", d: "최근 6개월 제조번호별 실패율", tint: "bg-[#0f3d3a]" },
-                { t: "문제", d: "적재일 · 번호만 조인 · 재시험합격", tint: "bg-[#3b2a12]" },
-                { t: "결정", d: "시험일 · 제품+번호 · 부적합만", tint: "bg-[#0f2f45]" },
-                { t: "결과", d: "불일치 점수 84", tint: "bg-[#1a3a24]" },
+                { t: "질문", d: "최근 6개월 실패율" },
+                { t: "함정", d: "적재일 · 키 충돌" },
+                { t: "결정", d: "시험일 · 복합키" },
+                { t: "점검", d: "불일치 점수 84" },
               ].map((cell) => (
-                <div key={cell.t} className={`${cell.tint} px-4 py-5`}>
-                  <p className="text-[10px] tracking-wide text-white/45">
+                <div key={cell.t} className="bg-card px-3 py-3.5">
+                  <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                     {cell.t}
                   </p>
-                  <p className="mt-2 font-display text-lg leading-snug text-white/95">
+                  <p className="mt-1 text-sm font-medium leading-snug text-ink">
                     {cell.d}
                   </p>
                 </div>
@@ -92,39 +93,43 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <section id="why" className="border-y border-border/60 bg-card/50">
-        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-16 sm:px-6 md:grid-cols-3">
+      <section className="border-b border-border/60 bg-card/40">
+        <div className="mx-auto grid max-w-6xl gap-3 px-4 py-8 sm:px-6 md:grid-cols-3">
           <Feature
-            tint="tint-teal"
-            icon={<SearchCheck className="size-5" />}
-            title="어디서 막히나요"
-            body="쿼리는 잘 돌아가고 숫자도 나옵니다. 그래도 회의 전에 ‘이거 맞나?’ 싶어 다시 들여다보게 되죠."
+            icon={<SearchCheck className="size-4" />}
+            title="기준 먼저"
+            body="쿼리가 돌아가도 ‘최근’·키·실패 정의가 틀리면 답이 틀립니다."
           />
           <Feature
-            tint="tint-sky"
-            icon={<GitBranch className="size-5" />}
-            title="무엇을 해주나요"
-            body="정의서와 표 구조를 보고 헷갈리는 기준을 먼저 짚어 줍니다. 정한 뒤에는 SQL을 만들고, Liner로 참고 자료도 찾습니다."
+            icon={<GitBranch className="size-4" />}
+            title="확인 → SQL"
+            body="모호한 기준을 고른 뒤 IntentSpec이 SQL과 점검 포인트를 만듭니다."
           />
           <Feature
-            tint="tint-amber"
-            icon={<Layers3 className="size-5" />}
-            title="시맨틱 레이어"
-            body="별도 콘솔에서 카탈로그·온톨로지·지표를 봅니다. 이 페이지의 분석 결과가 그대로 이어집니다."
+            icon={<Layers3 className="size-4" />}
+            title="시맨틱 콘솔"
+            body="Catalog·Ontology·Metrics에서 표와 용어 연결을 이어 봅니다."
           />
         </div>
       </section>
 
-      <div id="workspace" className="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-6">
-        <Workspace />
+      <div id="workspace" className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
+          <div className="border-b border-border/70 bg-mist/40 px-4 py-2.5 text-xs text-muted-foreground">
+            Workspace · 로컬 세션에 저장됩니다
+          </div>
+          <div className="p-4 md:p-5">
+            <Workspace />
+          </div>
+        </div>
       </div>
 
-      <footer className="border-t border-border/60 bg-ink text-white/70">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="font-display text-xl text-white">IntentSpec</p>
-          <p>Liner Model · Scholar 검색 · 가상 데이터 · .EXE-THON</p>
+      <footer className="border-t border-border/70 bg-card">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p className="font-medium text-ink">IntentSpec</p>
+          <p>Liner Model · Scholar · 가상 데이터 · .EXE-THON</p>
         </div>
       </footer>
     </main>
@@ -135,20 +140,18 @@ function Feature({
   icon,
   title,
   body,
-  tint,
 }: {
   icon: React.ReactNode;
   title: string;
   body: string;
-  tint: string;
 }) {
   return (
-    <div className={`panel ${tint} p-6`}>
-      <div className="mb-3 inline-flex size-10 items-center justify-center rounded-full bg-white/70 text-primary shadow-sm">
+    <div className="rounded-lg border border-border/70 bg-card p-4">
+      <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
         {icon}
       </div>
-      <h2 className="font-display text-2xl text-ink">{title}</h2>
-      <p className="mt-2 text-sm leading-[1.7] text-foreground/75">{body}</p>
+      <h2 className="text-sm font-semibold text-ink">{title}</h2>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
     </div>
   );
 }

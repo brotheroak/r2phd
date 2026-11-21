@@ -56,6 +56,66 @@ export const ENTITY_GRAPH = [
   { from: "tests", to: "dispositions", on: "test_id", label: "1:1" },
 ] as const;
 
+export type CatalogTable = {
+  schema: string;
+  name: string;
+  columns: readonly string[];
+  role: string;
+};
+
+export function listCatalogTables(): CatalogTable[] {
+  return PHYSICAL_CATALOG.schemas.flatMap((schema) =>
+    schema.tables.map((table) => ({
+      schema: schema.name,
+      name: table.name,
+      columns: table.columns,
+      role: table.role,
+    })),
+  );
+}
+
+/** Build analysis schema text from selected catalog tables. */
+export function buildSchemaFromTables(tableNames: string[]): string {
+  const selected = new Set(tableNames);
+  const lines: string[] = [
+    `# 데이터 구조 (${PHYSICAL_CATALOG.name})`,
+    "",
+  ];
+
+  for (const schema of PHYSICAL_CATALOG.schemas) {
+    for (const table of schema.tables) {
+      if (!selected.has(table.name)) continue;
+      lines.push(
+        `${table.name}(${table.columns.join(", ")})  -- ${table.role} · schema.${schema.name}`,
+      );
+    }
+  }
+
+  const edges = ENTITY_GRAPH.filter(
+    (e) => selected.has(e.from) && selected.has(e.to),
+  );
+  if (edges.length) {
+    lines.push("", "관계");
+    for (const e of edges) {
+      lines.push(`- ${e.from} —${e.label}→ ${e.to} ON ${e.on}`);
+    }
+  }
+
+  lines.push(
+    "",
+    "주의",
+    "- lots.lot_no 단독으로는 unique 하지 않음",
+    "- tests.ingest_date 는 ETL 적재일 (연구 '최근'과 무관)",
+    "- supplier_lot 을 lot_no 와 조인하면 잘못된 매칭 발생",
+  );
+
+  return lines.join("\n");
+}
+
+export function allCatalogTableNames(): string[] {
+  return listCatalogTables().map((t) => t.name);
+}
+
 export type SemanticMapping = {
   id: string;
   axis: IntentAxisId;

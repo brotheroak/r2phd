@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import {
+  Check,
   GitBranchPlus,
   Link2,
   Lock,
@@ -12,11 +14,16 @@ import { AXIS_BY_ID, INTENT_AXES } from "@/lib/intent-axes";
 import {
   ENTITY_GRAPH,
   PHYSICAL_CATALOG,
+  allCatalogTableNames,
+  buildSchemaFromTables,
   mappingsFromDraft,
   metricsFromSpec,
 } from "@/lib/semantic-model";
 import type { AnalysisDraft, AnalysisSpec } from "@/lib/types";
 import type { ConsoleTab } from "@/components/console-shell";
+import { useConsoleStore } from "@/lib/console-store";
+import { useConsoleTheme } from "@/lib/console-theme";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -26,26 +33,13 @@ type Props = {
   tab?: ConsoleTab;
 };
 
-const AXIS_BORDER: Record<string, string> = {
-  time: "border-amber-500/30",
-  identity: "border-sky-500/30",
-  measure: "border-teal-500/30",
-  population: "border-emerald-500/30",
-};
-
-const AXIS_DOT: Record<string, string> = {
-  time: "bg-amber-400",
-  identity: "bg-sky-400",
-  measure: "bg-teal-400",
-  population: "bg-emerald-400",
-};
-
 export function SemanticLayer({
   draft,
   spec,
   decisions,
   tab = "ontology",
 }: Props) {
+  const { isDark } = useConsoleTheme();
   const mappings = mappingsFromDraft(draft, decisions);
   const metrics = metricsFromSpec(spec);
   const tableCount = PHYSICAL_CATALOG.schemas.reduce(
@@ -63,10 +57,10 @@ export function SemanticLayer({
       : "카탈로그만";
 
   return (
-    <div className="space-y-6">
-      {/* KPI strip — dashboard feel, accents kept */}
+    <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <KpiCard
+          isDark={isDark}
           label="물리 테이블"
           value={String(tableCount)}
           hint={`${PHYSICAL_CATALOG.name} · core`}
@@ -74,21 +68,32 @@ export function SemanticLayer({
           tone="teal"
         />
         <KpiCard
+          isDark={isDark}
           label="온톨로지 매핑"
           value={`${lockedMaps}/${mappings.length}`}
           hint={
             draft
               ? "의도 → 용어 → 컬럼 연결"
-              : "소개 페이지에서 분석을 돌리면 채워집니다"
+              : "Analyze 탭에서 분석을 돌리면 채워집니다"
           }
           badge={
             lockedMaps === mappings.length && draft ? (
-              <span className="inline-flex items-center gap-1 text-emerald-400">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1",
+                  isDark ? "text-emerald-400" : "text-ok",
+                )}
+              >
                 <TrendingUp className="size-3" />
                 전부 확정
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-amber-400">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1",
+                  isDark ? "text-amber-400" : "text-signal",
+                )}
+              >
                 <TrendingDown className="size-3" />
                 {mappings.length - lockedMaps} 미확정
               </span>
@@ -97,6 +102,7 @@ export function SemanticLayer({
           tone="sky"
         />
         <KpiCard
+          isDark={isDark}
           label="시맨틱 지표"
           value={String(metrics.length)}
           hint={
@@ -109,35 +115,67 @@ export function SemanticLayer({
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#16181d]">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+      <div
+        className={cn(
+          "overflow-hidden rounded-lg border",
+          isDark
+            ? "border-white/10 bg-[#16181d]"
+            : "border-border/80 bg-card shadow-sm",
+        )}
+      >
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3",
+            isDark ? "border-white/10" : "border-border/70 bg-mist/40",
+          )}
+        >
           <div>
-            <h2 className="text-sm font-medium text-zinc-100">
+            <h2
+              className={cn(
+                "text-sm font-semibold",
+                isDark ? "text-zinc-100" : "text-ink",
+              )}
+            >
               {tabTitle(tab)}
             </h2>
-            <p className="mt-0.5 text-xs text-zinc-500">{tabSubtitle(tab)}</p>
+            <p
+              className={cn(
+                "mt-0.5 text-xs",
+                isDark ? "text-zinc-500" : "text-muted-foreground",
+              )}
+            >
+              {tabSubtitle(tab)}
+            </p>
           </div>
           <span
             className={cn(
               "rounded-md border px-2.5 py-1 text-[11px]",
               spec
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                ? isDark
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                  : "border-ok/30 bg-ok/10 text-ok"
                 : draft
-                  ? "border-sky-500/30 bg-sky-500/10 text-sky-400"
-                  : "border-white/10 bg-white/[0.04] text-zinc-400",
+                  ? isDark
+                    ? "border-sky-500/30 bg-sky-500/10 text-sky-400"
+                    : "border-sky/30 bg-sky/10 text-sky"
+                  : isDark
+                    ? "border-white/10 bg-white/[0.04] text-zinc-400"
+                    : "border-border bg-secondary/50 text-muted-foreground",
             )}
           >
             {statusLabel}
           </span>
         </div>
 
-        <div className="p-5">
+        <div className="p-4">
           {tab === "catalog" ? <CatalogPanel /> : null}
           {tab === "ontology" ? (
-            <OntologyPanel mappings={mappings} />
+            <OntologyPanel mappings={mappings} isDark={isDark} />
           ) : null}
-          {tab === "metrics" ? <MetricsPanel metrics={metrics} /> : null}
-          {tab === "lineage" ? <LineagePanel /> : null}
+          {tab === "metrics" ? (
+            <MetricsPanel metrics={metrics} isDark={isDark} />
+          ) : null}
+          {tab === "lineage" ? <LineagePanel isDark={isDark} /> : null}
         </div>
       </div>
     </div>
@@ -146,6 +184,8 @@ export function SemanticLayer({
 
 function tabTitle(tab: ConsoleTab) {
   switch (tab) {
+    case "analyze":
+      return "Analyze";
     case "catalog":
       return "Catalog";
     case "ontology":
@@ -159,8 +199,10 @@ function tabTitle(tab: ConsoleTab) {
 
 function tabSubtitle(tab: ConsoleTab) {
   switch (tab) {
+    case "analyze":
+      return "질문부터 결과 점검까지";
     case "catalog":
-      return "웨어하우스 물리 스키마 · 테이블 · 컬럼";
+      return "테이블을 선택해 분석 스키마에 연결합니다";
     case "ontology":
       return "의도 → 용어 → 컬럼을 한 줄로 고정";
     case "metrics":
@@ -176,62 +218,229 @@ function KpiCard({
   hint,
   badge,
   tone,
+  isDark,
 }: {
   label: string;
   value: string;
   hint: string;
   badge: React.ReactNode;
   tone: "teal" | "sky" | "amber";
+  isDark: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#16181d] p-4">
+    <div
+      className={cn(
+        "rounded-lg border p-3.5",
+        isDark
+          ? "border-white/10 bg-[#16181d]"
+          : "border-border/80 bg-card shadow-sm",
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs text-zinc-500">{label}</p>
-        <span className="text-[11px] text-zinc-400">{badge}</span>
+        <p
+          className={cn(
+            "text-[11px] font-medium tracking-wide uppercase",
+            isDark ? "text-zinc-500" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </p>
+        <span
+          className={cn(
+            "text-[11px]",
+            isDark ? "text-zinc-400" : "text-muted-foreground",
+          )}
+        >
+          {badge}
+        </span>
       </div>
       <p
         className={cn(
-          "mt-2 text-3xl font-semibold tracking-tight",
-          tone === "teal" && "text-teal-300",
-          tone === "sky" && "text-sky-300",
-          tone === "amber" && "text-amber-300",
+          "mt-1.5 text-2xl font-semibold tracking-tight tabular-nums",
+          tone === "teal" && (isDark ? "text-teal-300" : "text-primary"),
+          tone === "sky" && (isDark ? "text-sky-300" : "text-sky"),
+          tone === "amber" && (isDark ? "text-amber-300" : "text-signal"),
         )}
       >
         {value}
       </p>
-      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{hint}</p>
+      <p
+        className={cn(
+          "mt-1.5 text-xs leading-relaxed",
+          isDark ? "text-zinc-500" : "text-muted-foreground",
+        )}
+      >
+        {hint}
+      </p>
     </div>
   );
 }
 
 function CatalogPanel() {
+  const { isDark } = useConsoleTheme();
+  const { linkedTables, setLinkedTables, setSchema, schema } =
+    useConsoleStore();
+  const selected = new Set(linkedTables);
+
+  function toggle(name: string) {
+    const next = selected.has(name)
+      ? linkedTables.filter((t) => t !== name)
+      : [...linkedTables, name];
+    setLinkedTables(next);
+  }
+
+  function selectAll() {
+    setLinkedTables(allCatalogTableNames());
+  }
+
+  function clearAll() {
+    setLinkedTables([]);
+  }
+
+  function applyToSchema() {
+    if (!linkedTables.length) {
+      setSchema("");
+      return;
+    }
+    setSchema(buildSchemaFromTables(linkedTables));
+  }
+
+  const appliedHint =
+    linkedTables.length > 0 &&
+    schema.includes(linkedTables[0] ?? "") &&
+    linkedTables.every((t) => schema.includes(t));
+
   return (
     <div className="space-y-4">
-      {PHYSICAL_CATALOG.schemas.map((schema) => (
-        <div key={schema.name}>
-          <p className="mb-2 text-[11px] font-medium tracking-[0.14em] text-zinc-500 uppercase">
-            schema · {schema.name}
+      <div
+        className={cn(
+          "flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between",
+          isDark
+            ? "border-white/10 bg-black/20"
+            : "border-primary/20 bg-primary/5",
+        )}
+      >
+        <div>
+          <p
+            className={cn(
+              "text-sm font-medium",
+              isDark ? "text-zinc-100" : "text-ink",
+            )}
+          >
+            분석 스키마 연결
           </p>
-          <div className="grid gap-3 md:grid-cols-2">
-            {schema.tables.map((table) => (
-              <div
-                key={table.name}
-                className="rounded-lg border border-white/10 bg-black/20 p-3"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-100">
-                    <Table2 className="size-3.5 text-sky-400" />
-                    {table.name}
-                  </span>
-                  <span className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-400">
-                    {table.role}
-                  </span>
-                </div>
-                <p className="mt-2 font-mono text-[11px] leading-relaxed text-zinc-500">
-                  {table.columns.join(", ")}
-                </p>
-              </div>
-            ))}
+          <p
+            className={cn(
+              "mt-0.5 text-xs",
+              isDark ? "text-zinc-500" : "text-muted-foreground",
+            )}
+          >
+            테이블을 고른 뒤 반영하면 Analyze 탭의 「표 구조」에 들어갑니다.
+            {linkedTables.length
+              ? ` · ${linkedTables.length}개 선택`
+              : " · 아직 선택 없음"}
+            {appliedHint ? " · 반영됨" : null}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={selectAll}>
+            전체
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={clearAll}>
+            해제
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={applyToSchema}
+            disabled={!linkedTables.length}
+            className="gap-1.5"
+          >
+            <Link2 className="size-3.5" />
+            스키마에 반영
+          </Button>
+          <Link
+            href="/console/semantic?tab=analyze"
+            className="inline-flex h-7 items-center rounded-lg border border-border bg-secondary px-2.5 text-[0.8rem] font-medium text-secondary-foreground transition hover:bg-secondary/80"
+          >
+            Analyze로
+          </Link>
+        </div>
+      </div>
+
+      {PHYSICAL_CATALOG.schemas.map((schemaNode) => (
+        <div key={schemaNode.name}>
+          <p
+            className={cn(
+              "mb-2 text-[11px] font-medium tracking-[0.14em] uppercase",
+              isDark ? "text-zinc-500" : "text-muted-foreground",
+            )}
+          >
+            schema · {schemaNode.name}
+          </p>
+          <div className="grid gap-2 md:grid-cols-2">
+            {schemaNode.tables.map((table) => {
+              const on = selected.has(table.name);
+              return (
+                <button
+                  key={table.name}
+                  type="button"
+                  onClick={() => toggle(table.name)}
+                  className={cn(
+                    "rounded-lg border p-3 text-left transition",
+                    on
+                      ? isDark
+                        ? "border-teal-500/40 bg-teal-500/10"
+                        : "border-primary/40 bg-primary/5"
+                      : isDark
+                        ? "border-white/10 bg-black/20 hover:border-white/20"
+                        : "border-border/70 bg-card hover:border-primary/30",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 text-sm font-medium",
+                        isDark ? "text-zinc-100" : "text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex size-4 items-center justify-center rounded border",
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : isDark
+                              ? "border-white/20"
+                              : "border-border",
+                        )}
+                      >
+                        {on ? <Check className="size-3" /> : null}
+                      </span>
+                      <Table2 className="size-3.5 text-sky" />
+                      {table.name}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded border px-1.5 py-0.5 text-[10px]",
+                        isDark
+                          ? "border-white/10 text-zinc-400"
+                          : "border-border text-muted-foreground",
+                      )}
+                    >
+                      {table.role}
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-2 font-mono text-[11px] leading-relaxed",
+                      isDark ? "text-zinc-500" : "text-muted-foreground",
+                    )}
+                  >
+                    {table.columns.join(", ")}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -241,8 +450,10 @@ function CatalogPanel() {
 
 function OntologyPanel({
   mappings,
+  isDark,
 }: {
   mappings: ReturnType<typeof mappingsFromDraft>;
+  isDark: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -250,54 +461,96 @@ function OntologyPanel({
         {INTENT_AXES.map((axis) => (
           <span
             key={axis.id}
-            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-zinc-300"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs",
+              isDark
+                ? "border-white/10 bg-white/[0.03] text-zinc-300"
+                : "border-border/70 bg-secondary/40 text-foreground",
+            )}
           >
             <span
-              className={cn("size-1.5 rounded-full", AXIS_DOT[axis.id])}
+              className={cn(
+                "size-1.5 rounded-full",
+                axis.id === "time" && "bg-amber-400",
+                axis.id === "identity" && "bg-sky-400",
+                axis.id === "measure" && "bg-teal-500",
+                axis.id === "population" && "bg-emerald-500",
+              )}
             />
             {axis.label}
           </span>
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {mappings.map((m) => {
           const axis = AXIS_BY_ID[m.axis];
           return (
             <div
               key={m.id}
               className={cn(
-                "rounded-lg border bg-black/20 p-3",
-                AXIS_BORDER[m.axis] ?? "border-white/10",
+                "rounded-lg border p-3",
+                isDark ? "bg-black/20" : "bg-card",
+                m.axis === "time" &&
+                  (isDark ? "border-amber-500/30" : "border-amber/40"),
+                m.axis === "identity" &&
+                  (isDark ? "border-sky-500/30" : "border-sky/40"),
+                m.axis === "measure" &&
+                  (isDark ? "border-teal-500/30" : "border-primary/35"),
+                m.axis === "population" &&
+                  (isDark ? "border-emerald-500/30" : "border-ok/40"),
               )}
             >
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2 py-0.5 text-[11px] text-zinc-200">
-                  <span
-                    className={cn("size-1.5 rounded-full", AXIS_DOT[m.axis])}
-                  />
+              <div className="mb-2.5 flex flex-wrap items-center gap-2">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px]",
+                    isDark
+                      ? "bg-white/[0.06] text-zinc-200"
+                      : "bg-secondary text-foreground",
+                  )}
+                >
                   {axis.label}
                 </span>
                 {m.locked ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px]",
+                      isDark ? "text-emerald-400" : "text-ok",
+                    )}
+                  >
                     <Lock className="size-3" />
                     확정
                   </span>
                 ) : (
-                  <span className="text-[11px] text-zinc-500">미확정</span>
+                  <span
+                    className={cn(
+                      "text-[11px]",
+                      isDark ? "text-zinc-500" : "text-muted-foreground",
+                    )}
+                  >
+                    미확정
+                  </span>
                 )}
               </div>
 
               <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
-                <LayerNode tone="intent" title="의도" body={m.intentConcept} />
-                <Arrow />
                 <LayerNode
+                  isDark={isDark}
+                  tone="intent"
+                  title="의도"
+                  body={m.intentConcept}
+                />
+                <Arrow isDark={isDark} />
+                <LayerNode
+                  isDark={isDark}
                   tone="glossary"
                   title="용어"
                   body={m.glossaryTerm}
                 />
-                <Arrow />
+                <Arrow isDark={isDark} />
                 <LayerNode
+                  isDark={isDark}
                   tone="physical"
                   title="물리"
                   body={
@@ -306,10 +559,17 @@ function OntologyPanel({
                 />
               </div>
 
-              <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+              <p
+                className={cn(
+                  "mt-2.5 text-xs leading-relaxed",
+                  isDark ? "text-zinc-400" : "text-muted-foreground",
+                )}
+              >
                 {m.chosen ? (
                   <>
-                    <span className="text-zinc-200">선택: </span>
+                    <span className={isDark ? "text-zinc-200" : "text-foreground"}>
+                      선택:{" "}
+                    </span>
                     {m.chosen}
                   </>
                 ) : (
@@ -317,7 +577,12 @@ function OntologyPanel({
                 )}
               </p>
               {m.exceptions.length ? (
-                <p className="mt-1 text-[11px] text-amber-400/90">
+                <p
+                  className={cn(
+                    "mt-1 text-[11px]",
+                    isDark ? "text-amber-400/90" : "text-signal",
+                  )}
+                >
                   제외: {m.exceptions.join(", ")}
                 </p>
               ) : null}
@@ -331,26 +596,55 @@ function OntologyPanel({
 
 function MetricsPanel({
   metrics,
+  isDark,
 }: {
   metrics: ReturnType<typeof metricsFromSpec>;
+  isDark: boolean;
 }) {
   return (
-    <ul className="grid gap-3 md:grid-cols-2">
+    <ul className="grid gap-2.5 md:grid-cols-2">
       {metrics.map((metric) => (
         <li
           key={metric.id}
-          className="rounded-lg border border-white/10 bg-black/20 p-4"
+          className={cn(
+            "rounded-lg border p-3.5",
+            isDark
+              ? "border-white/10 bg-black/20"
+              : "border-border/70 bg-card",
+          )}
         >
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-medium text-zinc-100">{metric.name}</p>
+            <p
+              className={cn(
+                "text-sm font-medium",
+                isDark ? "text-zinc-100" : "text-ink",
+              )}
+            >
+              {metric.name}
+            </p>
             {metric.locked ? (
-              <Lock className="size-3.5 shrink-0 text-emerald-400" />
+              <Lock
+                className={cn(
+                  "size-3.5 shrink-0",
+                  isDark ? "text-emerald-400" : "text-ok",
+                )}
+              />
             ) : null}
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+          <p
+            className={cn(
+              "mt-2 text-xs leading-relaxed",
+              isDark ? "text-zinc-400" : "text-muted-foreground",
+            )}
+          >
             {metric.expression}
           </p>
-          <p className="mt-3 font-mono text-[11px] text-sky-400">
+          <p
+            className={cn(
+              "mt-2.5 font-mono text-[11px]",
+              isDark ? "text-sky-400" : "text-sky",
+            )}
+          >
             grain · {metric.grain}
           </p>
           {metric.filters.length ? (
@@ -358,7 +652,12 @@ function MetricsPanel({
               {metric.filters.map((f) => (
                 <li
                   key={f}
-                  className="rounded-md bg-white/[0.04] px-2 py-1 text-[11px] text-zinc-400"
+                  className={cn(
+                    "rounded-md px-2 py-1 text-[11px]",
+                    isDark
+                      ? "bg-white/[0.04] text-zinc-400"
+                      : "bg-secondary/70 text-muted-foreground",
+                  )}
                 >
                   {f}
                 </li>
@@ -371,10 +670,15 @@ function MetricsPanel({
   );
 }
 
-function LineagePanel() {
+function LineagePanel({ isDark }: { isDark: boolean }) {
   return (
     <div>
-      <p className="mb-3 flex items-center gap-1.5 text-xs text-zinc-500">
+      <p
+        className={cn(
+          "mb-3 flex items-center gap-1.5 text-xs",
+          isDark ? "text-zinc-500" : "text-muted-foreground",
+        )}
+      >
         <GitBranchPlus className="size-3.5" />
         엔터티 관계
       </p>
@@ -382,56 +686,37 @@ function LineagePanel() {
         {ENTITY_GRAPH.map((edge) => (
           <div
             key={`${edge.from}-${edge.to}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs",
+              isDark
+                ? "border-white/10 bg-black/20"
+                : "border-border/70 bg-card",
+            )}
           >
-            <span className="font-medium text-sky-400">{edge.from}</span>
-            <span className="text-zinc-500">—{edge.label}→</span>
-            <span className="font-medium text-teal-400">{edge.to}</span>
-            <span className="font-mono text-[10px] text-zinc-600">
+            <span className={cn("font-medium", isDark ? "text-sky-400" : "text-sky")}>
+              {edge.from}
+            </span>
+            <span className={isDark ? "text-zinc-500" : "text-muted-foreground"}>
+              —{edge.label}→
+            </span>
+            <span
+              className={cn(
+                "font-medium",
+                isDark ? "text-teal-400" : "text-primary",
+              )}
+            >
+              {edge.to}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-[10px]",
+                isDark ? "text-zinc-600" : "text-muted-foreground",
+              )}
+            >
               {edge.on}
             </span>
           </div>
         ))}
-      </div>
-      <div className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-black/30">
-        <svg
-          viewBox="0 0 640 160"
-          className="h-40 w-full text-zinc-600"
-          aria-hidden
-        >
-          <defs>
-            <linearGradient id="waveA" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#5eead4" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#5eead4" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="waveB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M0 110 C80 90 120 40 200 55 C280 70 320 120 400 100 C480 80 520 30 640 50 L640 160 L0 160 Z"
-            fill="url(#waveB)"
-          />
-          <path
-            d="M0 120 C100 100 140 70 220 85 C300 100 340 130 420 115 C500 100 560 60 640 80 L640 160 L0 160 Z"
-            fill="url(#waveA)"
-          />
-          <path
-            d="M0 110 C80 90 120 40 200 55 C280 70 320 120 400 100 C480 80 520 30 640 50"
-            fill="none"
-            stroke="#a1a1aa"
-            strokeWidth="1.2"
-            opacity="0.5"
-          />
-          <path
-            d="M0 120 C100 100 140 70 220 85 C300 100 340 130 420 115 C500 100 560 60 640 80"
-            fill="none"
-            stroke="#5eead4"
-            strokeWidth="1.4"
-            opacity="0.7"
-          />
-        </svg>
       </div>
     </div>
   );
@@ -441,33 +726,61 @@ function LayerNode({
   title,
   body,
   tone,
+  isDark,
 }: {
   title: string;
   body: string;
   tone: "intent" | "glossary" | "physical";
+  isDark: boolean;
 }) {
   return (
     <div
       className={cn(
         "rounded-md border px-2.5 py-2",
-        tone === "intent" && "border-teal-500/25 bg-teal-500/5",
-        tone === "glossary" && "border-sky-500/25 bg-sky-500/5",
-        tone === "physical" && "border-amber-500/25 bg-amber-500/5",
+        tone === "intent" &&
+          (isDark
+            ? "border-teal-500/25 bg-teal-500/5"
+            : "border-primary/25 bg-primary/5"),
+        tone === "glossary" &&
+          (isDark
+            ? "border-sky-500/25 bg-sky-500/5"
+            : "border-sky/30 bg-sky/5"),
+        tone === "physical" &&
+          (isDark
+            ? "border-amber-500/25 bg-amber-500/5"
+            : "border-amber/35 bg-amber/10"),
       )}
     >
-      <p className="flex items-center gap-1 text-[10px] tracking-wide text-zinc-500">
+      <p
+        className={cn(
+          "flex items-center gap-1 text-[10px] tracking-wide",
+          isDark ? "text-zinc-500" : "text-muted-foreground",
+        )}
+      >
         {tone === "glossary" ? <Link2 className="size-3" /> : null}
         {title}
       </p>
-      <p className="mt-0.5 text-sm font-medium leading-snug text-zinc-100">
+      <p
+        className={cn(
+          "mt-0.5 text-sm font-medium leading-snug",
+          isDark ? "text-zinc-100" : "text-foreground",
+        )}
+      >
         {body}
       </p>
     </div>
   );
 }
 
-function Arrow() {
+function Arrow({ isDark }: { isDark: boolean }) {
   return (
-    <div className="hidden justify-center text-zinc-600 md:flex">→</div>
+    <div
+      className={cn(
+        "hidden justify-center md:flex",
+        isDark ? "text-zinc-600" : "text-muted-foreground",
+      )}
+    >
+      →
+    </div>
   );
 }

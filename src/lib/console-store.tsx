@@ -23,6 +23,8 @@ type ConsoleState = {
   glossary: string;
   schema: string;
   resultCsv: string;
+  /** Catalog table names linked into the analysis schema. */
+  linkedTables: string[];
   draft: AnalysisDraft | null;
   scholar: ScholarHit[];
   decisions: Record<string, ResearcherDecision>;
@@ -36,6 +38,7 @@ type ConsoleContextValue = ConsoleState & {
   setGlossary: (v: string) => void;
   setSchema: (v: string) => void;
   setResultCsv: (v: string) => void;
+  setLinkedTables: (v: string[]) => void;
   setDraft: (v: AnalysisDraft | null) => void;
   setScholar: (v: ScholarHit[]) => void;
   setDecisions: (
@@ -57,6 +60,7 @@ const empty: ConsoleState = {
   glossary: "",
   schema: "",
   resultCsv: "",
+  linkedTables: [],
   draft: null,
   scholar: [],
   decisions: {},
@@ -102,6 +106,7 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
       setGlossary: (v) => patch({ glossary: v }),
       setSchema: (v) => patch({ schema: v }),
       setResultCsv: (v) => patch({ resultCsv: v }),
+      setLinkedTables: (v) => patch({ linkedTables: v }),
       setDraft: (v) => patch({ draft: v }),
       setScholar: (v) => patch({ scholar: v }),
       setDecisions: (v) =>
