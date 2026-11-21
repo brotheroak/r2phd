@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -15,12 +15,10 @@ import { KIND_LABEL } from "@/lib/intent-axes";
 import { SAMPLE_PROJECT } from "@/lib/sample-project";
 import type {
   AnalysisDraft,
-  AnalysisSpec,
-  AuditReport,
   ResearcherDecision,
-  ScholarHit,
 } from "@/lib/types";
-import { SemanticLayer } from "@/components/semantic-layer";
+import Link from "next/link";
+import { useConsoleStore } from "@/lib/console-store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +40,6 @@ const SEVERITY_LABEL = {
 } as const;
 
 type Step = "input" | "confirm" | "spec" | "audit";
-type Pane = "flow" | "semantic";
 
 const STEPS: { id: Step; label: string }[] = [
   { id: "input", label: "1 질문" },
@@ -52,27 +49,52 @@ const STEPS: { id: Step; label: string }[] = [
 ];
 
 export function Workspace() {
+  const store = useConsoleStore();
+  const {
+    researchQuestion,
+    glossary,
+    schema,
+    resultCsv,
+    draft,
+    scholar,
+    decisions,
+    spec,
+    report,
+    hydrated,
+    setResearchQuestion,
+    setGlossary,
+    setSchema,
+    setResultCsv,
+    setDraft,
+    setScholar,
+    setDecisions,
+    setSpec,
+    setReport,
+    patch,
+  } = store;
+
   const [step, setStep] = useState<Step>("input");
-  const [pane, setPane] = useState<Pane>("flow");
-  const [researchQuestion, setResearchQuestion] = useState<string>(
-    SAMPLE_PROJECT.researchQuestion,
-  );
-  const [glossary, setGlossary] = useState<string>(SAMPLE_PROJECT.glossary);
-  const [schema, setSchema] = useState<string>(SAMPLE_PROJECT.schema);
-  const [resultCsv, setResultCsv] = useState<string>(
-    SAMPLE_PROJECT.resultRowsCsv,
-  );
-  const [draft, setDraft] = useState<AnalysisDraft | null>(null);
-  const [scholar, setScholar] = useState<ScholarHit[]>([]);
-  const [decisions, setDecisions] = useState<Record<string, ResearcherDecision>>(
-    {},
-  );
-  const [spec, setSpec] = useState<AnalysisSpec | null>(null);
-  const [report, setReport] = useState<AuditReport | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [showNaive, setShowNaive] = useState(true);
+  const [bootstrapped, setBootstrapped] = useState(false);
+
+  useEffect(() => {
+    if (!hydrated || bootstrapped) return;
+    if (!researchQuestion.trim()) {
+      patch({
+        researchQuestion: SAMPLE_PROJECT.researchQuestion,
+        glossary: SAMPLE_PROJECT.glossary,
+        schema: SAMPLE_PROJECT.schema,
+        resultCsv: SAMPLE_PROJECT.resultRowsCsv,
+      });
+    }
+    if (report) setStep("audit");
+    else if (spec) setStep("spec");
+    else if (draft) setStep("confirm");
+    setBootstrapped(true);
+  }, [hydrated, bootstrapped, researchQuestion, draft, spec, report, patch]);
 
   const allAmbiguitiesDecided = useMemo(() => {
     if (!draft) return false;
@@ -141,7 +163,10 @@ export function Workspace() {
       }
       setDecisions(seeded);
       setStep("confirm");
-      setPane("semantic");
+      setNotice(
+        (json.notice ? json.notice + " · " : "") +
+          "시맨틱 레이어 콘솔에서 매핑을 확인할 수 있습니다.",
+      );
     });
   }
 
@@ -195,46 +220,23 @@ export function Workspace() {
   }
 
   return (
-    <section id="workspace" className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <section>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">체험해 보기</p>
-          <h2 className="font-display text-3xl text-ink sm:text-4xl">
+          <p className="text-sm text-muted-foreground">분석 콘솔</p>
+          <h1 className="font-display text-3xl text-ink sm:text-4xl">
             질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
-          </h2>
+          </h1>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { id: "flow", label: "분석 흐름" },
-              { id: "semantic", label: "시맨틱 레이어" },
-            ] as const
-          ).map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPane(p.id)}
-              className={cn(
-                "rounded-xl border px-3 py-1.5 text-sm transition",
-                pane === p.id
-                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-border/80 bg-card text-muted-foreground hover:border-primary/40",
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <Link
+          href="/console/semantic"
+          className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium shadow-sm hover:bg-accent/40"
+        >
+          시맨틱 레이어 열기
+        </Link>
       </div>
 
-      {pane === "semantic" ? (
-        <div className="mb-10">
-          <SemanticLayer draft={draft} spec={spec} decisions={decisions} />
-        </div>
-      ) : null}
-
-      {pane === "flow" ? (
-        <ol className="mb-8 flex flex-wrap gap-2">
+      <ol className="mb-8 flex flex-wrap gap-2">
           {STEPS.map((s) => (
             <li key={s.id}>
               <button
@@ -257,10 +259,6 @@ export function Workspace() {
             </li>
           ))}
         </ol>
-      ) : null}
-
-      {pane === "flow" ? (
-      <>
 
       {notice ? (
         <Alert className="mb-6 border-primary/20 bg-primary/5">
@@ -706,8 +704,6 @@ export function Workspace() {
             </Button>
           </div>
         </div>
-      ) : null}
-      </>
       ) : null}
     </section>
   );
