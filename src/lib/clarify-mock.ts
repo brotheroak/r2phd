@@ -177,9 +177,11 @@ export function mockClarifyBrief(
       mode: "demo",
       domain,
       summary:
-        "연구 질문이 열려 있습니다. 범위·근거·주장 강도를 고르면 챗봇이 덜 산만해집니다.",
-      refinedQuestion: q || "실패율 상승 요인을 조사하고 싶다",
-      direction: "선택 후 좁혀진 연구 질문과 다음 산출물을 잠급니다.",
+        "조사 질문이 열려 있습니다. 범위·근거·다음 산출물을 고르면 결과가 덜 산만해집니다.",
+      refinedQuestion:
+        q ||
+        "고객 불만에서 ‘품질’이 제품·배송·응대 중 무엇을 가리키는지 조사 범위를 정하고 싶다",
+      direction: "선택 후 좁혀진 조사 질문과 다음 산출물을 잠급니다.",
       ambiguities: [
         {
           id: "cl-goal",
@@ -187,12 +189,12 @@ export function mockClarifyBrief(
           title: "조사 목적",
           whyItMatters: "탐색과 검증을 섞으면 근거 기준이 흔들립니다.",
           options: [
-            "가설 목록 만들기",
-            "기존 연구 요약",
-            "내부 정의와 문헌 대조",
-            "실험·분석 설계 초안",
+            "용어 정의 한 장 정리",
+            "관련 사례·자료 목록",
+            "내부 정의와 외부 자료 대조",
+            "다음에 볼 질문 목록",
           ],
-          recommended: "내부 정의와 문헌 대조",
+          recommended: "내부 정의와 외부 자료 대조",
         },
         {
           id: "cl-constraint",
@@ -211,14 +213,14 @@ export function mockClarifyBrief(
           id: "cl-criteria",
           axis: "criteria",
           title: "근거 우선순위",
-          whyItMatters: "일화와 논문을 같은 무게로 두면 결론이 흔들립니다.",
+          whyItMatters: "일화와 공식 자료를 같은 무게로 두면 결론이 흔들립니다.",
           options: [
-            "정의서·스펙",
-            "동료 검토 분석",
-            "학술 가이드라인",
+            "내부 정의서·가이드",
+            "동료 검토된 분석",
+            "공개 가이드라인",
             "현장 경험담",
           ],
-          recommended: "정의서·스펙",
+          recommended: "내부 정의서·가이드",
         },
         {
           id: "cl-next",
@@ -226,12 +228,12 @@ export function mockClarifyBrief(
           title: "다음 산출물",
           whyItMatters: "산출물이 없으면 긴 설명만 남습니다.",
           options: [
-            "좁힌 연구 질문 한 줄",
-            "검색 쿼리 세트",
-            "분석 게이트로 넘기기",
+            "좁힌 조사 질문 한 줄",
+            "검색어·자료 목록",
+            "분석 콘솔로 넘기기",
             "읽을 자료 3개",
           ],
-          recommended: "분석 게이트로 넘기기",
+          recommended: "좁힌 조사 질문 한 줄",
         },
       ],
       assumedDefaults: ["추천 자동선택 없음"],

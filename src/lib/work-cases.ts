@@ -1,6 +1,6 @@
 /**
  * Landing work cases — general, verifiable situations.
- * Finance is one category (not three cards). Console still has vat/payroll/sap/quality.
+ * Console is a separate entry; cases are situations you can open and test.
  */
 
 export type WorkCaseCategory = {
@@ -40,10 +40,6 @@ export const WORK_CASE_CATEGORIES: WorkCaseCategory[] = [
   },
 ];
 
-/**
- * Six landing cases (ordered). VAT·payroll live under one finance card;
- * full scenario list remains in the analysis console.
- */
 export const WORK_CASES: WorkCase[] = [
   {
     id: "collab",
@@ -52,7 +48,7 @@ export const WORK_CASES: WorkCase[] = [
     emoji: "🤝",
     blurb: "짧은 지시로 바로 실행되기 전에 뜻을 고르기",
     example:
-      "「이거 좀 고쳐 줘」만 말했더니 다른 방향으로 바뀌었다 → 목적·제약·기준을 잠근 뒤 실행",
+      "「이거 좀 고쳐 줘」만 말했더니 다른 방향으로 바뀌었다 → 목적·제약·기준을 고른 뒤 실행",
     gap: "짧은 지시만 듣고 바로 실행해, 원한 뜻과 결과물이 어긋나는 간극",
     href: "/clarify/collab",
     swatch: "#7c3aed",
@@ -76,9 +72,9 @@ export const WORK_CASES: WorkCase[] = [
     categoryId: "inquiry",
     label: "연구 · 조사",
     emoji: "🔬",
-    blurb: "자료·문헌을 찾기 전에 범위와 근거를 고르기",
+    blurb: "자료를 찾기 전에 범위와 근거를 고르기",
     example:
-      "「이 정의를 어떻게 볼까?」→ 범위·근거 강도·다음 산출물을 확정",
+      "「고객 불만에서 ‘품질’이 무엇을 뜻하는지 조사」→ 범위·근거·다음 산출물 확정",
     gap: "좁히고 싶은 질문과 넓게 답하는 조사 결과의 간극",
     href: "/clarify/research",
     swatch: "#0284c7",
@@ -91,7 +87,7 @@ export const WORK_CASES: WorkCase[] = [
     emoji: "📊",
     blurb: "지표·기간·집계 키를 숫자 보기 전에 잠그기",
     example:
-      "「최근 수치가 왜 이상하지?」→ ‘최근’·대상 키·성공/실패 정의를 확정",
+      "「최근 불량률이 왜 올랐지?」→ ‘최근’·제품 키·불량 정의를 확정한 뒤 SQL",
     gap: "사람이 말한 말과 모델이 고른 컬럼·필터의 간극",
     href: "/console/semantic?tab=analyze&case=quality",
     swatch: "#0f6b63",
@@ -104,7 +100,7 @@ export const WORK_CASES: WorkCase[] = [
     emoji: "🔗",
     blurb: "서로 다른 시스템의 필드 뜻을 맞추기",
     example:
-      "「연동했는데 숫자가 안 맞아」→ 진실 원천·매핑 유효성·기준 시각을 잠금",
+      "「연동했는데 숫자가 안 맞아」→ 어느 시스템을 기준할지·매핑이 유효한지 잠금",
     gap: "이름만 같고 뜻이 다른 필드·스키마 사이의 간극",
     href: "/console/semantic?tab=analyze&case=sap",
     swatch: "#1d4ed8",
@@ -117,7 +113,7 @@ export const WORK_CASES: WorkCase[] = [
     emoji: "🧾",
     blurb: "신고·지급 전, 갈라진 숫자 기준을 잠그기",
     example:
-      "「장부와 신고·지급 액이 안 같아」→ 귀속 기간·코드·대조 범위를 확정",
+      "「장부와 신고 액이 안 같아」→ 귀속 기간·코드·대조 범위를 확정",
     gap: "장부·신고 화면·지급 장표가 서로 다른 ‘맞음’을 쓰는 간극",
     href: "/console/semantic?tab=analyze&case=vat",
     swatch: "#b45309",

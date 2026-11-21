@@ -7,7 +7,9 @@ import {
   Boxes,
   FileSearch,
   GitBranchPlus,
+  Home,
   Layers3,
+  LayoutGrid,
   Link2,
   MessageSquare,
   Moon,
@@ -142,13 +144,13 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
       )}
     >
       {/* Top chrome — above drawers so toggles stay clickable */}
-      <header className="relative z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3">
+      <header className="relative z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             data-testid="console-nav-toggle"
             onClick={() => setNavOpen((v) => !v)}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border px-2 text-muted-foreground hover:bg-mist hover:text-foreground"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 text-muted-foreground hover:bg-mist hover:text-foreground"
             title={navOpen ? "메뉴 숨기기" : "메뉴 보이기"}
             aria-label={navOpen ? "메뉴 숨기기" : "메뉴 보이기"}
             aria-pressed={navOpen}
@@ -160,27 +162,41 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             )}
             <span className="hidden text-xs font-medium sm:inline">메뉴</span>
           </button>
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">
+          <Link href="/" className="flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-mist">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
               IS
             </span>
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold text-foreground">
                 IntentSpec
               </p>
-              <p className="truncate text-[10px] text-muted-foreground">
-                {CONSOLE_TABS.find((t) => t.id === tab)?.label ?? "Analyze"}
+              <p className="truncate text-[11px] text-muted-foreground">
+                {CONSOLE_TABS.find((t) => t.id === tab)?.label ?? "Analyze"} · 콘솔
               </p>
             </div>
-          </div>
+          </Link>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground hover:bg-mist"
+          >
+            <Home className="size-3.5" />
+            <span className="hidden sm:inline">홈</span>
+          </Link>
+          <Link
+            href="/#cases"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 text-sm font-semibold text-primary hover:bg-primary/15"
+          >
+            <LayoutGrid className="size-3.5" />
+            <span>케이스</span>
+          </Link>
           <StatusPill appearance={isDark ? "dark" : "light"} />
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-mist hover:text-foreground"
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-mist hover:text-foreground"
             title={isDark ? "라이트 모드" : "다크 모드"}
             aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
           >
@@ -191,7 +207,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             data-testid="console-agent-toggle"
             onClick={() => setAgentOpen((v) => !v)}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
+              "inline-flex h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
               agentOpen
                 ? "border-primary/40 bg-primary/10 text-foreground"
                 : "border-border text-muted-foreground hover:bg-mist hover:text-foreground",
@@ -295,35 +311,44 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
               })}
             </nav>
 
-            <div className="space-y-1.5 border-t border-border px-3 py-3 text-[11px]">
-              <p className="font-medium text-muted-foreground">다른 케이스</p>
+            <div className="space-y-2 border-t border-border px-3 py-3">
+              <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                사이트 이동
+              </p>
               <Link
-                href="/clarify/collab"
-                className="block font-medium text-violet-700 hover:underline dark:text-violet-300"
+                href="/"
+                className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-sm font-medium text-foreground hover:bg-mist"
               >
-                LLM에게 의도 설명하기
-              </Link>
-              <Link
-                href="/clarify/everyday"
-                className="block text-signal hover:underline"
-              >
-                일상 질문
-              </Link>
-              <Link href="/clarify/research" className="block text-sky hover:underline">
-                연구 · 조사
-              </Link>
-              <Link
-                href="/console/semantic?tab=analyze&case=sap"
-                className="block text-sky hover:underline"
-              >
-                시스템 연동
+                <Home className="size-3.5 text-primary" />
+                홈
               </Link>
               <Link
                 href="/#cases"
-                className="block text-muted-foreground hover:text-foreground"
+                className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-2 text-sm font-semibold text-primary hover:bg-primary/15"
               >
-                ← 전체 케이스
+                <LayoutGrid className="size-3.5" />
+                전체 케이스
               </Link>
+              <div className="space-y-1 pt-1 text-sm">
+                <Link
+                  href="/clarify/collab"
+                  className="block rounded-md px-2 py-1.5 text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10"
+                >
+                  LLM에게 의도 설명하기
+                </Link>
+                <Link
+                  href="/clarify/everyday"
+                  className="block rounded-md px-2 py-1.5 text-signal hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                >
+                  일상 질문
+                </Link>
+                <Link
+                  href="/clarify/research"
+                  className="block rounded-md px-2 py-1.5 text-sky hover:bg-sky-50 dark:hover:bg-sky-500/10"
+                >
+                  연구 · 조사
+                </Link>
+              </div>
             </div>
           </div>
         </aside>
