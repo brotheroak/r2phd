@@ -24,11 +24,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const SAMPLES: Record<ClarifyDomain, string> = {
-  analysis: "최근 로트 실패율이 왜 올랐는지, 회의 전에 원인을 잡고 싶다",
-  research: "재시험 합격을 실패로 볼지에 대한 방법론을 정리하고 싶다",
-  everyday: "주말에 아이랑 두 시간 안에 할 만한 걸 추천해 줘",
+  analysis: "최근 수치가 왜 이상한지, 회의 전에 정의를 맞춰 두고 싶다",
+  research: "이 개념을 어디까지 같은 뜻으로 볼지, 조사 전에 범위를 정하고 싶다",
+  everyday: "주말에 두 시간 안에 할 만한 걸 추천해 줘",
   collab:
-    "코딩 에이전트에게 「화면 좀 고쳐 줘」라고만 했더니, 내가 말한 것과 다른 방향으로 알아서 바꿔 버렸다. 실행하기 전에 목적·제약·기준을 선택지로 맞춰 달라",
+    "에이전트에게 「이거 좀 고쳐 줘」라고만 했더니 내가 원한 것과 다른 방향으로 바뀌었다. 실행하기 전에 목적·제약·기준을 선택지로 맞춰 달라",
 };
 
 type Props = {

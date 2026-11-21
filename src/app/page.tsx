@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
-import { WORK_CASES } from "@/lib/work-cases";
+import {
+  WORK_CASE_CATEGORIES,
+  WORK_CASES,
+  casesByCategory,
+} from "@/lib/work-cases";
 
 const FLOW = [
   { t: "사람의 말", c: "bg-zinc-700 text-white" },
@@ -53,7 +57,7 @@ export default function HomePage() {
           </h1>
           <p className="rise-in-delay-2 mt-5 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
             애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
-            분석·조사·추천·에이전트 실행으로 넘어갑니다.
+            분석·조사·추천·실행으로 넘어갑니다.
           </p>
 
           <div className="rise-in-delay-2 mt-14">
@@ -90,8 +94,9 @@ export default function HomePage() {
           같은 소통, 여러 케이스
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          품질·SAP·부가세·급여·연구·일상·LLM에게 의도 설명하기까지 — 현장이 달라도
-          같은 패턴으로 뜻을 맞춥니다. 아래가 바로 진입입니다.
+          사람↔AI · 조사·분석 · 운영·연동 — 카테고리는 달라도 검증 가능한
+          일반 상황으로 뜻을 맞춥니다. 부가세·급여 등 세부 시나리오는 분석
+          콘솔 안에서 고를 수 있습니다.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -108,38 +113,60 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {WORK_CASES.map((s, i) => (
-            <Link
-              key={s.id}
-              href={s.href}
-              className="group flex flex-col rounded-2xl border-2 bg-card/90 p-5 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              style={{ borderColor: `${s.swatch}55` }}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-2xl">{s.emoji}</span>
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                  style={{ backgroundColor: s.swatch }}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
+        <div className="mt-10 space-y-10">
+          {WORK_CASE_CATEGORIES.map((cat) => {
+            const cases = casesByCategory(cat.id);
+            return (
+              <div key={cat.id}>
+                <div className="mb-4">
+                  <h3 className="font-display text-xl text-ink sm:text-2xl">
+                    {cat.label}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{cat.blurb}</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {cases.map((s) => {
+                    const n = WORK_CASES.findIndex((c) => c.id === s.id) + 1;
+                    return (
+                      <Link
+                        key={s.id}
+                        href={s.href}
+                        className="group flex flex-col rounded-2xl border-2 bg-card/90 p-5 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        style={{ borderColor: `${s.swatch}55` }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-2xl">{s.emoji}</span>
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                            style={{ backgroundColor: s.swatch }}
+                          >
+                            {String(n).padStart(2, "0")}
+                          </span>
+                        </div>
+                        <h4 className="mt-3 text-lg font-semibold text-ink">
+                          {s.label}
+                        </h4>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {s.blurb}
+                        </p>
+                        <p className="mt-3 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+                          간극 · {s.gap}
+                        </p>
+                        <p className="mt-3 flex-1 rounded-xl bg-mist/80 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+                          <span className="font-semibold">예 · </span>
+                          {s.example}
+                        </p>
+                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2">
+                          이 케이스 열기
+                          <ArrowRight className="size-4" />
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <h3 className="mt-3 text-lg font-semibold text-ink">{s.label}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{s.blurb}</p>
-              <p className="mt-3 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
-                간극 · {s.gap}
-              </p>
-              <p className="mt-3 flex-1 rounded-xl bg-mist/80 px-3 py-2.5 text-xs leading-relaxed text-foreground">
-                <span className="font-semibold">예 · </span>
-                {s.example}
-              </p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2">
-                이 케이스 열기
-                <ArrowRight className="size-4" />
-              </span>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       </section>
 

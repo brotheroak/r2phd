@@ -7,17 +7,18 @@ GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)
 
 **핵심 무기**는 SQL 생성기가 아니라, 애매한 말을 **선택지로 고르고 잠그는 소통 에이전트**입니다.
 
-## 업무 케이스
+## 케이스 카테고리 (랜딩 6개)
 
-| 케이스 | 경로 | 하는 일 |
+| 카테고리 | 케이스 | 경로 |
 | --- | --- | --- |
-| 📊 품질·로트 | `/console/semantic?case=quality` | 실패율·기간·키 잠금 → SQL |
-| 🔗 SAP RFC·EAI | `/console/semantic?case=sap` | 연동 메타·스키마·진실 원천 잠금 |
-| 🧾 부가세·홈택스 | `/console/semantic?case=vat` | 신고 전 대조 기준 잠금 |
-| 💸 급여·원천 | `/console/semantic?case=payroll` | 지급·신고 전 원천 기준 잠금 |
-| 🔬 연구·조사 | `/clarify/research` | 범위·근거·주장·다음 산출물 |
-| 💬 일상 질문 | `/clarify/everyday` | 목적·제약·기준·다음 행동 |
-| 🤝 LLM에게 의도 설명하기 | `/clarify/collab` | 자기 마음대로 실행하기 전에 의도 잠금 |
+| 사람 ↔ AI | LLM에게 의도 설명하기 | `/clarify/collab` |
+| 사람 ↔ AI | 일상 질문 | `/clarify/everyday` |
+| 조사 · 분석 | 연구 · 조사 | `/clarify/research` |
+| 조사 · 분석 | 데이터 분석 | `/console/semantic?case=quality` |
+| 운영 · 연동 | 시스템 연동 | `/console/semantic?case=sap` |
+| 운영 · 연동 | 재무 · 세무 대조 | `/console/semantic?case=vat` |
+
+부가세·급여 등 세부 시나리오는 **분석 콘솔 안에서** 고릅니다. 랜딩에 금융 카드를 나란히 두지 않습니다.
 
 진입 CTA는 홈 히어로가 아니라 **같은 소통, 여러 케이스** 구역에 둡니다.
 
@@ -26,7 +27,7 @@ GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)
 애매한 질문 → 🎯목적 / 🧱제약 / ⚖️기준 / 🧭다음 → 🔒같은 뜻 → (분석이면 SQL·감사)
 
 - 추천은 보이되 **자동 선택하지 않음**
-- 잠그기 전에는 반출·확정·코드 확정 불가
+- 잠그기 전에는 반출·확정·실행 금지
 - 콘솔 Agent가 “자기 마음대로 / 의도”를 감지하면 의도 설명 케이스로 보냄
 
 ## Liner API

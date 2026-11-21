@@ -298,13 +298,10 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             <div className="space-y-1.5 border-t border-border px-3 py-3 text-[11px]">
               <p className="font-medium text-muted-foreground">다른 케이스</p>
               <Link
-                href="/console/semantic?tab=analyze&case=sap"
-                className="block text-sky hover:underline"
+                href="/clarify/collab"
+                className="block font-medium text-violet-700 hover:underline dark:text-violet-300"
               >
-                SAP RFC·EAI
-              </Link>
-              <Link href="/clarify/research" className="block text-sky hover:underline">
-                연구 구체화
+                LLM에게 의도 설명하기
               </Link>
               <Link
                 href="/clarify/everyday"
@@ -312,11 +309,14 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
               >
                 일상 질문
               </Link>
+              <Link href="/clarify/research" className="block text-sky hover:underline">
+                연구 · 조사
+              </Link>
               <Link
-                href="/clarify/collab"
-                className="block font-medium text-violet-700 hover:underline dark:text-violet-300"
+                href="/console/semantic?tab=analyze&case=sap"
+                className="block text-sky hover:underline"
               >
-                LLM에게 의도 설명하기
+                시스템 연동
               </Link>
               <Link
                 href="/#cases"

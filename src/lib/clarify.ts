@@ -7,7 +7,7 @@ export const CLARIFY_DOMAINS = [
     id: "analysis",
     label: "데이터 분석",
     emoji: "📊",
-    blurb: "SQL·지표·결과 표 전에 기준 잠그기",
+    blurb: "지표·기간·집계 정의를 SQL 전에 잠그기",
     swatch: "#0f6b63",
   },
   {

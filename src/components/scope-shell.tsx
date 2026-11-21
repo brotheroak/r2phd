@@ -46,12 +46,16 @@ export function ScopeShell({
         <div className="mx-auto max-w-6xl px-4 pb-3 sm:px-6">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {WORK_CASES.map((s) => {
+              const analysisActive =
+                pathname.startsWith("/console") &&
+                (s.id === "finance"
+                  ? caseParam === "vat" || caseParam === "payroll"
+                  : caseParam === s.id ||
+                    (!caseParam && s.id === "quality"));
               const active =
                 s.kind === "clarify"
                   ? pathname.startsWith(s.href)
-                  : pathname.startsWith("/console") &&
-                    (caseParam === s.id ||
-                      (!caseParam && s.id === "quality"));
+                  : analysisActive;
               return (
                 <Link
                   key={s.id}
