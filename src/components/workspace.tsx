@@ -12,7 +12,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { undecidedCount } from "@/lib/intent-lock";
-import { SAMPLE_PROJECT } from "@/lib/sample-project";
+import {
+  ANALYSIS_SCENARIOS,
+  getScenario,
+  type AnalysisScenarioId,
+} from "@/lib/analysis-scenarios";
 import { useConsoleStore } from "@/lib/console-store";
 import {
   IntentAxisMap,
@@ -50,9 +54,14 @@ const STEPS: { id: Step; label: string; gate?: boolean }[] = [
 
 type WorkspaceProps = {
   variant?: "landing" | "console";
+  /** Analyze case: payroll | vat | quality */
+  scenarioId?: AnalysisScenarioId | string | null;
 };
 
-export function Workspace({ variant = "landing" }: WorkspaceProps) {
+export function Workspace({
+  variant = "landing",
+  scenarioId,
+}: WorkspaceProps) {
   const store = useConsoleStore();
   const {
     researchQuestion,
@@ -92,21 +101,39 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
   const [bootstrapped, setBootstrapped] = useState(false);
   /** Interview cursor: ask one ambiguity at a time */
   const [focusIdx, setFocusIdx] = useState(0);
+  const [activeCase, setActiveCase] = useState<AnalysisScenarioId>(
+    () => getScenario(scenarioId).id,
+  );
+
+  useEffect(() => {
+    setActiveCase(getScenario(scenarioId).id);
+  }, [scenarioId]);
 
   useEffect(() => {
     if (!hydrated || bootstrapped) return;
-    if (!researchQuestion.trim()) {
+    const scenario = getScenario(activeCase);
+    const forceCase = Boolean(scenarioId);
+    if (forceCase || !researchQuestion.trim()) {
       patch({
-        researchQuestion: SAMPLE_PROJECT.researchQuestion,
-        glossary: SAMPLE_PROJECT.glossary,
-        schema: SAMPLE_PROJECT.schema,
-        resultCsv: SAMPLE_PROJECT.resultRowsCsv,
-        candidateSql: SAMPLE_PROJECT.naiveSql,
+        researchQuestion: scenario.researchQuestion,
+        glossary: scenario.glossary,
+        schema: scenario.schema,
+        resultCsv: scenario.resultRowsCsv,
+        candidateSql: scenario.naiveSql,
+        linkedTables: scenario.linkedTables,
+        draft: null,
+        decisions: {},
+        spec: null,
+        report: null,
+        intentLocked: false,
+        lockedAt: null,
       });
     }
-    if (report && intentLocked) setStep("audit");
-    else if (spec && intentLocked) setStep("spec");
-    else if (draft) setStep("confirm");
+    if (!forceCase) {
+      if (report && intentLocked) setStep("audit");
+      else if (spec && intentLocked) setStep("spec");
+      else if (draft) setStep("confirm");
+    }
     setBootstrapped(true);
   }, [
     hydrated,
@@ -117,6 +144,8 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     report,
     intentLocked,
     patch,
+    activeCase,
+    scenarioId,
   ]);
 
   const openCount = useMemo(
@@ -135,13 +164,15 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     if (firstOpen >= 0) setFocusIdx(firstOpen);
   }, [draft, decisions]);
 
-  function loadSample() {
-    setResearchQuestion(SAMPLE_PROJECT.researchQuestion);
-    setGlossary(SAMPLE_PROJECT.glossary);
-    setSchema(SAMPLE_PROJECT.schema);
-    setResultCsv(SAMPLE_PROJECT.resultRowsCsv);
-    setCandidateSql(SAMPLE_PROJECT.naiveSql);
-    setLinkedTables(["products", "lots", "tests", "dispositions"]);
+  function loadScenario(id: AnalysisScenarioId) {
+    const scenario = getScenario(id);
+    setActiveCase(scenario.id);
+    setResearchQuestion(scenario.researchQuestion);
+    setGlossary(scenario.glossary);
+    setSchema(scenario.schema);
+    setResultCsv(scenario.resultRowsCsv);
+    setCandidateSql(scenario.naiveSql);
+    setLinkedTables(scenario.linkedTables);
     setDraft(null);
     setSpec(null);
     setReport(null);
@@ -150,8 +181,12 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     setMode("verify");
     setStep("input");
     setNotice(
-      "의심 쿼리·결과 CSV 예제를 넣었습니다. 기준을 잠그기 전에는 반출할 수 없습니다.",
+      `${scenario.label} 예제를 넣었습니다. 기준을 확정하기 전에는 반출할 수 없습니다.`,
     );
+  }
+
+  function loadSample() {
+    loadScenario(activeCase);
   }
 
   function chooseOption(ambiguityId: string, chosenOption: string) {
@@ -422,9 +457,19 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="button" variant="secondary" onClick={loadSample}>
-                의심 예제 불러오기
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {ANALYSIS_SCENARIOS.map((s) => (
+                  <Button
+                    key={s.id}
+                    type="button"
+                    variant={activeCase === s.id ? "default" : "secondary"}
+                    size="sm"
+                    onClick={() => loadScenario(s.id)}
+                  >
+                    {s.label}
+                  </Button>
+                ))}
+              </div>
               <Badge variant="outline" className="font-normal">
                 가상 데이터 · 추천 자동선택 없음
               </Badge>

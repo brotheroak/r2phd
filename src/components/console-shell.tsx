@@ -245,10 +245,10 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
               <div className="rounded-lg border border-border bg-mist/50 px-3 py-2">
                 <p className="flex items-center gap-2 text-xs text-foreground">
                   <Boxes className="size-3.5 text-primary" />
-                  quality_lab
+                  ops_lab
                 </p>
                 <p className="mt-1 pl-5 font-mono text-[10px] text-muted-foreground">
-                  workspace · core
+                  quality · finance
                 </p>
               </div>
             </div>

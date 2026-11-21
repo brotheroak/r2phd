@@ -14,6 +14,7 @@ export default function SemanticConsolePage() {
     useConsoleStore();
   const searchParams = useSearchParams();
   const raw = searchParams.get("tab");
+  const caseId = searchParams.get("case");
   const tab: ConsoleTab =
     CONSOLE_TABS.some((t) => t.id === raw) && raw
       ? (raw as ConsoleTab)
@@ -45,7 +46,7 @@ export default function SemanticConsolePage() {
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
         ) : tab === "analyze" ? (
           <div className="rounded-lg border border-border bg-card p-4 md:p-5">
-            <Workspace variant="console" />
+            <Workspace variant="console" scenarioId={caseId} />
           </div>
         ) : (
           <div className="space-y-4">

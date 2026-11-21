@@ -64,7 +64,7 @@ export function ConsoleAgentChat({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open, pending]);
 
-  function applyActions(actions: ConsoleAgentAction[]) {
+  function applyActions(actions: ConsoleAgentAction[], hint = "") {
     let linked = [...store.linkedTables];
     let navigateTo: Extract<ConsoleAgentAction, { type: "navigate" }> | null =
       null;
@@ -88,7 +88,7 @@ export function ConsoleAgentChat({
           break;
         }
         case "seed_demo_workspace": {
-          const seed = demoWorkspaceSeed();
+          const seed = demoWorkspaceSeed(hint);
           linked = seed.linkedTables;
           store.patch({
             researchQuestion: seed.researchQuestion,
@@ -107,7 +107,9 @@ export function ConsoleAgentChat({
           break;
         }
         case "seed_ontology_draft": {
-          const seed = demoWorkspaceSeed();
+          const seed = demoWorkspaceSeed(
+            store.researchQuestion || hint,
+          );
           linked = store.linkedTables.length
             ? store.linkedTables
             : seed.linkedTables;
@@ -188,7 +190,7 @@ export function ConsoleAgentChat({
         return;
       }
       const actions = (json.actions ?? []) as ConsoleAgentAction[];
-      applyActions(actions);
+      applyActions(actions, message);
       setMessages((prev) => [
         ...prev,
         {

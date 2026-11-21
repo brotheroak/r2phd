@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ draft, scholar });
     } catch (e) {
       if (e instanceof Error && e.message === "NO_LINER_KEY") {
-        const draft = mockAnalyzeDraft();
+        const draft = mockAnalyzeDraft(body.researchQuestion);
         scholar = body.includeScholar ? mockScholarHits(body.researchQuestion) : [];
         return NextResponse.json({
           draft,
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         });
       }
       // Live call failed — fall back so the demo never bricks
-      const draft = mockAnalyzeDraft();
+      const draft = mockAnalyzeDraft(body.researchQuestion);
       return NextResponse.json({
         draft: { ...draft, mode: "demo" as const },
         scholar: mockScholarHits(body.researchQuestion),

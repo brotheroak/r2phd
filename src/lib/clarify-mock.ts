@@ -5,15 +5,102 @@ export function mockClarifyBrief(
   domainHint?: ClarifyDomain,
 ): ClarifyBrief {
   const q = question.trim();
+  const financeAsk =
+    /부가세|원천세|홈택스|sap|전표|급여|원천징수|회계|세무|payroll|fi\/co|인사/i.test(
+      q,
+    );
   const domain =
     domainHint ??
-    (/sql|실패율|로트|스키마|지표|집계|csv/i.test(q)
+    (financeAsk || /sql|실패율|로트|스키마|지표|집계|csv/i.test(q)
       ? "analysis"
       : /논문|연구|문헌|조사|가설/i.test(q)
         ? "research"
         : "everyday");
 
   if (domain === "analysis") {
+    if (financeAsk || /급여|원천|부가|홈택스|sap/i.test(q)) {
+      const payroll = /급여|원천|인사|payroll|연말정산/i.test(q);
+      return {
+        mode: "demo",
+        domain: "analysis",
+        summary: payroll
+          ? "급여·원천은 한 줄이 틀려도 신고·지급이 틀립니다. 분석 콘솔에서 근거·마감을 먼저 고르세요."
+          : "SAP·홈택스 숫자는 추측 확정이 금지입니다. 분석 게이트에서 날짜·세금코드·범위를 확정합니다.",
+        refinedQuestion:
+          q ||
+          "이번 달 급여 원천세와 홈택스 신고액이 안 맞는데 어디를 대조해야 할까",
+        direction:
+          "선택 후 분석 콘솔에서 대조 범위·SQL 기준을 확정합니다. 실신고·실지급은 하지 않습니다.",
+        ambiguities: [
+          {
+            id: "cl-goal",
+            axis: "goal",
+            title: "콘솔에서 남길 산출물",
+            whyItMatters: "설명만으로는 신고·지급 전 숫자가 잠기지 않습니다.",
+            options: payroll
+              ? [
+                  "급여대장↔원천세 차이표",
+                  "지급 전 점검 체크리스트",
+                  "인사·재무 전달 문장",
+                  "임금 항목 매핑표",
+                ]
+              : [
+                  "SAP↔홈택스 차이표",
+                  "신고 전 점검 체크리스트",
+                  "세무 담당 전달 문장",
+                  "세금코드 매핑표",
+                ],
+            recommended: payroll
+              ? "급여대장↔원천세 차이표"
+              : "SAP↔홈택스 차이표",
+          },
+          {
+            id: "cl-constraint",
+            axis: "constraint",
+            title: "절대 깨면 안 되는 제약",
+            whyItMatters: "마감·권한이 바뀌면 같은 질문도 다른 숫자가 됩니다.",
+            options: [
+              "홈택스/원천 마감 전",
+              "급여·전표 확정 후만",
+              "세무·인사 확인 필수",
+              "가상 법인 데모만",
+            ],
+            recommended: "세무·인사 확인 필수",
+          },
+          {
+            id: "cl-criteria",
+            axis: "criteria",
+            title: "숫자가 갈릴 때 우선 근거",
+            whyItMatters: "전표·급여대장·홈택스 중 무엇을 진실로 둘지 정해야 합니다.",
+            options: [
+              "법정·정의서 우선",
+              "SAP/급여 전표 우선",
+              "홈택스 화면 우선",
+              "아직 미정 (확정 금지)",
+            ],
+            recommended: "법정·정의서 우선",
+          },
+          {
+            id: "cl-next",
+            axis: "next",
+            title: "다음에 바로 할 일",
+            whyItMatters: "다음이 없으면 AI가 숫자를 대략 채웁니다.",
+            options: [
+              "분석 콘솔에서 사례 열기",
+              "대조 범위 확정",
+              "차이만 담당자 전달",
+              "질문만 더 다듬기",
+            ],
+            recommended: "분석 콘솔에서 사례 열기",
+          },
+        ],
+        assumedDefaults: [
+          "추천 자동선택 없음",
+          "데모는 가상 법인·가상 전표",
+        ],
+      };
+    }
+
     return {
       mode: "demo",
       domain,

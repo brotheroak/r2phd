@@ -55,8 +55,8 @@
 }
 
 :root {
-  /* Cool paper + teal/sky/amber — colorful, not gray mono */
-  --background: #f3f7f9;
+  /* Cool paper base — matches first landing atmosphere */
+  --background: #e8eef2;
   --foreground: #15262b;
   --card: #ffffff;
   --card-foreground: #15262b;
@@ -106,11 +106,11 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* Original cool mist: soft teal + slate, no loud amber wash */
     background-image:
-      radial-gradient(900px 480px at 0% -5%, #c8ebe4 0%, transparent 55%),
-      radial-gradient(800px 420px at 100% 5%, #fde68a66 0%, transparent 50%),
-      radial-gradient(700px 380px at 70% 100%, #bae6fd66 0%, transparent 45%),
-      linear-gradient(180deg, #f3f7f9 0%, #e8f0f4 100%);
+      radial-gradient(1200px 600px at 10% -10%, #d7ebe7 0%, transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, #d6e0ea 0%, transparent 50%),
+      linear-gradient(180deg, #e8eef2 0%, #dfe8ee 100%);
     background-attachment: fixed;
     font-family: var(--font-sans), "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   }
@@ -118,14 +118,21 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-display), "Apple SD Gothic Neo", serif;
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-style: italic;
+    letter-spacing: -0.02em;
+  }
+  .font-display-roman {
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-style: normal;
+    letter-spacing: -0.02em;
   }
   .grid-atmosphere {
     background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--ink) 5%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 5%, transparent) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse at 40% 30%, black 15%, transparent 70%);
+      linear-gradient(to right, color-mix(in oklab, var(--ink) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
   }
   .pipe-flow {
     background: linear-gradient(

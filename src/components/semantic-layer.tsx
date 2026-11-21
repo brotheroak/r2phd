@@ -64,8 +64,8 @@ export function SemanticLayer({
           isDark={isDark}
           label="물리 테이블"
           value={String(tableCount)}
-          hint={`${PHYSICAL_CATALOG.name} · core`}
-          badge={`${PHYSICAL_CATALOG.schemas.length} schema`}
+          hint={`${PHYSICAL_CATALOG.name} · core+finance`}
+          badge={`${PHYSICAL_CATALOG.schemas.length} schemas`}
           tone="teal"
         />
         <KpiCard

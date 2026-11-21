@@ -4,8 +4,7 @@ import {
   allCatalogTableNames,
   listCatalogTables,
 } from "./semantic-model";
-import { SAMPLE_PROJECT } from "./sample-project";
-import { mockAnalyzeDraft } from "./mock-engine";
+import { getScenario } from "./analysis-scenarios";
 import type { AnalysisDraft } from "./types";
 
 export type ConsoleAgentAction =
@@ -51,7 +50,7 @@ actions type:
 규칙:
 - 사용자가 테이블 연결·스키마 반영·예제 로드·매핑 초안을 원하면 해당 action을 넣으세요.
 - 단순 질문이면 actions는 [] 이고 reply로만 답하세요.
-- 없는 테이블 이름을 만들지 마세요. 가능한 테이블: products, lots, tests, dispositions.
+- 없는 테이블 이름을 만들지 마세요. quality: products,lots,tests,dispositions / finance: company_codes,fi_documents,tax_items,hometax_returns,employees,payroll_runs,wage_lines,withholding_lines.
 - 번역투 금지. 쉬운 한국어.`;
 
 export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
@@ -125,11 +124,17 @@ export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
     };
   }
 
-  if (/예제|샘플|데모|실패율|돌려|시작/.test(q)) {
+  if (/예제|샘플|데모|실패율|급여|원천|부가세|홈택스|sap|돌려|시작/.test(q)) {
+    const which = /급여|원천|payroll/.test(q)
+      ? "급여·원천"
+      : /부가|홈택스|sap|vat/.test(q)
+        ? "부가세·SAP↔홈택스"
+        : /실패|로트|품질/.test(q)
+          ? "품질·로트 실패율"
+          : "급여·원천(기본)";
     return {
       mode: "demo",
-      reply:
-        "로트 실패율 예제(질문·용어·스키마·매핑 초안)를 워크스페이스에 넣습니다. Analyze·Ontology·Metrics에서 바로 이어서 보세요.",
+      reply: `${which} 예제(질문·용어·스키마·매핑 초안)를 워크스페이스에 넣습니다. Analyze에서 기준을 확정하기 전에는 숫자를 반출하지 마세요.`,
       actions: [
         { type: "seed_demo_workspace" },
         { type: "navigate", tab: "analyze" },
@@ -199,7 +204,7 @@ export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
   };
 }
 
-export function demoWorkspaceSeed(): {
+export function demoWorkspaceSeed(hint?: string): {
   researchQuestion: string;
   glossary: string;
   schema: string;
@@ -208,13 +213,14 @@ export function demoWorkspaceSeed(): {
   linkedTables: string[];
   draft: AnalysisDraft;
 } {
+  const scenario = getScenario(hint);
   return {
-    researchQuestion: SAMPLE_PROJECT.researchQuestion,
-    glossary: SAMPLE_PROJECT.glossary,
-    schema: SAMPLE_PROJECT.schema,
-    resultCsv: SAMPLE_PROJECT.resultRowsCsv,
-    candidateSql: SAMPLE_PROJECT.naiveSql,
-    linkedTables: allCatalogTableNames(),
-    draft: mockAnalyzeDraft(),
+    researchQuestion: scenario.researchQuestion,
+    glossary: scenario.glossary,
+    schema: scenario.schema,
+    resultCsv: scenario.resultRowsCsv,
+    candidateSql: scenario.naiveSql,
+    linkedTables: scenario.linkedTables,
+    draft: scenario.draft,
   };
 }

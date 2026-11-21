@@ -6,9 +6,9 @@ import {
 } from "./intent-axes";
 import type { AnalysisDraft, AnalysisSpec, ConceptLink } from "./types";
 
-/** Databricks-style catalog entries for the fictional warehouse. */
+/** Databricks-style catalog: quality + finance (SAP/홈택스/급여 가상). */
 export const PHYSICAL_CATALOG = {
-  name: "quality_lab",
+  name: "ops_lab",
   schemas: [
     {
       name: "core",
@@ -42,6 +42,64 @@ export const PHYSICAL_CATALOG = {
         },
       ],
     },
+    {
+      name: "finance",
+      tables: [
+        {
+          name: "company_codes",
+          columns: ["company_code", "name"],
+          role: "차원",
+        },
+        {
+          name: "fi_documents",
+          columns: [
+            "doc_id",
+            "company_code",
+            "posting_date",
+            "load_date",
+            "amount",
+            "reversal_of",
+          ],
+          role: "사실",
+        },
+        {
+          name: "tax_items",
+          columns: ["doc_id", "tax_code", "vat_amount", "base_amount"],
+          role: "사실",
+        },
+        {
+          name: "hometax_returns",
+          columns: ["period", "return_type", "filed_vat", "filed_at"],
+          role: "참조",
+        },
+        {
+          name: "employees",
+          columns: ["employee_id", "org_unit", "hire_date", "leave_date"],
+          role: "차원",
+        },
+        {
+          name: "payroll_runs",
+          columns: [
+            "run_id",
+            "pay_period",
+            "status",
+            "confirmed_at",
+            "load_date",
+          ],
+          role: "사실",
+        },
+        {
+          name: "wage_lines",
+          columns: ["run_id", "employee_id", "wage_type", "gross_amount"],
+          role: "사실",
+        },
+        {
+          name: "withholding_lines",
+          columns: ["run_id", "employee_id", "tax_code", "withheld_amount"],
+          role: "사실",
+        },
+      ],
+    },
   ],
 } as const;
 
@@ -54,6 +112,21 @@ export const ENTITY_GRAPH = [
     label: "복합키",
   },
   { from: "tests", to: "dispositions", on: "test_id", label: "1:1" },
+  {
+    from: "company_codes",
+    to: "fi_documents",
+    on: "company_code",
+    label: "1:N",
+  },
+  { from: "fi_documents", to: "tax_items", on: "doc_id", label: "1:N" },
+  { from: "employees", to: "wage_lines", on: "employee_id", label: "1:N" },
+  { from: "payroll_runs", to: "wage_lines", on: "run_id", label: "1:N" },
+  {
+    from: "payroll_runs",
+    to: "withholding_lines",
+    on: "run_id",
+    label: "1:N",
+  },
 ] as const;
 
 export type CatalogTable = {
@@ -104,11 +177,8 @@ export function buildSchemaFromTables(tableNames: string[]): string {
   lines.push(
     "",
     "주의",
-    "- lots.lot_no 단독으로는 unique 하지 않음",
-    "- tests.ingest_date 는 ETL 적재일 (연구 '최근'과 무관)",
-    "- supplier_lot 을 lot_no 와 조인하면 잘못된 매칭 발생",
+    "- 날짜·키·세금코드/임금유형을 잠그기 전에 합계를 확정하지 말 것",
   );
-
   return lines.join("\n");
 }
 
@@ -180,21 +250,35 @@ function relatedAmbiguity(
   kind: string,
 ): boolean {
   const blob = `${c.concept} ${c.glossaryTerm ?? ""} ${title}`.toLowerCase();
-  if (kind === "date_anchor" && /최근|기간|날짜|date|test_date/.test(blob))
+  if (
+    kind === "date_anchor" &&
+    /최근|기간|날짜|date|test_date|posting|귀속|pay_period|과세/.test(blob)
+  )
     return true;
-  if (kind === "identifier_scope" && /제조|로트|식별|product|lot/.test(blob))
+  if (
+    kind === "identifier_scope" &&
+    /제조|로트|식별|product|lot|회사|사업장|org|company/.test(blob)
+  )
     return true;
-  if (kind === "term_conflict" && /실패|부적합|fail|재시험/.test(blob))
+  if (
+    kind === "term_conflict" &&
+    /실패|부적합|fail|재시험|세금코드|과세|런|meal|비과세/.test(blob)
+  )
     return true;
-  if (kind === "aggregation" && /분모|로트 수|집계|시험/.test(blob)) return true;
+  if (
+    kind === "aggregation" &&
+    /분모|로트 수|집계|시험|역분개|식대|표준/.test(blob)
+  )
+    return true;
   return false;
 }
 
 function guessAxis(c: ConceptLink): IntentAxisId {
   const blob = `${c.concept} ${c.glossaryTerm ?? ""} ${c.condition}`;
-  if (/최근|기간|날짜|date/.test(blob)) return "time";
-  if (/제조|식별|로트|product|lot/.test(blob)) return "identity";
-  if (/분모|대상|population/.test(blob)) return "population";
+  if (/최근|기간|날짜|date|귀속|과세기간|posting|pay_period/.test(blob))
+    return "time";
+  if (/제조|식별|로트|product|lot|회사|사업장|org/.test(blob)) return "identity";
+  if (/분모|대상|population|인원/.test(blob)) return "population";
   return "measure";
 }
 
@@ -202,10 +286,10 @@ export function metricsFromSpec(spec: AnalysisSpec | null): SemanticMetric[] {
   if (!spec) {
     return [
       {
-        id: "m-fail-rate",
-        name: "실패율",
+        id: "m-pending",
+        name: "지표 (미확정)",
         expression: "아직 기준이 정해지지 않음",
-        grain: "로트",
+        grain: "잠금 전",
         filters: [],
         locked: false,
       },

@@ -1,4 +1,4 @@
-import { SAMPLE_PROJECT } from "./sample-project";
+import { getScenario } from "./analysis-scenarios";
 import type {
   AnalysisDraft,
   AnalysisSpec,
@@ -44,219 +44,62 @@ export function mockScholarHits(query: string): ScholarHit[] {
   ];
 }
 
-export function mockAnalyzeDraft(): AnalysisDraft {
-  return {
-    mode: "demo",
-    summary:
-      "질문의 뜻은 대략 이렇습니다. 시험일 기준으로 최근 6개월, 제품과 제조번호를 같이 본 최종 부적합 실패율. 정의서와 표를 맞춰 보니 기간·묶는 방식·실패 정의가 서로 부딪칠 여지가 있습니다.",
-    concepts: [
-      {
-        concept: "실패율 분자",
-        glossaryTerm: "실패 / 부적합",
-        columns: ["dispositions.disposition"],
-        condition: "disposition = 'FAIL'",
-        exceptions: [
-          "PASS_AFTER_RETEST 제외",
-          "HOLD/PENDING 제외",
-        ],
-      },
-      {
-        concept: "실패율 분모",
-        glossaryTerm: "시험에 올라간 로트",
-        columns: ["tests.product_code", "tests.lot_no"],
-        condition: "tests에 1건 이상 존재",
-        exceptions: ["입고만 되고 시험 없는 로트 제외"],
-      },
-      {
-        concept: "최근 구간",
-        glossaryTerm: "최근",
-        columns: ["tests.test_date"],
-        condition: "test_date >= as_of_date - 180 days",
-        exceptions: ["ingest_date/created_at 사용 금지"],
-      },
-      {
-        concept: "로트 식별",
-        glossaryTerm: "제조번호",
-        columns: ["product_code", "lot_no"],
-        condition: "복합키 (product_code, lot_no)",
-        exceptions: ["supplier_lot 과 혼용 금지", "lot_no 단독 조인 금지"],
-      },
-    ],
-    ambiguities: [
-      {
-        id: "amb-date",
-        kind: "date_anchor",
-        title: "‘최근 6개월’의 날짜 필드",
-        whyItMatters:
-          "적재일로 자르면 시험은 예전에 끝났는데 늦게 쌓인 로트가 ‘최근’에 들어갑니다.",
-        options: [
-          "시험일(test_date) — 정의서 쪽",
-          "적재일(ingest_date) — 창고 편의",
-          "제조일(manufacture_date)",
-        ],
-        recommended: "시험일(test_date) — 정의서 쪽",
-        evidence: [
-          "정의서: 최근은 시험일",
-          "표 주의: ingest_date는 쌓인 날",
-        ],
-      },
-      {
-        id: "amb-id",
-        kind: "identifier_scope",
-        title: "제조번호를 어디까지 같은 걸로 볼까",
-        whyItMatters:
-          "번호만으로 묶으면 제품이 다른데도 한 로트로 합쳐질 수 있습니다.",
-        options: [
-          "제품코드 + 제조번호",
-          "제조번호만",
-          "협력사 로트(supplier_lot)",
-        ],
-        recommended: "제품코드 + 제조번호",
-        evidence: [
-          "정의서: 제품코드와 맞춰야 유일",
-          "lots 기본키: product_code, lot_no",
-        ],
-      },
-      {
-        id: "amb-fail",
-        kind: "term_conflict",
-        title: "재시험 합격은 실패인가",
-        whyItMatters:
-          "여기에 넣으면 실패만 커져서, 현장에서 느끼는 부적합률과 멀어집니다.",
-        options: [
-          "최종 부적합(FAIL)만 실패",
-          "FAIL + 재시험 합격도 실패",
-          "첫 판정 기준 (아직 정의 없음)",
-        ],
-        recommended: "최종 부적합(FAIL)만 실패",
-        evidence: [
-          "정의서: 재시험 합격은 실패가 아님",
-          "질문: 재시험으로 합격한 건은 빼 달라",
-        ],
-      },
-      {
-        id: "amb-denom",
-        kind: "aggregation",
-        title: "분모는 무엇으로 셀까",
-        whyItMatters:
-          "시험 건수로 나눌지, 로트 수로 나눌지에 따라 같은 숫자도 뜻이 달라집니다.",
-        options: [
-          "시험이 한 번이라도 있는 로트 수",
-          "시험 건수",
-          "입고만 된 로트 수",
-        ],
-        recommended: "시험이 한 번이라도 있는 로트 수",
-        evidence: ["정의서: 분모는 시험에 올라간 로트 수"],
-      },
-    ],
-    assumedDefaults: [
-      "기준일은 오늘(CURRENT_DATE)로 둠",
-      "보류·대기(HOLD/PENDING)는 일단 빼고 초안을 잡음",
-    ],
-    sourcesUsed: [
-      "연구 질문",
-      "용어 정의서",
-      "표 구조 주의 문구",
-      "Liner Scholar (예시)",
-    ],
-  };
-}
-
-function decisionMap(decisions: ResearcherDecision[]) {
-  const map = new Map(decisions.map((d) => [d.ambiguityId, d.chosenOption]));
-  return {
-    date: map.get("amb-date") ?? "시험일(test_date) — 정의서 쪽",
-    id: map.get("amb-id") ?? "제품코드 + 제조번호",
-    fail: map.get("amb-fail") ?? "최종 부적합(FAIL)만 실패",
-    denom: map.get("amb-denom") ?? "시험이 한 번이라도 있는 로트 수",
-  };
+export function mockAnalyzeDraft(questionHint?: string): AnalysisDraft {
+  return getScenario(questionHint).draft;
 }
 
 export function mockConfirmSpec(req: ConfirmRequest): AnalysisSpec {
-  const d = decisionMap(req.decisions);
-  const useTestDate = d.date.includes("test_date") || d.date.includes("시험일");
-  const useComposite =
-    d.id.includes("product_code") || d.id.includes("제품코드");
-  const failOnly = d.fail.includes("FAIL만") || d.fail.includes("부적합(FAIL)만");
-  const lotDenom = d.denom.includes("로트 수");
+  const scenario = getScenario(req.researchQuestion);
+  const byId = Object.fromEntries(
+    req.decisions.map((d) => [d.ambiguityId, d.chosenOption]),
+  );
+  const picks = scenario.draft.ambiguities.map(
+    (a) => byId[a.id] ?? a.recommended ?? a.options[0],
+  );
+  const dateAnchor = picks[0] ?? "정의서 날짜";
+  const identifierScope = picks[2] ?? picks[1] ?? "정의 범위";
+  const measure = picks[1] ?? "정의서 측정";
+  const population = picks[3] ?? picks[2] ?? "대상 범위";
 
-  const dateFilter = useTestDate
-    ? "t.test_date >= CURRENT_DATE - INTERVAL '180 days'"
-    : "t.ingest_date >= CURRENT_DATE - INTERVAL '180 days'";
-
-  const failPred = failOnly
-    ? "d.disposition = 'FAIL'"
-    : "d.disposition IN ('FAIL', 'PASS_AFTER_RETEST')";
-
-  const groupCols = useComposite
-    ? "t.product_code, t.lot_no"
-    : "t.lot_no";
-
-  const joinLots = useComposite
-    ? "JOIN lots l ON l.product_code = t.product_code AND l.lot_no = t.lot_no"
-    : "JOIN lots l ON l.lot_no = t.lot_no";
-
-  const sql = lotDenom
-    ? `-- IntentSpec 확정 명세 반영
-WITH eligible_tests AS (
-  SELECT t.product_code, t.lot_no, t.test_id, d.disposition
-  FROM tests t
-  JOIN dispositions d ON d.test_id = t.test_id
-  ${joinLots}
-  WHERE ${dateFilter}
-    AND d.disposition NOT IN ('HOLD', 'PENDING')
-),
-lot_flags AS (
-  SELECT
-    ${useComposite ? "product_code, lot_no" : "lot_no"},
-    MAX(CASE WHEN ${failPred} THEN 1 ELSE 0 END) AS is_fail,
-    COUNT(*) AS trial_events
-  FROM eligible_tests
-  GROUP BY ${groupCols}
-)
-SELECT
-  ${useComposite ? "product_code, lot_no" : "lot_no"},
-  is_fail AS fails,
-  1 AS trials,
-  ROUND(100.0 * is_fail, 2) AS fail_rate_pct
-FROM lot_flags
-ORDER BY ${useComposite ? "product_code, lot_no" : "lot_no"};`
-    : `-- IntentSpec 확정 명세 반영 (시험 건수 분모)
-SELECT
-  ${groupCols},
-  COUNT(*) FILTER (WHERE ${failPred}) AS fails,
-  COUNT(*) AS trials,
-  ROUND(100.0 * COUNT(*) FILTER (WHERE ${failPred}) / NULLIF(COUNT(*), 0), 2) AS fail_rate_pct
-FROM tests t
-JOIN dispositions d ON d.test_id = t.test_id
-${joinLots}
-WHERE ${dateFilter}
-  AND d.disposition NOT IN ('HOLD', 'PENDING')
-GROUP BY ${groupCols};`;
+  const sql =
+    scenario.id === "payroll"
+      ? `-- IntentSpec 확정 명세 (급여·원천 데모)
+SELECT SUM(w.withheld_amount) AS wht
+FROM payroll_runs r
+JOIN withholding_lines w ON w.run_id = r.run_id
+JOIN employees e ON e.employee_id = w.employee_id
+WHERE r.pay_period = '2026-01'
+  AND r.status = 'CONFIRMED'
+  -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
+;`
+      : scenario.id === "vat"
+        ? `-- IntentSpec 확정 명세 (부가세 데모)
+SELECT SUM(t.vat_amount) AS sap_vat
+FROM fi_documents f
+JOIN tax_items t ON t.doc_id = f.doc_id
+WHERE f.company_code = 'KR01'
+  AND t.tax_code = 'A1'
+  AND f.posting_date >= DATE '2026-01-01'
+  AND f.posting_date < DATE '2026-02-01'
+  AND f.reversal_of IS NULL
+  -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
+;`
+        : `-- IntentSpec 확정 명세 (품질 데모)
+SELECT product_code, lot_no, fail_rate_pct
+FROM /* locked grain */ lots
+-- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
+;`;
 
   return {
     mode: "demo",
-    title: "제조번호별 실패율 — 확인 반영 명세",
+    title: `${scenario.label} — 확정 명세`,
     researchQuestion: req.researchQuestion,
-    population: useComposite
-      ? "시험 기록이 있는 제품+제조번호 로트"
-      : "시험 기록이 있는 제조번호",
-    measures: [
-      failOnly ? "실패 = 최종 부적합(FAIL)" : "실패 = FAIL 또는 재시험 합격",
-      lotDenom ? "분모 = 로트 수" : "분모 = 시험 건수",
-      "실패율(%) = 100 × 실패 / 분모",
-    ],
-    filters: [
-      d.date,
-      "보류·대기 제외",
-      useComposite ? "협력사 로트는 쓰지 않음" : "제조번호만으로 식별",
-    ],
-    dateAnchor: d.date,
-    identifierScope: d.id,
-    exclusions: [
-      "시험 없이 입고만 된 로트",
-      failOnly ? "재시험 합격" : "(재시험 합격 포함)",
-    ],
+    population,
+    measures: [measure, ...scenario.knownTraps.slice(0, 1).map((t) => t.title)],
+    filters: [dateAnchor, identifierScope],
+    dateAnchor,
+    identifierScope,
+    exclusions: scenario.knownTraps.map((t) => t.title),
     openQuestions: req.decisions
       .filter((x) => x.note?.trim())
       .map((x) => `${x.ambiguityId}: ${x.note}`),
@@ -264,46 +107,39 @@ GROUP BY ${groupCols};`;
     checks: [
       {
         id: "chk-date",
-        name: "기간 기준이 맞는지",
-        description: `쿼리와 결과가 ${d.date}를 쓰는지 본다`,
-        sqlHint: useTestDate
-          ? "결과의 date_basis가 test_date인지"
-          : "결과의 date_basis가 ingest_date인지",
+        name: "기간·귀속 기준",
+        description: `결과가 ${dateAnchor}와 맞는지`,
         severity: "blocker",
       },
       {
         id: "chk-id",
-        name: "묶는 방식이 맞는지",
-        description: useComposite
-          ? "제품코드가 비거나 번호만으로 묶인 행이 있으면 안 됨"
-          : "제조번호만으로 묶기로 확정됨",
+        name: "범위·키",
+        description: `결과가 ${identifierScope}와 맞는지`,
         severity: "blocker",
       },
       {
         id: "chk-fail-def",
-        name: "실패 정의가 맞는지",
-        description: failOnly
-          ? "재시험 합격이 분자에 있으면 안 됨"
-          : "재시험 합격도 분자에 넣기로 함",
+        name: "측정·포함 규칙",
+        description: `결과가 ${measure}와 맞는지`,
         severity: "blocker",
       },
       {
         id: "chk-dup",
-        name: "같은 로트가 두 번인지",
-        description: "같은 로트 키가 결과에 한 번만 나오는지",
+        name: "중복·역분개",
+        description: "같은 키가 두 번 잡히지 않는지",
         severity: "warning",
       },
       {
         id: "chk-missing",
-        name: "빠진 대상은 없는지",
-        description: "분모에 들어가야 할 로트가 빠지지 않았는지",
+        name: "누락",
+        description: "분모·대상이 빠지지 않았는지",
         severity: "info",
       },
     ],
     rationale: [
       "헷갈리는 기준을 정한 뒤에 SQL을 만들었습니다.",
-      "겉보기엔 정상인 SQL과 비교해 기간·묶기·실패 정의를 맞추려는 목적입니다.",
-      `예제에서 자주 틀리는 점: ${SAMPLE_PROJECT.knownTraps.map((t) => t.title).join(", ")}`,
+      `${scenario.systems} 대조용 데모입니다. 실신고·실지급을 대행하지 않습니다.`,
+      `자주 틀리는 점: ${scenario.knownTraps.map((t) => t.title).join(", ")}`,
     ],
   };
 }
