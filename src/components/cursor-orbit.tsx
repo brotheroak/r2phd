@@ -3,17 +3,26 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Monotone dots + lines assemble into a 3D sphere, shatter, reassemble.
- * Follows the cursor. No color rainbow — ink/slate only.
+ * Thin monotone wire + slightly thicker dots assemble into a 3D sphere.
+ * Across the sphere as a whole, palette gradient flows over time.
  */
 
-const N = 96;
+const N = 110;
 const CYCLE_MS = 3800;
 const FOV = 2.7;
-const INK = { r: 13, g: 44, b: 48 };
-const MID = { r: 55, g: 78, b: 84 };
+
+/** Soft brand washes — flow across the sphere surface */
+const PALETTE = [
+  { r: 15, g: 107, b: 99 }, // teal
+  { r: 90, g: 140, b: 155 }, // slate-teal
+  { r: 170, g: 120, b: 110 }, // coral muted
+  { r: 180, g: 150, b: 110 }, // peach muted
+  { r: 100, g: 130, b: 160 }, // slate
+  { r: 15, g: 107, b: 99 },
+];
 
 type Vec3 = { x: number; y: number; z: number };
+type RGB = { r: number; g: number; b: number };
 
 function easeInOut(t: number) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -23,8 +32,23 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function rgba(c: { r: number; g: number; b: number }, a: number) {
-  return `rgba(${c.r},${c.g},${c.b},${Math.max(0, Math.min(1, a))})`;
+function mix(a: RGB, b: RGB, t: number): RGB {
+  return {
+    r: a.r + (b.r - a.r) * t,
+    g: a.g + (b.g - a.g) * t,
+    b: a.b + (b.b - a.b) * t,
+  };
+}
+
+function samplePalette(t: number): RGB {
+  const x = ((t % 1) + 1) % 1;
+  const s = x * (PALETTE.length - 1);
+  const i = Math.floor(s);
+  return mix(PALETTE[i], PALETTE[Math.min(i + 1, PALETTE.length - 1)], s - i);
+}
+
+function rgba(c: RGB, a: number) {
+  return `rgba(${c.r | 0},${c.g | 0},${c.b | 0},${Math.max(0, Math.min(1, a))})`;
 }
 
 function rotXYZ(p: Vec3, rx: number, ry: number, rz: number): Vec3 {
@@ -42,7 +66,6 @@ function rotXYZ(p: Vec3, rx: number, ry: number, rz: number): Vec3 {
   return { x: xy, y, z: zy };
 }
 
-/** Fibonacci sphere — even coverage on unit sphere */
 function fibSphere(i: number, n: number): Vec3 {
   const phi = Math.acos(1 - (2 * (i + 0.5)) / n);
   const theta = Math.PI * (1 + Math.sqrt(5)) * i;
@@ -60,11 +83,17 @@ function assembleAmount(u: number) {
   return 0;
 }
 
+/** Hue position on sphere surface — longitude + latitude blend */
+function surfaceT(p: Vec3, flow: number) {
+  const lon = Math.atan2(p.z, p.x) / (Math.PI * 2) + 0.5;
+  const lat = Math.acos(Math.max(-1, Math.min(1, p.y))) / Math.PI;
+  return lon * 0.65 + lat * 0.35 + flow;
+}
+
 export function CursorOrbit() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sphere = useRef<Vec3[]>([]);
   const scatter = useRef<Vec3[]>([]);
-  /** neighbor indices for each point (kNN on sphere) */
   const links = useRef<number[][]>([]);
   const raf = useRef<number | null>(null);
   const start = useRef(0);
@@ -86,7 +115,6 @@ export function CursorOrbit() {
         z: Math.sin(lon) * Math.cos(lat) * d,
       });
     }
-    // k=5 nearest neighbors on the sphere for wireframe edges
     const neigh: number[][] = [];
     for (let i = 0; i < N; i++) {
       const dists: { j: number; d: number }[] = [];
@@ -94,12 +122,13 @@ export function CursorOrbit() {
         if (i === j) continue;
         const a = sph[i];
         const b = sph[j];
-        const d =
-          (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2;
-        dists.push({ j, d });
+        dists.push({
+          j,
+          d: (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2,
+        });
       }
       dists.sort((a, b) => a.d - b.d);
-      neigh.push(dists.slice(0, 5).map((x) => x.j));
+      neigh.push(dists.slice(0, 4).map((x) => x.j));
     }
     sphere.current = sph;
     scatter.current = sca;
@@ -168,7 +197,7 @@ export function CursorOrbit() {
 
       const cx = current.current.x * w;
       const cy = current.current.y * h;
-      const scale = Math.min(w, h) * 0.13;
+      const scale = Math.min(w, h) * 0.125;
 
       const u = reduced ? 0.4 : ((now - start.current) % CYCLE_MS) / CYCLE_MS;
       const assemble = assembleAmount(u);
@@ -177,8 +206,15 @@ export function CursorOrbit() {
       const rotY = t * 0.85;
       const rotX = 0.45 + Math.sin(t * 0.4) * 0.35;
       const rotZ = Math.cos(t * 0.28) * 0.18;
+      const flow = t * 0.12; // slow color wash across surface
 
-      type Proj = { x: number; y: number; z: number; i: number };
+      type Proj = {
+        x: number;
+        y: number;
+        z: number;
+        i: number;
+        local: Vec3;
+      };
       const projected: Proj[] = new Array(N);
 
       for (let i = 0; i < N; i++) {
@@ -196,23 +232,24 @@ export function CursorOrbit() {
           y: cy + p.y * scale * persp,
           z: p.z,
           i,
+          local: s, // color keyed to sphere rest position for stable flow
         };
       }
 
-      // Soft monotone bloom
-      const bloom = ctx.createRadialGradient(cx, cy, 2, cx, cy, scale * 1.55);
-      bloom.addColorStop(0, rgba(INK, 0.07 * v));
+      // Soft ink bloom under the form
+      const bloom = ctx.createRadialGradient(cx, cy, 2, cx, cy, scale * 1.5);
+      bloom.addColorStop(0, rgba(samplePalette(flow), 0.06 * v));
       bloom.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = bloom;
       ctx.beginPath();
-      ctx.arc(cx, cy, scale * 1.55, 0, Math.PI * 2);
+      ctx.arc(cx, cy, scale * 1.5, 0, Math.PI * 2);
       ctx.fill();
 
       const order = projected
         .map((_, i) => i)
         .sort((a, b) => projected[a].z - projected[b].z);
 
-      // Edges — monotone, depth-faded, undirected (i < j)
+      // —— Thin elegant edges ——
       ctx.lineCap = "round";
       for (let i = 0; i < N; i++) {
         for (const j of links.current[i]) {
@@ -221,30 +258,50 @@ export function CursorOrbit() {
           const b = projected[j];
           const midZ = (a.z + b.z) * 0.5;
           const depth = (midZ + 1.15) / 2.3;
-          // Edges strengthen as sphere forms
           const alpha =
-            (0.12 + depth * 0.45) * v * (0.2 + assemble * 0.85);
+            (0.18 + depth * 0.5) * v * (0.25 + assemble * 0.8);
           if (alpha < 0.03) continue;
+
+          const ta = surfaceT(a.local, flow);
+          const tb = surfaceT(b.local, flow);
+          const c0 = samplePalette(ta);
+          const c1 = samplePalette(tb);
+          // Pull toward ink so it stays refined, not neon
+          const tone = (c: RGB) =>
+            mix({ r: 20, g: 40, b: 45 }, c, 0.72);
+
+          const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+          grad.addColorStop(0, rgba(tone(c0), alpha * 0.75));
+          grad.addColorStop(1, rgba(tone(c1), alpha * 0.75));
+
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = rgba(depth > 0.55 ? INK : MID, alpha);
-          ctx.lineWidth = 0.7 + depth * 0.55;
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 0.55 + depth * 0.35; // thin
           ctx.stroke();
         }
       }
 
-      // Dots — monotone, size by depth (near = larger)
+      // —— Dots: a bit thicker than lines, still small ——
       for (const idx of order) {
         const p = projected[idx];
         const depth = (p.z + 1.15) / 2.3;
-        const alpha = (0.35 + depth * 0.6) * v;
+        const alpha = (0.4 + depth * 0.55) * v;
         if (alpha < 0.04) continue;
         const persp = FOV / Math.max(0.4, FOV - p.z);
-        const rad = Math.max(1.1, (1.15 + depth * 1.1) * persp * (0.85 + assemble * 0.2));
+        // slightly thicker than line (~1.8–2.6px feel)
+        const rad = Math.max(
+          1.35,
+          (1.55 + depth * 0.85) * persp * (0.9 + assemble * 0.15)
+        );
+
+        const c = samplePalette(surfaceT(p.local, flow));
+        const tone = mix({ r: 18, g: 36, b: 40 }, c, 0.78);
+
         ctx.beginPath();
         ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = rgba(depth > 0.5 ? INK : MID, alpha);
+        ctx.fillStyle = rgba(tone, alpha);
         ctx.fill();
       }
 
