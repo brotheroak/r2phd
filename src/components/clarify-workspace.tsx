@@ -116,11 +116,11 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       `상태: ${clarifyLocked ? "확정됨" : "아직 미확정"}`,
       clarifyLockedAt ? `시각: ${clarifyLockedAt}` : "",
       ``,
-      `## 원래 질문`,
+      `## 애매한 질문 (프롬프트)`,
       clarifyQuestion,
       ``,
-      `## 당신이 한 말`,
-      clarifyBrief.refinedQuestion,
+      `## 상황`,
+      clarifyBrief.summary,
       ``,
       `## 방향`,
       clarifyBrief.direction,
@@ -291,11 +291,14 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
 
       <div>
         <Label className="mb-1.5 block">애매한 질문</Label>
+        <p className="mb-2 text-xs text-muted-foreground">
+          평소에 AI한테 치는 프롬프트 그대로 넣으면 돼요.
+        </p>
         <Textarea
           rows={4}
           value={clarifyQuestion}
           onChange={(e) => setClarifyQuestion(e.target.value)}
-          placeholder="예: AI가 내 뜻을 못 읽고 멋대로 고쳤어요"
+          placeholder="예: 화면 좀 고쳐 줘"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={loadSample}>
@@ -331,22 +334,12 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       {clarifyBrief ? (
         <>
           <div className="rounded-xl border border-violet-300 bg-violet-50 px-5 py-4 dark:border-violet-500/40 dark:bg-violet-500/10">
-            <div>
-              <p className="text-[11px] font-semibold tracking-wide text-violet-700/80 dark:text-violet-200/70">
-                지금 상황
-              </p>
-              <p className="mt-1 text-sm font-medium leading-relaxed">
-                {clarifyBrief.summary}
-              </p>
-            </div>
-            <div className="mt-3 border-t border-violet-200/80 pt-3 dark:border-violet-500/30">
-              <p className="text-[11px] font-semibold tracking-wide text-violet-700/80 dark:text-violet-200/70">
-                당신이 한 말
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/85">
-                {clarifyBrief.refinedQuestion}
-              </p>
-            </div>
+            <p className="text-[11px] font-semibold tracking-wide text-violet-700/80 dark:text-violet-200/70">
+              상황
+            </p>
+            <p className="mt-1.5 text-sm font-medium leading-relaxed">
+              {clarifyBrief.summary}
+            </p>
           </div>
 
           <AxisCardGrid

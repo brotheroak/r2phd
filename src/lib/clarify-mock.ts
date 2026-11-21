@@ -2,8 +2,8 @@ import type { ClarifyBrief, ClarifyDomain } from "./clarify";
 
 /**
  * Demo briefs.
- * summary = 지금 상황 only (no UX instructions)
- * refinedQuestion = 당신이 한 말 (no AI prompts)
+ * summary = 상황 (what is going wrong) — shown under the prompt
+ * refinedQuestion = internal polished line — not shown as a second prompt
  */
 export function mockClarifyBrief(
   question: string,
