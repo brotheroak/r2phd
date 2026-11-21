@@ -169,42 +169,42 @@
     background: #f3f7f9;
     color: var(--foreground);
   }
-  /* Remap design tokens so shadcn + Workspace stay readable in dark console */
+  /* Dark console: muted teal (not neon), ink stays dark for inverse panels */
   .console-surface.console-dark {
-    --background: #111318;
-    --foreground: #f4f4f5;
-    --card: #16181d;
-    --card-foreground: #f4f4f5;
-    --popover: #16181d;
-    --popover-foreground: #f4f4f5;
-    --primary: #2dd4bf;
-    --primary-foreground: #042f2e;
-    --secondary: #1e242b;
-    --secondary-foreground: #e4e4e7;
-    --muted: #1c2026;
-    --muted-foreground: #a8b0b8;
-    --accent: #134e4a;
-    --accent-foreground: #99f6e4;
-    --destructive: #f87171;
-    --border: #2f363f;
-    --input: #2f363f;
-    --ring: #2dd4bf;
-    --ink: #fafafa;
-    --mist: #1a1f24;
-    --signal: #fbbf24;
-    --ok: #4ade80;
-    --sky: #38bdf8;
-    --amber: #fbbf24;
-    --lilac: #94a3b8;
-    --sidebar: #0b0d10;
-    --sidebar-foreground: #f4f4f5;
-    --sidebar-primary: #2dd4bf;
-    --sidebar-primary-foreground: #042f2e;
-    --sidebar-accent: #1e242b;
-    --sidebar-accent-foreground: #e4e4e7;
-    --sidebar-border: #2f363f;
-    --sidebar-ring: #2dd4bf;
-    background: #0b0d10;
+    --background: #12151a;
+    --foreground: #e8eaed;
+    --card: #1a1e24;
+    --card-foreground: #e8eaed;
+    --popover: #1a1e24;
+    --popover-foreground: #e8eaed;
+    --primary: #4a7c76;
+    --primary-foreground: #f2faf8;
+    --secondary: #22272e;
+    --secondary-foreground: #d5d9de;
+    --muted: #22272e;
+    --muted-foreground: #9aa3ad;
+    --accent: #243532;
+    --accent-foreground: #c5ddd8;
+    --destructive: #e07070;
+    --border: #2c333c;
+    --input: #2c333c;
+    --ring: #4a7c76;
+    --ink: #0d2c30;
+    --mist: #1c2228;
+    --signal: #d4a017;
+    --ok: #5f9e6e;
+    --sky: #5b8fad;
+    --amber: #d4a017;
+    --lilac: #7f90a3;
+    --sidebar: #0f1216;
+    --sidebar-foreground: #e8eaed;
+    --sidebar-primary: #4a7c76;
+    --sidebar-primary-foreground: #f2faf8;
+    --sidebar-accent: #22272e;
+    --sidebar-accent-foreground: #d5d9de;
+    --sidebar-border: #2c333c;
+    --sidebar-ring: #4a7c76;
+    background: #12151a;
     color: var(--foreground);
   }
   .console-surface.console-dark .tint-teal,

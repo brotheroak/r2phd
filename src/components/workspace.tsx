@@ -362,36 +362,38 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
           </div>
 
           <aside className="space-y-6">
-            <div className="rounded-xl border border-border/70 bg-ink text-primary-foreground p-6">
-              <p className="text-xs tracking-wide text-white/60">
+            <div className="rounded-xl border border-border bg-muted p-5">
+              <p className="text-xs tracking-wide text-muted-foreground">
                 이런 일이 자주 있습니다
               </p>
-              <h3 className="mt-2 font-display text-2xl text-white">
+              <h3 className="mt-2 text-lg font-semibold text-foreground">
                 쿼리는 됐는데 답이 이상할 때
               </h3>
-              <dl className="mt-5 space-y-4 text-sm text-white/85">
+              <dl className="mt-4 space-y-3 text-sm text-foreground/90">
                 <div>
-                  <dt className="text-white/50">누구</dt>
-                  <dd>{SAMPLE_PROJECT.drama.who}</dd>
+                  <dt className="text-xs text-muted-foreground">누구</dt>
+                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.who}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/50">언제</dt>
-                  <dd>{SAMPLE_PROJECT.drama.when}</dd>
+                  <dt className="text-xs text-muted-foreground">언제</dt>
+                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.when}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/50">왜 답답한가</dt>
-                  <dd>{SAMPLE_PROJECT.drama.pain}</dd>
+                  <dt className="text-xs text-muted-foreground">왜 답답한가</dt>
+                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.pain}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/50">얼마나 걸리냐면</dt>
-                  <dd>{SAMPLE_PROJECT.drama.cost}</dd>
+                  <dt className="text-xs text-muted-foreground">얼마나 걸리냐면</dt>
+                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.cost}</dd>
                 </div>
               </dl>
             </div>
 
-            <div className="rounded-xl border border-border/70 bg-card/70 p-5">
+            <div className="rounded-xl border border-border bg-card p-5">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h3 className="font-display text-xl">겉보기엔 정상인 SQL</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  겉보기엔 정상인 SQL
+                </h3>
                 <Button
                   type="button"
                   size="sm"
@@ -405,7 +407,7 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
                 AI가 자주 짜 주는 쿼리입니다. 실행은 되지만 기준이 다릅니다.
               </p>
               {showNaive ? (
-                <pre className="overflow-x-auto rounded-lg bg-ink p-4 font-mono text-[11px] leading-relaxed text-emerald-100/90">
+                <pre className="overflow-x-auto rounded-lg border border-border bg-muted p-4 font-mono text-[11px] leading-relaxed text-foreground">
                   {SAMPLE_PROJECT.naiveSql}
                 </pre>
               ) : null}
@@ -413,7 +415,7 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
                 {SAMPLE_PROJECT.knownTraps.map((t) => (
                   <li
                     key={t.id}
-                    className="flex gap-2 text-sm text-foreground/90"
+                    className="flex gap-2 text-sm text-foreground"
                   >
                     <ShieldAlert className="mt-0.5 size-4 shrink-0 text-signal" />
                     <span>
@@ -610,9 +612,11 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-border/70 bg-ink p-4">
-              <h4 className="mb-2 text-sm text-white/70">만든 SQL</h4>
-              <pre className="max-h-[420px] overflow-auto font-mono text-[11px] leading-relaxed text-emerald-100/90">
+            <div className="rounded-xl border border-border bg-muted p-4">
+              <h4 className="mb-2 text-sm font-medium text-muted-foreground">
+                만든 SQL
+              </h4>
+              <pre className="max-h-[420px] overflow-auto font-mono text-[11px] leading-relaxed text-foreground">
                 {spec.sql}
               </pre>
             </div>
@@ -722,7 +726,7 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
                 </div>
                 <p className="mt-2 text-sm">{f.detail}</p>
                 {f.evidenceRows?.length ? (
-                  <pre className="mt-3 overflow-x-auto rounded-md bg-ink p-3 font-mono text-[11px] text-emerald-100/90">
+                  <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-muted p-3 font-mono text-[11px] text-foreground">
                     {f.evidenceRows.join("\n")}
                   </pre>
                 ) : null}
