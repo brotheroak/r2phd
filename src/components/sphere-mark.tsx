@@ -2,11 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { HumanAiMark } from "@/components/human-ai-mark";
 import {
   FOV,
-  assembleAmount,
   buildSphereField,
-  lerp,
   mix,
   rgba,
   rotXYZ,
@@ -17,18 +16,16 @@ import {
 
 type Size = "nav" | "hero" | "footer";
 
-const PRESETS: Record<
-  Size,
-  { px: number; n: number; cycle: number; scale: number }
-> = {
-  nav: { px: 34, n: 56, cycle: 4200, scale: 0.38 },
-  hero: { px: 88, n: 84, cycle: 4000, scale: 0.4 },
-  footer: { px: 28, n: 48, cycle: 4400, scale: 0.38 },
+const PRESETS: Record<Size, { px: number; n: number; scale: number }> = {
+  nav: { px: 40, n: 64, scale: 0.4 },
+  hero: { px: 112, n: 96, scale: 0.42 },
+  footer: { px: 32, n: 52, scale: 0.4 },
 };
 
 /**
- * Brand mark: sparse dots + hairlines assemble into a 3D sphere,
- * shatter, and reassemble — palette flows only on the wire itself.
+ * Brand mark only — stable rotating sphere wireframe.
+ * No shatter. Center holds the human↔AI communication discs.
+ * (Cursor assemble/shatter lives in CursorOrbit, separately.)
  */
 export function SphereMark({
   size = "nav",
@@ -46,7 +43,7 @@ export function SphereMark({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const { sphere, scatter, links } = buildSphereField(preset.n, 4);
+    const { sphere, links } = buildSphereField(preset.n, 4);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const start = performance.now();
     let raf: number | null = null;
@@ -69,27 +66,18 @@ export function SphereMark({
       const cx = px / 2;
       const cy = px / 2;
       const scale = px * preset.scale;
-
-      const u = reduced ? 0.4 : ((now - start) % preset.cycle) / preset.cycle;
-      const assemble = assembleAmount(u);
-      const t = now * 0.001;
-      const rotY = t * 0.9;
-      const rotX = 0.5 + Math.sin(t * 0.42) * 0.32;
-      const rotZ = Math.cos(t * 0.3) * 0.16;
-      const flow = t * 0.12;
+      const t = reduced ? 0 : (now - start) * 0.001;
+      const rotY = t * 0.7;
+      const rotX = 0.55 + Math.sin(t * 0.35) * 0.2;
+      const rotZ = Math.cos(t * 0.25) * 0.1;
+      const flow = t * 0.1;
 
       type Proj = { x: number; y: number; z: number; i: number; local: Vec3 };
       const projected: Proj[] = new Array(preset.n);
 
       for (let i = 0; i < preset.n; i++) {
         const s = sphere[i];
-        const sc = scatter[i];
-        const local = {
-          x: lerp(sc.x, s.x, assemble),
-          y: lerp(sc.y, s.y, assemble),
-          z: lerp(sc.z, s.z, assemble),
-        };
-        const p = rotXYZ(local, rotX, rotY, rotZ);
+        const p = rotXYZ(s, rotX, rotY, rotZ);
         const persp = FOV / Math.max(0.4, FOV - p.z);
         projected[i] = {
           x: cx + p.x * scale * persp,
@@ -112,20 +100,19 @@ export function SphereMark({
           const b = projected[j];
           const midZ = (a.z + b.z) * 0.5;
           const depth = (midZ + 1.15) / 2.3;
-          const alpha = (0.22 + depth * 0.55) * (0.3 + assemble * 0.75);
-          if (alpha < 0.04) continue;
+          const alpha = 0.2 + depth * 0.55;
           const c0 = samplePalette(surfaceT(a.local, flow));
           const c1 = samplePalette(surfaceT(b.local, flow));
           const tone = (c: { r: number; g: number; b: number }) =>
-            mix({ r: 20, g: 40, b: 45 }, c, 0.72);
+            mix({ r: 20, g: 40, b: 45 }, c, 0.7);
           const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-          grad.addColorStop(0, rgba(tone(c0), alpha * 0.8));
-          grad.addColorStop(1, rgba(tone(c1), alpha * 0.8));
+          grad.addColorStop(0, rgba(tone(c0), alpha * 0.75));
+          grad.addColorStop(1, rgba(tone(c1), alpha * 0.75));
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = size === "nav" || size === "footer" ? 0.5 : 0.55;
+          ctx.lineWidth = size === "hero" ? 0.55 : 0.45;
           ctx.stroke();
         }
       }
@@ -133,17 +120,16 @@ export function SphereMark({
       for (const idx of order) {
         const p = projected[idx];
         const depth = (p.z + 1.15) / 2.3;
-        const alpha = 0.5 + depth * 0.45;
         const persp = FOV / Math.max(0.4, FOV - p.z);
         const rad = Math.max(
-          size === "hero" ? 0.9 : 0.7,
-          (size === "hero" ? 0.95 : 0.75) * persp * (0.85 + depth * 0.2)
+          size === "hero" ? 0.85 : 0.65,
+          (size === "hero" ? 0.9 : 0.7) * persp * (0.85 + depth * 0.15)
         );
         const c = samplePalette(surfaceT(p.local, flow));
-        const tone = mix({ r: 18, g: 36, b: 40 }, c, 0.78);
+        const tone = mix({ r: 18, g: 36, b: 40 }, c, 0.75);
         ctx.beginPath();
         ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = rgba(tone, alpha);
+        ctx.fillStyle = rgba(tone, 0.55 + depth * 0.4);
         ctx.fill();
       }
 
@@ -159,14 +145,18 @@ export function SphereMark({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center",
+        "relative inline-flex shrink-0 items-center justify-center",
         className
       )}
       style={{ width: preset.px, height: preset.px }}
-      aria-label="IntentSpec"
-      title="뜻이 모이는 구"
+      aria-label="IntentSpec — 뜻이 모이는 소통"
+      title="뜻이 모이는 소통"
     >
-      <canvas ref={canvasRef} className="block" aria-hidden />
+      <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden />
+      {/* Center glyph only — small so it never reads as a face */}
+      <span className="pointer-events-none relative z-[1] flex items-center justify-center rounded-full bg-white/55 px-1 py-0.5 backdrop-blur-[1px]">
+        <HumanAiMark size="compact" quiet />
+      </span>
     </span>
   );
 }

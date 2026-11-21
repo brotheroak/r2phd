@@ -15,8 +15,9 @@ import {
 } from "@/lib/sphere-field";
 
 /**
- * Cursor-locked highlighter: thin dots + lines assemble into a 3D sphere.
- * Palette flows only on the wire — no ambient cloud.
+ * CURSOR HIGHLIGHTER (separate from SphereMark brand).
+ * On hover: thin dots + lines assemble → shatter → reassemble.
+ * Brand mark rotation lives in SphereMark and never shatters.
  */
 
 const N = 110;

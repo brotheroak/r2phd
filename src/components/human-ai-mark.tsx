@@ -1,30 +1,35 @@
 import { cn } from "@/lib/utils";
 
 type Props = {
-  size?: "nav" | "hero";
+  size?: "nav" | "hero" | "compact";
   className?: string;
+  /** Hide hover title when nested inside SphereMark */
+  quiet?: boolean;
 };
 
 /**
  * White disc ↔ black disc — bidirectional bridge pulses.
- * Circles: (36,40) r=26 and (164,40) r=26
- * Bridge: x=62 → x=138
+ * compact: tiny center glyph for SphereMark (not face-sized).
  */
-export function HumanAiMark({ size = "nav", className }: Props) {
+export function HumanAiMark({ size = "nav", className, quiet = false }: Props) {
   const hero = size === "hero";
-  const bridgeLen = 76;
-  const dash = hero ? 12 : 8;
-  const gap = bridgeLen - dash + 10;
+  const compact = size === "compact";
+  const dash = hero ? 12 : compact ? 7 : 8;
+  const gap = compact ? 48 : hero ? 74 : 78;
 
   return (
     <span
       className={cn("inline-flex items-center justify-center", className)}
-      aria-label="사람과 AI의 소통"
-      title="사람과 AI의 소통"
+      aria-label={quiet ? undefined : "사람과 AI의 소통"}
+      title={quiet ? undefined : "사람과 AI의 소통"}
     >
       <svg
         viewBox="0 0 200 80"
-        className={cn(hero ? "h-16 w-48 sm:h-[4.5rem] sm:w-56" : "h-6 w-14")}
+        className={cn(
+          hero && "h-16 w-48 sm:h-[4.5rem] sm:w-56",
+          size === "nav" && "h-6 w-14",
+          compact && "h-5 w-11"
+        )}
         fill="none"
         aria-hidden
       >
@@ -34,28 +39,26 @@ export function HumanAiMark({ size = "nav", className }: Props) {
           x2="138"
           y2="40"
           className="stroke-ink/20"
-          strokeWidth={hero ? 1.5 : 1.25}
+          strokeWidth={hero ? 1.5 : 1.1}
           strokeLinecap="round"
         />
-        {/* Human → AI */}
         <line
           x1="62"
           y1="40"
           x2="138"
           y2="40"
           className="human-ai-bridge-pulse-fwd stroke-primary"
-          strokeWidth={hero ? 2.25 : 1.75}
+          strokeWidth={hero ? 2.25 : compact ? 1.5 : 1.75}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${gap}`}
         />
-        {/* AI → Human */}
         <line
           x1="62"
           y1="40"
           x2="138"
           y2="40"
           className="human-ai-bridge-pulse-rev stroke-ink/70"
-          strokeWidth={hero ? 2 : 1.5}
+          strokeWidth={hero ? 2 : compact ? 1.25 : 1.5}
           strokeLinecap="round"
           strokeDasharray={`${dash * 0.85} ${gap}`}
         />
@@ -63,11 +66,16 @@ export function HumanAiMark({ size = "nav", className }: Props) {
         <circle
           cx="36"
           cy="40"
-          r="26"
+          r={compact ? 18 : 26}
           className="fill-white stroke-ink/25"
           strokeWidth="1.25"
         />
-        <circle cx="164" cy="40" r="26" className="fill-ink" />
+        <circle
+          cx="164"
+          cy="40"
+          r={compact ? 18 : 26}
+          className="fill-ink"
+        />
       </svg>
     </span>
   );
