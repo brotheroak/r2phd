@@ -21,6 +21,7 @@ import {
   Table2,
 } from "lucide-react";
 import { ConsoleAgentChat } from "@/components/console-agent-chat";
+import { SphereMark } from "@/components/sphere-mark";
 import { StatusPill } from "@/components/status-pill";
 import {
   ConsoleThemeProvider,
@@ -163,9 +164,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             <span className="hidden text-xs font-medium sm:inline">메뉴</span>
           </button>
           <Link href="/" className="flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-mist">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
-              IS
-            </span>
+            <SphereMark size="nav" />
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold text-foreground">
                 IntentSpec
