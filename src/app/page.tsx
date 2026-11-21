@@ -53,7 +53,7 @@ export default function HomePage() {
             <HumanAiMark size="hero" />
           </div>
 
-          <h1 className="rise-in-delay-1 mt-7 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
+          <h1 className="rise-in-delay-1 mt-8 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
             결국 문제는 소통입니다.
             <br />
             뜻이 맞으면 일이 풀립니다
@@ -188,10 +188,7 @@ export default function HomePage() {
       <footer className="border-t border-border/70 bg-white/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:px-8">
           <p className="font-display text-xl text-ink">IntentSpec</p>
-          <p className="inline-flex items-center gap-2">
-            <HumanAiMark />
-            <span>· 의도 잠금 · .EXE-THON</span>
-          </p>
+          <p>.EXE-THON</p>
         </div>
       </footer>
     </main>

@@ -6,78 +6,55 @@ type Props = {
 };
 
 /**
- * Brand signal for human↔AI communication.
- * Typographic + geometric — not a clipart pill.
+ * Geometric human↔AI signal only — white disc, black disc, pulse between.
+ * No “사람 AI” label (kept out of chrome on purpose).
  */
 export function HumanAiMark({ size = "nav", className }: Props) {
   const hero = size === "hero";
-
-  if (hero) {
-    return (
-      <div
-        className={cn(
-          "inline-flex flex-col items-center gap-4 text-ink",
-          className,
-        )}
-      >
-        <div
-          className="relative flex h-14 w-[min(72vw,420px)] items-center justify-center"
-          aria-hidden
-        >
-          {/* Left disc — human */}
-          <span className="absolute left-[12%] top-1/2 size-11 -translate-y-1/2 rounded-full border border-ink/25 bg-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
-          {/* Right disc — AI */}
-          <span className="absolute right-[12%] top-1/2 size-11 -translate-y-1/2 rounded-full bg-ink" />
-          {/* Bridging arc */}
-          <svg
-            className="absolute inset-x-[18%] top-1/2 h-10 -translate-y-1/2 overflow-visible"
-            viewBox="0 0 240 40"
-            fill="none"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M8 20 C 70 2, 170 2, 232 20"
-              className="human-ai-arc stroke-ink/25"
-              strokeWidth="1.25"
-            />
-            <path
-              d="M8 20 C 70 2, 170 2, 232 20"
-              className="human-ai-arc-draw stroke-primary"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-            />
-          </svg>
-          {/* Center lock glyph */}
-          <span className="relative z-[1] flex size-9 items-center justify-center rounded-full border border-primary/30 bg-white font-display text-lg text-ink">
-            ⟷
-          </span>
-        </div>
-        <p className="font-display text-xl tracking-tight text-ink sm:text-2xl">
-          사람 <span className="text-primary">⟷</span> AI
-        </p>
-        <p className="text-sm tracking-[0.18em] text-muted-foreground uppercase">
-          뜻이 맞는 소통
-        </p>
-      </div>
-    );
-  }
+  const disc = hero ? "size-10 sm:size-12" : "size-3.5";
+  const bridge = hero ? "h-px w-24 sm:w-28" : "h-px w-8";
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-ink",
+        "inline-flex items-center justify-center",
+        hero ? "gap-0" : "gap-0",
         className,
       )}
-      title="사람 ⟷ AI · 뜻이 맞는 소통"
+      aria-label="사람과 AI의 소통"
+      title="사람과 AI의 소통"
     >
-      <span className="relative inline-flex h-5 w-11 items-center" aria-hidden>
-        <span className="absolute left-0 size-3.5 rounded-full border border-ink/30 bg-white" />
-        <span className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-ink/20" />
-        <span className="human-ai-dot absolute left-3 top-1/2 size-1 -translate-y-1/2 rounded-full bg-primary" />
-        <span className="absolute right-0 size-3.5 rounded-full bg-ink" />
-      </span>
-      <span className="font-display text-[15px] leading-none tracking-tight">
-        사람 <span className="text-primary">⟷</span> AI
+      <span
+        className={cn(
+          "relative inline-flex items-center",
+          hero ? "h-12 w-[9.5rem] sm:h-14 sm:w-44" : "h-5 w-11",
+        )}
+        aria-hidden
+      >
+        <span
+          className={cn(
+            "absolute left-0 top-1/2 -translate-y-1/2 rounded-full border border-ink/25 bg-white",
+            disc,
+          )}
+        />
+        <span
+          className={cn(
+            "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-ink/15",
+            bridge,
+          )}
+        />
+        <span
+          className={cn(
+            "human-ai-dot absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-primary",
+            hero ? "size-2" : "size-1",
+          )}
+        />
+        <span
+          className={cn(
+            "absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink",
+            disc,
+          )}
+        />
       </span>
     </span>
   );

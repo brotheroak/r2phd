@@ -246,53 +246,28 @@
     animation: pipe-slide 3.2s ease-in-out infinite;
   }
   .human-ai-dot {
-    animation: human-ai-dot 2.2s ease-in-out infinite;
+    left: 18%;
+    animation: human-ai-dot 2s ease-in-out infinite;
   }
   @keyframes human-ai-dot {
     0% {
-      left: 0.55rem;
+      left: 18%;
       opacity: 0.35;
     }
     50% {
-      left: 1.55rem;
+      left: 50%;
       opacity: 1;
     }
     100% {
-      left: 2.35rem;
-      opacity: 0.25;
-    }
-  }
-  .human-ai-arc-draw {
-    stroke-dasharray: 280;
-    stroke-dashoffset: 280;
-    animation: human-ai-arc 2.8s ease-in-out infinite;
-  }
-  @keyframes human-ai-arc {
-    0% {
-      stroke-dashoffset: 280;
-      opacity: 0.2;
-    }
-    45% {
-      stroke-dashoffset: 0;
-      opacity: 1;
-    }
-    100% {
-      stroke-dashoffset: -40;
-      opacity: 0.15;
+      left: 78%;
+      opacity: 0.3;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .human-ai-dot,
-    .human-ai-arc-draw {
-      animation: none;
-    }
     .human-ai-dot {
-      left: 1.4rem;
+      animation: none;
+      left: 50%;
       opacity: 0.9;
-    }
-    .human-ai-arc-draw {
-      stroke-dashoffset: 0;
-      opacity: 0.85;
     }
   }
 
