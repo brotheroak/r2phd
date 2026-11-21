@@ -23,7 +23,7 @@ type Size = "nav" | "hero" | "footer";
  */
 const SPHERE_SCALE = 0.42;
 /** Communication glyph width as a fraction of the visual sphere diameter */
-const GLYPH_OF_SPHERE = 0.36;
+const GLYPH_OF_SPHERE = 0.58;
 
 const PRESETS: Record<Size, { px: number; n: number }> = {
   nav: { px: 40, n: 64 },
