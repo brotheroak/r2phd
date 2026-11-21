@@ -145,7 +145,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
       )}
     >
       {/* Top chrome — above drawers so toggles stay clickable */}
-      <header className="relative z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3">
+      <header className="relative z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-4 sm:px-5">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"

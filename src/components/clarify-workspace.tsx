@@ -18,6 +18,7 @@ import {
   type ClarifyDomain,
 } from "@/lib/clarify";
 import { useConsoleStore } from "@/lib/console-store";
+import { AxisCardGrid, AxisFlowPills } from "@/components/axis-card-grid";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -227,10 +228,10 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div
         className={cn(
-          "flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-sm",
+          "flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm",
           clarifyLocked
             ? "border-ok/35 bg-ok/5"
             : "border-violet-300/60 bg-violet-50 dark:border-violet-500/40 dark:bg-violet-500/10",
@@ -331,105 +332,82 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
 
       {clarifyBrief ? (
         <>
-          <div className="rounded-xl border border-violet-300 bg-violet-50 p-4 dark:border-violet-500/40 dark:bg-violet-500/10">
-            <p className="text-sm font-medium">{clarifyBrief.summary}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
+          <div className="rounded-xl border border-violet-300 bg-violet-50 px-5 py-4 dark:border-violet-500/40 dark:bg-violet-500/10">
+            <p className="text-sm font-medium leading-relaxed">
+              {clarifyBrief.summary}
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
               구체화 초안: {clarifyBrief.refinedQuestion}
             </p>
           </div>
 
-          {/* Color axis map */}
-          <div className="grid gap-2 sm:grid-cols-2">
-            {CLARIFY_AXES.map((axis) => {
+          <AxisCardGrid
+            cards={CLARIFY_AXES.map((axis) => {
               const related = ambiguities
                 .map((a, i) => ({ a, i }))
                 .filter(({ a }) => a.axis === axis.id);
+              const first = related[0];
               const done =
                 related.length > 0 &&
                 related.every(({ a }) => hasChoice(clarifyDecisions, a.id));
-              const first = related[0];
-              const active = related.some(({ i }) => i === focusIdx);
               const picked = first
                 ? chosenList(clarifyDecisions, first.a.id)
                 : [];
-              return (
-                <button
-                  key={axis.id}
-                  type="button"
-                  disabled={!first}
-                  onClick={() => first && setFocusIdx(first.i)}
-                  className={cn(
-                    "rounded-xl border-2 p-3 text-left",
-                    axis.soft,
-                    axis.softDark,
-                    !first && "opacity-40",
-                  )}
-                  style={
-                    active ? { boxShadow: `0 0 0 2px ${axis.swatch}` } : undefined
-                  }
-                >
-                  <div className="flex justify-between">
-                    <span className="text-lg">{axis.emoji}</span>
-                    <span className="text-[11px] font-semibold">
-                      {done ? "✓ 골랐음" : "고르기"}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm font-bold">{axis.label}</p>
-                  <p className="mt-0.5 text-xs opacity-80">{axis.question}</p>
-                  {picked.length ? (
-                    <p className="mt-2 rounded-md bg-white/50 px-2 py-1 text-[11px] font-medium dark:bg-black/20">
-                      → {picked.join(" · ")}
-                    </p>
-                  ) : null}
-                </button>
-              );
+              return {
+                id: axis.id,
+                emoji: axis.emoji,
+                label: axis.label,
+                question: axis.question,
+                swatch: axis.swatch,
+                soft: axis.soft,
+                softDark: axis.softDark,
+                done,
+                active: related.some(({ i }) => i === focusIdx),
+                disabled: !first,
+                picked: picked.length ? picked.join(" · ") : undefined,
+                onClick: () => first && setFocusIdx(first.i),
+              };
             })}
-          </div>
+          />
 
-          {/* Flow diagram */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-medium">
-            {[
+          <AxisFlowPills
+            steps={[
               { t: "질문", c: "bg-zinc-200 text-zinc-800" },
               { t: "목적", c: "bg-violet-400 text-violet-950" },
               { t: "제약", c: "bg-amber-400 text-amber-950" },
               { t: "기준", c: "bg-sky-400 text-sky-950" },
               { t: "다음", c: "bg-teal-500 text-white" },
               { t: "잠금", c: "bg-rose-500 text-white" },
-            ].map((n, i, arr) => (
-              <span key={n.t} className="inline-flex items-center gap-1.5">
-                <span className={cn("rounded-full px-2.5 py-1", n.c)}>
-                  {n.t}
-                </span>
-                {i < arr.length - 1 ? (
-                  <span className="text-muted-foreground">→</span>
-                ) : null}
-              </span>
-            ))}
-          </div>
+            ]}
+          />
 
           {focus ? (
             <div
               className={cn(
-                "rounded-2xl border-2 p-5",
+                "rounded-2xl border-2 px-5 py-5 sm:px-6 sm:py-6",
                 CLARIFY_AXIS_BY_ID[focus.axis].soft,
                 CLARIFY_AXIS_BY_ID[focus.axis].softDark,
               )}
             >
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl leading-none">
                   {CLARIFY_AXIS_BY_ID[focus.axis].emoji}
                 </span>
-                <span className="text-xs opacity-70">
+                <span className="text-xs font-medium opacity-70">
                   {focusIdx + 1}/{ambiguities.length}
                 </span>
               </div>
-              <h3 className="mt-2 text-xl font-bold">{focus.title}</h3>
-              <p className="mt-1 text-sm opacity-90">{focus.whyItMatters}</p>
+              <h3 className="mt-3 text-xl font-bold leading-snug">
+                {focus.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed opacity-90">
+                {focus.whyItMatters}
+              </p>
               <p className="mt-2 text-xs font-medium opacity-70">
                 복수 선택 가능 · {focusChosen.length}개 고름
               </p>
 
-              <div className="mt-4 space-y-2">
+              <div className="mt-5 space-y-2.5">
                 {focus.options.map((opt, oi) => {
                   const selected = focusChosen.includes(opt);
                   const letter = String.fromCharCode(65 + oi);
@@ -441,7 +419,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                       data-testid="clarify-option"
                       onClick={() => toggle(focus.id, opt)}
                       className={cn(
-                        "flex w-full items-start gap-3 rounded-xl border-2 bg-white/80 p-3 text-left dark:bg-black/30",
+                        "flex w-full items-center gap-3 rounded-xl border-2 bg-white/80 px-3.5 py-3 text-left dark:bg-black/30",
                         selected
                           ? "shadow-md"
                           : "border-black/10 dark:border-white/15",
@@ -465,7 +443,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                           letter
                         )}
                       </span>
-                      <span className="flex-1 text-sm font-semibold">
+                      <span className="min-w-0 flex-1 text-sm font-semibold leading-snug">
                         {opt}
                         {focus.recommended === opt ? (
                           <span className="mt-1 block text-[10px] font-medium text-violet-700 dark:text-violet-200">
@@ -475,7 +453,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                       </span>
                       <Circle
                         className={cn(
-                          "mt-1 size-4",
+                          "size-4 shrink-0",
                           selected ? "opacity-0" : "opacity-30",
                         )}
                       />
@@ -484,7 +462,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                 })}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Button
                   type="button"
                   onClick={goNextQuestion}
@@ -496,7 +474,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                     : "다음 질문"}
                 </Button>
                 {focusChosen.length > 0 ? (
-                  <span className="self-center text-xs opacity-70">
+                  <span className="text-xs leading-relaxed opacity-70">
                     {focusChosen.join(" · ")}
                   </span>
                 ) : null}

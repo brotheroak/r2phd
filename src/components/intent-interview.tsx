@@ -8,6 +8,7 @@ import {
   kindToAxis,
 } from "@/lib/intent-axes";
 import type { Ambiguity, ResearcherDecision } from "@/lib/types";
+import { AxisCardGrid, AxisFlowPills } from "@/components/axis-card-grid";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,70 +31,48 @@ export function IntentAxisMap({
 }: Pick<Props, "ambiguities" | "decisions" | "focusIdx" | "onFocus">) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="border-b border-border bg-mist/50 px-4 py-2.5">
+      <div className="border-b border-border bg-mist/50 px-5 py-3">
         <p className="text-sm font-semibold text-foreground">
           네 가지를 고르면 잠글 수 있어요
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
           색 칸을 누르면 해당 질문으로 이동합니다
         </p>
       </div>
-      <div className="grid gap-2 p-3 sm:grid-cols-2">
-        {INTENT_AXES.map((axis) => {
-          const related = ambiguities
-            .map((a, i) => ({ a, i }))
-            .filter(({ a }) => kindToAxis(a.kind) === axis.id);
-          const done =
-            related.length > 0 &&
-            related.every(({ a }) => decisions[a.id]?.chosenOption);
-          const active = related.some(({ i }) => i === focusIdx);
-          const first = related[0];
-          return (
-            <button
-              key={axis.id}
-              type="button"
-              disabled={!first}
-              onClick={() => first && onFocus(first.i)}
-              className={cn(
-                "rounded-xl border-2 p-3 text-left transition",
-                axis.soft,
-                axis.softDark,
-                active && "ring-2 ring-offset-2 ring-offset-background",
-                done && "opacity-95",
-                !first && "opacity-40",
-              )}
-              style={active ? { boxShadow: `0 0 0 2px ${axis.swatch}` } : undefined}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-lg leading-none">{axis.emoji}</span>
-                {done ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold">
-                    <CheckCircle2 className="size-3.5" /> 골랐음
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-medium opacity-70">
-                    고르기
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-sm font-bold">{axis.label}</p>
-              <p className="mt-1 text-xs leading-snug opacity-80">
-                {axis.question}
-              </p>
-              {related[0] && decisions[related[0].a.id]?.chosenOption ? (
-                <p className="mt-2 rounded-md bg-white/50 px-2 py-1 text-[11px] font-medium dark:bg-black/20">
-                  → {decisions[related[0].a.id].chosenOption}
-                </p>
-              ) : null}
-            </button>
-          );
-        })}
+      <div className="p-4 sm:p-5">
+        <AxisCardGrid
+          cards={INTENT_AXES.map((axis) => {
+            const related = ambiguities
+              .map((a, i) => ({ a, i }))
+              .filter(({ a }) => kindToAxis(a.kind) === axis.id);
+            const first = related[0];
+            const done =
+              related.length > 0 &&
+              related.every(({ a }) => decisions[a.id]?.chosenOption);
+            const picked = first
+              ? decisions[first.a.id]?.chosenOption
+              : undefined;
+            return {
+              id: axis.id,
+              emoji: axis.emoji,
+              label: axis.label,
+              question: axis.question,
+              swatch: axis.swatch,
+              soft: axis.soft,
+              softDark: axis.softDark,
+              done,
+              active: related.some(({ i }) => i === focusIdx),
+              disabled: !first,
+              picked,
+              onClick: () => first && onFocus(first.i),
+            };
+          })}
+        />
       </div>
 
-      {/* Simple flow diagram */}
-      <div className="border-t border-border px-3 py-3">
-        <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-medium">
-          {[
+      <div className="border-t border-border px-4 py-3.5 sm:px-5">
+        <AxisFlowPills
+          steps={[
             { t: "질문", c: "bg-zinc-200 text-zinc-800" },
             { t: "기간", c: "bg-amber-400 text-amber-950" },
             { t: "식별", c: "bg-sky-400 text-sky-950" },
@@ -101,15 +80,8 @@ export function IntentAxisMap({
             { t: "분모", c: "bg-emerald-500 text-white" },
             { t: "잠금", c: "bg-violet-500 text-white" },
             { t: "반출", c: "bg-rose-500 text-white" },
-          ].map((n, i, arr) => (
-            <span key={n.t} className="inline-flex items-center gap-1.5">
-              <span className={cn("rounded-full px-2.5 py-1", n.c)}>{n.t}</span>
-              {i < arr.length - 1 ? (
-                <span className="text-muted-foreground">→</span>
-              ) : null}
-            </span>
-          ))}
-        </div>
+          ]}
+        />
       </div>
     </div>
   );
@@ -210,7 +182,7 @@ export function IntentChoicePanel({
                 type="button"
                 onClick={() => onChoose(focus.id, opt)}
                 className={cn(
-                  "flex items-start gap-3 rounded-xl border-2 bg-white/80 p-3 text-left transition dark:bg-black/30",
+                  "flex items-center gap-3 rounded-xl border-2 bg-white/80 px-3.5 py-3 text-left transition dark:bg-black/30",
                   selected
                     ? "border-current shadow-md"
                     : "border-black/10 hover:border-black/25 dark:border-white/15",
@@ -219,7 +191,7 @@ export function IntentChoicePanel({
               >
                 <span
                   className={cn(
-                    "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
+                    "flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
                     selected ? "text-white" : "bg-black/5 dark:bg-white/10",
                   )}
                   style={
@@ -239,7 +211,7 @@ export function IntentChoicePanel({
                   ) : null}
                 </span>
                 {!selected ? (
-                  <Circle className="mt-1 size-4 shrink-0 opacity-30" />
+                  <Circle className="size-4 shrink-0 opacity-30" />
                 ) : null}
               </button>
             );

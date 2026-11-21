@@ -93,13 +93,13 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Cases — centered section heads, balanced card grid */}
+      {/* Cases — same gutters as hero; category heads left-aligned with cards */}
       <section
         id="cases"
         className="scroll-mt-20 border-t border-border/60 bg-white/40"
       >
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="max-w-2xl">
             <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
               같은 소통, 여러 케이스
             </h2>
@@ -109,27 +109,27 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 space-y-16">
+          <div className="mt-14 space-y-14">
             {WORK_CASE_CATEGORIES.map((cat) => {
               const cases = casesByCategory(cat.id);
               return (
                 <div key={cat.id}>
-                  <div className="mb-6 text-center sm:text-left">
+                  <div className="mb-5">
                     <h3 className="font-display text-2xl leading-snug text-ink sm:text-[1.75rem]">
                       {cat.label}
                     </h3>
-                    <p className="mt-2 text-base text-muted-foreground">
+                    <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                       {cat.blurb}
                     </p>
                   </div>
-                  <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
+                  <div className="grid gap-5 sm:grid-cols-2 sm:gap-5">
                     {cases.map((s) => {
                       const n = WORK_CASES.findIndex((c) => c.id === s.id) + 1;
                       return (
                         <Link
                           key={s.id}
                           href={s.href}
-                          className="group flex h-full flex-col rounded-xl border border-border bg-card p-6 transition hover:border-primary/35"
+                          className="group flex h-full flex-col rounded-xl border border-border bg-card p-5 sm:p-6 transition hover:border-primary/35"
                           style={{ borderColor: `${s.swatch}40` }}
                         >
                           <div className="flex items-center justify-between gap-3">
@@ -143,20 +143,20 @@ export default function HomePage() {
                               {String(n).padStart(2, "0")}
                             </span>
                           </div>
-                          <h4 className="mt-5 text-xl font-semibold leading-snug text-ink">
+                          <h4 className="mt-4 text-xl font-semibold leading-snug text-ink">
                             {s.label}
                           </h4>
                           <p className="mt-2 text-base leading-relaxed text-muted-foreground">
                             {s.blurb}
                           </p>
-                          <p className="mt-5 rounded-lg border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+                          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
                             간극 · {s.gap}
                           </p>
                           <p className="mt-3 flex-1 rounded-lg bg-mist/70 px-4 py-3 text-sm leading-relaxed text-foreground">
                             <span className="font-semibold">예 · </span>
                             {s.example}
                           </p>
-                          <span className="mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-primary group-hover:gap-2">
+                          <span className="mt-5 inline-flex items-center gap-1.5 text-base font-semibold text-primary group-hover:gap-2">
                             이 케이스 열기
                             <ArrowRight className="size-4" />
                           </span>

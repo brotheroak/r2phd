@@ -5,7 +5,7 @@
 export const INTENT_AXES = [
   {
     id: "time",
-    label: "기간 기준",
+    label: "기간",
     short: "기간",
     emoji: "📅",
     question: "‘최근’을 어떤 날짜로 자를까?",
@@ -19,7 +19,7 @@ export const INTENT_AXES = [
   },
   {
     id: "identity",
-    label: "같은 걸로 묶기",
+    label: "식별",
     short: "식별",
     emoji: "🔑",
     question: "무엇을 같은 대상으로 볼까?",
@@ -33,7 +33,7 @@ export const INTENT_AXES = [
   },
   {
     id: "measure",
-    label: "무엇을 셀까",
+    label: "측정",
     short: "측정",
     emoji: "🧮",
     question: "분자에 무엇을 넣고, 무엇을 뺄까?",
@@ -47,7 +47,7 @@ export const INTENT_AXES = [
   },
   {
     id: "population",
-    label: "분모에 누구",
+    label: "분모",
     short: "분모",
     emoji: "👥",
     question: "비율의 분모에는 누가 들어가나?",

@@ -38,10 +38,10 @@ export type ClarifyDomain = (typeof CLARIFY_DOMAINS)[number]["id"];
 export const CLARIFY_AXES = [
   {
     id: "goal",
-    label: "무엇을 얻고 싶어",
+    label: "목적",
     short: "목적",
     emoji: "🎯",
-    question: "이 질문이 끝나면 무엇이 있으면 성공일까?",
+    question: "이 질문이 끝나면 무엇이 있으면 성공인가요?",
     swatch: "#7c3aed",
     soft: "bg-violet-100 text-violet-950 border-violet-300",
     softDark:
@@ -49,10 +49,10 @@ export const CLARIFY_AXES = [
   },
   {
     id: "constraint",
-    label: "무엇을 지킬까",
+    label: "제약",
     short: "제약",
     emoji: "🧱",
-    question: "시간·비용·규칙 중 먼저 지킬 것은?",
+    question: "시간·비용·규칙 중 먼저 지킬 것은 무엇인가요?",
     swatch: "#d97706",
     soft: "bg-amber-100 text-amber-950 border-amber-300",
     softDark:
@@ -60,20 +60,20 @@ export const CLARIFY_AXES = [
   },
   {
     id: "criteria",
-    label: "무엇으로 고를까",
+    label: "기준",
     short: "기준",
     emoji: "⚖️",
-    question: "여러 답이 있을 때 무엇을 우위로 볼까?",
+    question: "답이 여러 개일 때 무엇을 우선할까요?",
     swatch: "#0284c7",
     soft: "bg-sky-100 text-sky-950 border-sky-300",
     softDark: "dark:bg-sky-500/15 dark:text-sky-100 dark:border-sky-500/40",
   },
   {
     id: "next",
-    label: "다음에 무엇을",
+    label: "다음",
     short: "다음",
     emoji: "🧭",
-    question: "구체화된 뒤 바로 할 다음 한 가지는?",
+    question: "뜻을 맞춘 뒤 바로 할 다음 한 가지는 무엇인가요?",
     swatch: "#0f6b63",
     soft: "bg-teal-100 text-teal-950 border-teal-300",
     softDark: "dark:bg-teal-500/15 dark:text-teal-100 dark:border-teal-500/40",
