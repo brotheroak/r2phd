@@ -236,15 +236,7 @@ export function CursorOrbit() {
         };
       }
 
-      // Soft ink bloom under the form
-      const bloom = ctx.createRadialGradient(cx, cy, 2, cx, cy, scale * 1.5);
-      bloom.addColorStop(0, rgba(samplePalette(flow), 0.06 * v));
-      bloom.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = bloom;
-      ctx.beginPath();
-      ctx.arc(cx, cy, scale * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-
+      // Gradient lives only on dots & edges — no ambient wash around the sphere
       const order = projected
         .map((_, i) => i)
         .sort((a, b) => projected[a].z - projected[b].z);
