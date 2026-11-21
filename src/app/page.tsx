@@ -97,27 +97,27 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Full-bleed flow — edge to edge of content width */}
-        <div className="relative z-10 mx-auto mt-12 max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
-          <p className="mb-4 text-center text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+        {/* Full-width flow — fills the viewport band */}
+        <div className="relative z-10 mt-14 w-full px-3 pb-16 sm:px-5 sm:pb-20 lg:px-8">
+          <p className="mb-5 text-center text-sm font-semibold tracking-[0.22em] text-muted-foreground uppercase">
             소통 → 합의 → 실행
           </p>
-          <div className="rise-in-delay-2 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7 lg:gap-2">
+          <div className="rise-in-delay-2 mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-7 lg:gap-3">
             {FLOW.map((step, i) => (
-              <div key={step.label} className="relative">
+              <div key={step.label} className="relative min-w-0">
                 <div
-                  className={`flex h-full min-h-[7.5rem] flex-col items-center justify-center rounded-2xl px-2 py-5 text-center shadow-sm sm:min-h-[8.5rem] ${step.tint}`}
+                  className={`flex h-full min-h-[9rem] flex-col items-center justify-center rounded-2xl px-2 py-6 text-center shadow-sm sm:min-h-[10.5rem] lg:min-h-[11.5rem] ${step.tint}`}
                 >
-                  <span className="text-2xl sm:text-3xl" aria-hidden>
+                  <span className="text-3xl sm:text-4xl" aria-hidden>
                     {step.emoji}
                   </span>
-                  <span className="mt-3 font-display text-xl leading-tight tracking-tight sm:text-2xl lg:text-[1.65rem]">
+                  <span className="mt-4 font-display text-2xl leading-none tracking-tight sm:text-3xl lg:text-[2rem]">
                     {step.label}
                   </span>
                 </div>
                 {i < FLOW.length - 1 ? (
                   <span
-                    className="pointer-events-none absolute top-1/2 -right-2 z-10 hidden -translate-y-1/2 text-lg font-bold text-ink/35 lg:block"
+                    className="pointer-events-none absolute top-1/2 -right-2.5 z-10 hidden -translate-y-1/2 text-2xl font-bold text-ink/40 lg:block"
                     aria-hidden
                   >
                     →
