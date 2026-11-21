@@ -37,10 +37,17 @@ export default function HomePage() {
             <StatusPill />
             <a
               href="#cases"
-              className="hidden rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground sm:inline"
+              className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
             >
-              케이스 보기
+              케이스
             </a>
+            <Link
+              href="/console/semantic?tab=analyze&case=quality"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+            >
+              콘솔 접속
+              <ArrowRight className="size-3.5" />
+            </Link>
           </div>
         </nav>
 
@@ -90,14 +97,24 @@ export default function HomePage() {
       </header>
 
       <section id="cases" className="mx-auto max-w-6xl scroll-mt-6 px-4 py-10 sm:px-6">
-        <h2 className="font-display text-2xl text-ink sm:text-3xl">
-          같은 소통, 여러 케이스
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          사람↔AI · 조사·분석 · 운영·연동 — 카테고리는 달라도 검증 가능한
-          일반 상황으로 뜻을 맞춥니다. 부가세·급여 등 세부 시나리오는 분석
-          콘솔 안에서 고를 수 있습니다.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-display text-2xl text-ink sm:text-3xl">
+              같은 소통, 여러 케이스
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              사람↔AI · 조사·분석 · 운영·연동 — 검증 가능한 일반 상황으로
+              뜻을 맞춥니다. IntentSpec 콘솔은 케이스와 별도로 들어갑니다.
+            </p>
+          </div>
+          <Link
+            href="/console/semantic?tab=analyze&case=quality"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            IntentSpec 콘솔 접속
+            <ArrowRight className="size-4" />
+          </Link>
+        </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
           {WORK_CASES.map((c) => (

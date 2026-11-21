@@ -55,10 +55,26 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
   const domain = fixedDomain ?? clarifyDomain;
 
   useEffect(() => {
-    if (fixedDomain && clarifyDomain !== fixedDomain) {
+    if (!fixedDomain) return;
+    if (clarifyDomain !== fixedDomain) {
       setClarifyDomain(fixedDomain);
+      setClarifyQuestion(SAMPLES[fixedDomain]);
+      setClarifyBrief(null);
+      setClarifyDecisions({});
+      setClarifyLocked(false);
+      setNotice(null);
+      setError(null);
+      setFocusIdx(0);
     }
-  }, [fixedDomain, clarifyDomain, setClarifyDomain]);
+  }, [
+    fixedDomain,
+    clarifyDomain,
+    setClarifyDomain,
+    setClarifyQuestion,
+    setClarifyBrief,
+    setClarifyDecisions,
+    setClarifyLocked,
+  ]);
 
   const [focusIdx, setFocusIdx] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);

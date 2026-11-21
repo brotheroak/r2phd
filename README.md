@@ -14,13 +14,13 @@ GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)
 | 사람 ↔ AI | LLM에게 의도 설명하기 | `/clarify/collab` |
 | 사람 ↔ AI | 일상 질문 | `/clarify/everyday` |
 | 조사 · 분석 | 연구 · 조사 | `/clarify/research` |
-| 조사 · 분석 | 데이터 분석 | `/console/semantic?case=quality` |
+| 조사 · 분석 | 데이터 정의 맞추기 | `/console/semantic?case=quality` |
 | 운영 · 연동 | 시스템 연동 | `/console/semantic?case=sap` |
 | 운영 · 연동 | 재무 · 세무 대조 | `/console/semantic?case=vat` |
 
-부가세·급여 등 세부 시나리오는 **분석 콘솔 안에서** 고릅니다. 랜딩에 금융 카드를 나란히 두지 않습니다.
+**IntentSpec 콘솔**(`/console/semantic`)은 케이스 카드와 별도 진입입니다. 상단·케이스 구역에 **콘솔 접속** 버튼이 있습니다.
 
-진입 CTA는 홈 히어로가 아니라 **같은 소통, 여러 케이스** 구역에 둡니다.
+부가세·급여 등 세부 시나리오는 콘솔 안에서 고릅니다.
 
 ## 코어 루프
 

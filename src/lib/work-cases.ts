@@ -87,9 +87,9 @@ export const WORK_CASES: WorkCase[] = [
   {
     id: "quality",
     categoryId: "inquiry",
-    label: "데이터 분석",
+    label: "데이터 정의 맞추기",
     emoji: "📊",
-    blurb: "지표·기간·집계 키를 SQL 전에 잠그기",
+    blurb: "지표·기간·집계 키를 숫자 보기 전에 잠그기",
     example:
       "「최근 수치가 왜 이상하지?」→ ‘최근’·대상 키·성공/실패 정의를 확정",
     gap: "사람이 말한 말과 모델이 고른 컬럼·필터의 간극",
