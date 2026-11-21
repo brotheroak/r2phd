@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, IBM_Plex_Mono, Instrument_Serif } from "next/font/google";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const sans = DM_Sans({
@@ -35,7 +36,7 @@ export default function RootLayout({
       <body
         className={`${sans.variable} ${display.variable} ${mono.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

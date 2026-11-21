@@ -165,7 +165,7 @@ export function Workspace() {
       setStep("confirm");
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "시맨틱 레이어 콘솔에서 매핑을 확인할 수 있습니다.",
+          "시맨틱 콘솔에서 매핑을 확인할 수 있습니다.",
       );
     });
   }
@@ -223,16 +223,16 @@ export function Workspace() {
     <section>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">분석 콘솔</p>
-          <h1 className="font-display text-3xl text-ink sm:text-4xl">
+          <p className="text-sm text-muted-foreground">이 페이지에서 분석하기</p>
+          <h2 className="font-display text-3xl text-ink sm:text-4xl">
             질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
-          </h1>
+          </h2>
         </div>
         <Link
           href="/console/semantic"
           className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium shadow-sm hover:bg-accent/40"
         >
-          시맨틱 레이어 열기
+          시맨틱 콘솔 열기
         </Link>
       </div>
 
