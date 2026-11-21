@@ -131,6 +131,101 @@
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
   }
+
+  /* Landing hero: mouse-follow monotone grid + soft 3D planes */
+  .hero-atmosphere {
+    --hx: 50%;
+    --hy: 40%;
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+  }
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--ink) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 8%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .hero-grid-base {
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 10%, transparent 72%);
+  }
+  .hero-grid-lit {
+    opacity: 1;
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--primary) 28%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--primary) 28%, transparent) 1px, transparent 1px);
+    mask-image: radial-gradient(
+      circle 220px at var(--hx) var(--hy),
+      black 0%,
+      color-mix(in oklab, black 55%, transparent) 35%,
+      transparent 70%
+    );
+  }
+  .hero-bloom {
+    background: radial-gradient(
+      circle 280px at var(--hx) var(--hy),
+      color-mix(in oklab, var(--primary) 16%, transparent) 0%,
+      color-mix(in oklab, var(--ink) 4%, transparent) 42%,
+      transparent 70%
+    );
+  }
+  .hero-stage {
+    perspective: 900px;
+    perspective-origin: var(--hx) var(--hy);
+  }
+  .hero-plane {
+    position: absolute;
+    border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+    background: linear-gradient(
+      145deg,
+      color-mix(in oklab, white 70%, transparent),
+      color-mix(in oklab, var(--ink) 6%, transparent)
+    );
+    border-radius: 1.25rem;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+    transition: none;
+  }
+  .hero-plane-a {
+    width: min(52vw, 520px);
+    height: min(28vw, 280px);
+    opacity: 0.35;
+    transform: translate3d(-8%, -6%, 40px) rotateX(calc(var(--tilt-x) + 8deg))
+      rotateY(calc(var(--tilt-y) - 10deg));
+  }
+  .hero-plane-b {
+    width: min(40vw, 400px);
+    height: min(22vw, 220px);
+    opacity: 0.28;
+    transform: translate3d(18%, 10%, 80px) rotateX(calc(var(--tilt-x) - 6deg))
+      rotateY(calc(var(--tilt-y) + 14deg));
+  }
+  .hero-plane-c {
+    width: min(28vw, 280px);
+    height: min(16vw, 160px);
+    opacity: 0.22;
+    border-color: color-mix(in oklab, var(--primary) 22%, transparent);
+    background: linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--primary) 10%, white),
+      color-mix(in oklab, var(--ink) 5%, transparent)
+    );
+    transform: translate3d(-4%, 22%, 120px) rotateX(calc(var(--tilt-x) + 12deg))
+      rotateY(calc(var(--tilt-y) + 4deg));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-grid-lit,
+    .hero-bloom,
+    .hero-plane {
+      transition: none;
+    }
+    .hero-plane-a,
+    .hero-plane-b,
+    .hero-plane-c {
+      transform: none;
+      opacity: 0.12;
+    }
+  }
   .pipe-flow {
     background: linear-gradient(
       90deg,

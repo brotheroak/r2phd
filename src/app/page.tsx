@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
 import { ConsoleEntryButton } from "@/components/console-entry-button";
+import { HeroAtmosphere } from "@/components/hero-atmosphere";
 import {
   WORK_CASE_CATEGORIES,
   WORK_CASES,
@@ -45,9 +46,9 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Centered hero — equal vertical air */}
+      {/* Centered hero — equal vertical air + mouse-follow monotone atmosphere */}
       <header className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 grid-atmosphere" />
+        <HeroAtmosphere />
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 sm:py-24">
           <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.14em] text-primary uppercase">
             <Sparkles className="size-4" />
