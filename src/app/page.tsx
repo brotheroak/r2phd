@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
 import { ConsoleEntryButton } from "@/components/console-entry-button";
 import { HeroAtmosphere } from "@/components/hero-atmosphere";
-import { HumanAiMark } from "@/components/human-ai-mark";
+import { SphereMark } from "@/components/sphere-mark";
 import {
   WORK_CASE_CATEGORIES,
   WORK_CASES,
@@ -26,12 +26,12 @@ export default function HomePage() {
       {/* Slim sticky bar — Astryx-style chrome */}
       <nav className="sticky top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-2.5">
+            <SphereMark size="nav" />
             <span className="font-display text-2xl tracking-tight text-ink">
               IntentSpec
             </span>
-            <HumanAiMark className="hidden md:inline-flex" />
-          </div>
+          </a>
           <div className="flex items-center gap-4">
             <StatusPill />
             <a
@@ -50,7 +50,7 @@ export default function HomePage() {
         <HeroAtmosphere />
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 sm:py-24">
           <div className="rise-in">
-            <HumanAiMark size="hero" />
+            <SphereMark size="hero" />
           </div>
 
           <h1 className="rise-in-delay-1 mt-8 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
@@ -187,7 +187,10 @@ export default function HomePage() {
 
       <footer className="border-t border-border/70 bg-white/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:px-8">
-          <p className="font-display text-xl text-ink">IntentSpec</p>
+          <div className="flex items-center gap-2">
+            <SphereMark size="footer" />
+            <p className="font-display text-xl text-ink">IntentSpec</p>
+          </div>
           <p>.EXE-THON</p>
         </div>
       </footer>
