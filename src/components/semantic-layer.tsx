@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   Check,
@@ -277,69 +278,57 @@ function KpiCard({
 }
 
 function CatalogPanel() {
-  const { isDark } = useConsoleTheme();
   const { linkedTables, setLinkedTables, setSchema, schema } =
     useConsoleStore();
   const selected = new Set(linkedTables);
+  const [justApplied, setJustApplied] = useState(false);
+
+  function syncSelection(next: string[], apply: boolean) {
+    setLinkedTables(next);
+    if (apply) {
+      setSchema(next.length ? buildSchemaFromTables(next) : "");
+      setJustApplied(true);
+    } else {
+      setJustApplied(false);
+    }
+  }
 
   function toggle(name: string) {
     const next = selected.has(name)
       ? linkedTables.filter((t) => t !== name)
       : [...linkedTables, name];
-    setLinkedTables(next);
+    // Selecting a table immediately updates linked set; keep schema in sync
+    syncSelection(next, true);
   }
 
   function selectAll() {
-    setLinkedTables(allCatalogTableNames());
+    syncSelection(allCatalogTableNames(), true);
   }
 
   function clearAll() {
-    setLinkedTables([]);
+    syncSelection([], true);
   }
 
   function applyToSchema() {
-    if (!linkedTables.length) {
-      setSchema("");
-      return;
-    }
-    setSchema(buildSchemaFromTables(linkedTables));
+    syncSelection(linkedTables, true);
   }
 
   const appliedHint =
     linkedTables.length > 0 &&
-    schema.includes(linkedTables[0] ?? "") &&
-    linkedTables.every((t) => schema.includes(t));
+    linkedTables.every((t) => schema.includes(`${t}(`));
 
   return (
     <div className="space-y-4">
-      <div
-        className={cn(
-          "flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between",
-          isDark
-            ? "border-white/10 bg-black/20"
-            : "border-primary/20 bg-primary/5",
-        )}
-      >
+      <div className="flex flex-col gap-3 rounded-lg border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p
-            className={cn(
-              "text-sm font-medium",
-              isDark ? "text-zinc-100" : "text-ink",
-            )}
-          >
-            분석 스키마 연결
-          </p>
-          <p
-            className={cn(
-              "mt-0.5 text-xs",
-              isDark ? "text-zinc-500" : "text-muted-foreground",
-            )}
-          >
-            테이블을 고른 뒤 반영하면 Analyze 탭의 「표 구조」에 들어갑니다.
+          <p className="text-sm font-medium text-foreground">분석 스키마 연결</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            카드를 누르면 선택·스키마 반영이 함께 됩니다. Analyze 「표 구조」와
+            Agent 컨텍스트에 바로 쓰입니다.
             {linkedTables.length
               ? ` · ${linkedTables.length}개 선택`
               : " · 아직 선택 없음"}
-            {appliedHint ? " · 반영됨" : null}
+            {appliedHint || justApplied ? " · 스키마 반영됨" : null}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -370,12 +359,7 @@ function CatalogPanel() {
 
       {PHYSICAL_CATALOG.schemas.map((schemaNode) => (
         <div key={schemaNode.name}>
-          <p
-            className={cn(
-              "mb-2 text-[11px] font-medium tracking-[0.14em] uppercase",
-              isDark ? "text-zinc-500" : "text-muted-foreground",
-            )}
-          >
+          <p className="mb-2 text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
             schema · {schemaNode.name}
           </p>
           <div className="grid gap-2 md:grid-cols-2">
@@ -385,33 +369,23 @@ function CatalogPanel() {
                 <button
                   key={table.name}
                   type="button"
+                  aria-pressed={on}
                   onClick={() => toggle(table.name)}
                   className={cn(
-                    "rounded-lg border p-3 text-left transition",
+                    "rounded-lg border p-3 text-left transition outline-none",
                     on
-                      ? isDark
-                        ? "border-teal-500/40 bg-teal-500/10"
-                        : "border-primary/40 bg-primary/5"
-                      : isDark
-                        ? "border-white/10 bg-black/20 hover:border-white/20"
-                        : "border-border/70 bg-card hover:border-primary/30",
+                      ? "border-primary bg-primary/10 ring-2 ring-primary/35"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-mist/40",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 text-sm font-medium",
-                        isDark ? "text-zinc-100" : "text-foreground",
-                      )}
-                    >
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <span
                         className={cn(
                           "flex size-4 items-center justify-center rounded border",
                           on
                             ? "border-primary bg-primary text-primary-foreground"
-                            : isDark
-                              ? "border-white/20"
-                              : "border-border",
+                            : "border-border bg-background",
                         )}
                       >
                         {on ? <Check className="size-3" /> : null}
@@ -419,23 +393,18 @@ function CatalogPanel() {
                       <Table2 className="size-3.5 text-sky" />
                       {table.name}
                     </span>
-                    <span
-                      className={cn(
-                        "rounded border px-1.5 py-0.5 text-[10px]",
-                        isDark
-                          ? "border-white/10 text-zinc-400"
-                          : "border-border text-muted-foreground",
-                      )}
-                    >
-                      {table.role}
+                    <span className="flex items-center gap-1.5">
+                      {on ? (
+                        <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                          선택됨
+                        </span>
+                      ) : null}
+                      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {table.role}
+                      </span>
                     </span>
                   </div>
-                  <p
-                    className={cn(
-                      "mt-2 font-mono text-[11px] leading-relaxed",
-                      isDark ? "text-zinc-500" : "text-muted-foreground",
-                    )}
-                  >
+                  <p className="mt-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
                     {table.columns.join(", ")}
                   </p>
                 </button>
