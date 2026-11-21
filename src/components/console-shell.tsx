@@ -96,7 +96,9 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             <p className="text-sm font-semibold tracking-tight text-foreground">
               IntentSpec
             </p>
-            <p className="text-[11px] text-muted-foreground">Semantic Console</p>
+            <p className="text-[11px] text-muted-foreground">
+              분석 게이트 · 코어 에이전트
+            </p>
           </div>
         </div>
 
@@ -171,12 +173,27 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </div>
-          <Link
-            href="/"
-            className="block text-[11px] text-muted-foreground transition hover:text-foreground"
-          >
-            ← 소개 페이지
-          </Link>
+          <div className="space-y-1.5 text-[11px]">
+            <p className="font-medium text-muted-foreground">다른 적용 범위</p>
+            <Link
+              href="/clarify/research"
+              className="block text-sky hover:underline"
+            >
+              🔬 연구 구체화
+            </Link>
+            <Link
+              href="/clarify/everyday"
+              className="block text-signal hover:underline"
+            >
+              💬 일상 질문 구체화
+            </Link>
+            <Link
+              href="/"
+              className="block text-muted-foreground transition hover:text-foreground"
+            >
+              ← 적용 범위 홈
+            </Link>
+          </div>
         </div>
       </aside>
 

@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { ClarifyBrief, ClarifyDomain } from "@/lib/clarify";
 import type {
   AnalysisDraft,
   AnalysisSpec,
@@ -16,20 +17,31 @@ import type {
   ScholarHit,
 } from "@/lib/types";
 
-const STORAGE_KEY = "intentspec-console-v1";
+const STORAGE_KEY = "intentspec-console-v2";
+
+type ChoiceMap = Record<string, { chosenOption: string; note?: string }>;
 
 type ConsoleState = {
   researchQuestion: string;
   glossary: string;
   schema: string;
   resultCsv: string;
-  /** Catalog table names linked into the analysis schema. */
+  candidateSql: string;
   linkedTables: string[];
   draft: AnalysisDraft | null;
   scholar: ScholarHit[];
   decisions: Record<string, ResearcherDecision>;
   spec: AnalysisSpec | null;
   report: AuditReport | null;
+  intentLocked: boolean;
+  lockedAt: string | null;
+  /** Unified clarify: analysis / research / everyday */
+  clarifyDomain: ClarifyDomain;
+  clarifyQuestion: string;
+  clarifyBrief: ClarifyBrief | null;
+  clarifyDecisions: ChoiceMap;
+  clarifyLocked: boolean;
+  clarifyLockedAt: string | null;
 };
 
 type ConsoleContextValue = ConsoleState & {
@@ -38,7 +50,16 @@ type ConsoleContextValue = ConsoleState & {
   setGlossary: (v: string) => void;
   setSchema: (v: string) => void;
   setResultCsv: (v: string) => void;
+  setCandidateSql: (v: string) => void;
   setLinkedTables: (v: string[]) => void;
+  setIntentLocked: (v: boolean, lockedAt?: string | null) => void;
+  setClarifyDomain: (v: ClarifyDomain) => void;
+  setClarifyQuestion: (v: string) => void;
+  setClarifyBrief: (v: ClarifyBrief | null) => void;
+  setClarifyDecisions: (
+    v: ChoiceMap | ((prev: ChoiceMap) => ChoiceMap),
+  ) => void;
+  setClarifyLocked: (v: boolean, lockedAt?: string | null) => void;
   setDraft: (v: AnalysisDraft | null) => void;
   setScholar: (v: ScholarHit[]) => void;
   setDecisions: (
@@ -60,12 +81,21 @@ const empty: ConsoleState = {
   glossary: "",
   schema: "",
   resultCsv: "",
+  candidateSql: "",
   linkedTables: [],
   draft: null,
   scholar: [],
   decisions: {},
   spec: null,
   report: null,
+  intentLocked: false,
+  lockedAt: null,
+  clarifyDomain: "everyday",
+  clarifyQuestion: "",
+  clarifyBrief: null,
+  clarifyDecisions: {},
+  clarifyLocked: false,
+  clarifyLockedAt: null,
 };
 
 export function ConsoleProvider({ children }: { children: React.ReactNode }) {
@@ -76,7 +106,7 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as ConsoleState;
+        const parsed = JSON.parse(raw) as Partial<ConsoleState>;
         setState({ ...empty, ...parsed });
       }
     } catch {
@@ -106,13 +136,36 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
       setGlossary: (v) => patch({ glossary: v }),
       setSchema: (v) => patch({ schema: v }),
       setResultCsv: (v) => patch({ resultCsv: v }),
+      setCandidateSql: (v) => patch({ candidateSql: v }),
       setLinkedTables: (v) => patch({ linkedTables: v }),
+      setIntentLocked: (v, lockedAt = null) =>
+        patch({ intentLocked: v, lockedAt: v ? lockedAt : null }),
+      setClarifyDomain: (v) => patch({ clarifyDomain: v }),
+      setClarifyQuestion: (v) => patch({ clarifyQuestion: v }),
+      setClarifyBrief: (v) => patch({ clarifyBrief: v }),
+      setClarifyDecisions: (v) =>
+        setState((prev) => ({
+          ...prev,
+          clarifyDecisions:
+            typeof v === "function" ? v(prev.clarifyDecisions) : v,
+          clarifyLocked: false,
+          clarifyLockedAt: null,
+        })),
+      setClarifyLocked: (v, lockedAt = null) =>
+        patch({
+          clarifyLocked: v,
+          clarifyLockedAt: v ? lockedAt : null,
+        }),
       setDraft: (v) => patch({ draft: v }),
       setScholar: (v) => patch({ scholar: v }),
       setDecisions: (v) =>
         setState((prev) => ({
           ...prev,
           decisions: typeof v === "function" ? v(prev.decisions) : v,
+          intentLocked: false,
+          lockedAt: null,
+          spec: null,
+          report: null,
         })),
       setSpec: (v) => patch({ spec: v }),
       setReport: (v) => patch({ report: v }),

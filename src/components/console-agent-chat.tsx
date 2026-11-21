@@ -27,7 +27,11 @@ const SUGGESTIONS: Record<string, string[]> = {
   ontology: ["온톨로지 초안 만들어줘", "기간 기준이 뭐야?", "예제 돌려줘"],
   metrics: ["지표 설명해줘", "예제 돌려줘", "온톨로지 초안 만들어줘"],
   lineage: ["관계 설명해줘", "조인 키가 뭐야?"],
-  analyze: ["예제 불러와줘", "전체 테이블 연결해줘", "온톨로지 초안 만들어줘"],
+  analyze: [
+    "예제 불러와줘",
+    "기준 잠그기 전에 뭘 고르지?",
+    "전체 테이블 연결해줘",
+  ],
 };
 
 export function ConsoleAgentChat({
@@ -89,19 +93,13 @@ export function ConsoleAgentChat({
             glossary: seed.glossary,
             schema: seed.schema,
             resultCsv: seed.resultCsv,
+            candidateSql: seed.candidateSql,
             linkedTables: seed.linkedTables,
             draft: seed.draft,
-            decisions: Object.fromEntries(
-              seed.draft.ambiguities
-                .filter(
-                  (a): a is typeof a & { recommended: string } =>
-                    Boolean(a.recommended),
-                )
-                .map((a) => [
-                  a.id,
-                  { ambiguityId: a.id, chosenOption: a.recommended },
-                ]),
-            ),
+            // Gate: never auto-pick recommendations
+            decisions: {},
+            intentLocked: false,
+            lockedAt: null,
             spec: null,
             report: null,
           });
@@ -120,17 +118,11 @@ export function ConsoleAgentChat({
             researchQuestion: store.researchQuestion.trim()
               ? store.researchQuestion
               : seed.researchQuestion,
-            decisions: Object.fromEntries(
-              seed.draft.ambiguities
-                .filter(
-                  (a): a is typeof a & { recommended: string } =>
-                    Boolean(a.recommended),
-                )
-                .map((a) => [
-                  a.id,
-                  { ambiguityId: a.id, chosenOption: a.recommended },
-                ]),
-            ),
+            decisions: {},
+            intentLocked: false,
+            lockedAt: null,
+            spec: null,
+            report: null,
           });
           break;
         }

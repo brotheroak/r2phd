@@ -1,12 +1,28 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  GitBranch,
-  Layers3,
-  SearchCheck,
-} from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
-import { Workspace } from "@/components/workspace";
+import { CLARIFY_DOMAINS } from "@/lib/clarify";
+
+const SCOPES = [
+  {
+    ...CLARIFY_DOMAINS[0],
+    href: "/console/semantic?tab=analyze",
+    example: "「최근 실패율이 왜 올랐지?」→ 기간·키·실패 정의를 고른 뒤 SQL 잠금",
+    agent: "분석 게이트 에이전트 · 기준 잠금 전 반출 불가",
+  },
+  {
+    ...CLARIFY_DOMAINS[1],
+    href: "/clarify/research",
+    example: "「재시험 합격을 실패로 볼까?」→ 범위·근거·주장 강도·다음 산출물",
+    agent: "연구 인터뷰 에이전트 · 문헌 챗 전에 방향 고정",
+  },
+  {
+    ...CLARIFY_DOMAINS[2],
+    href: "/clarify/everyday",
+    example: "「주말에 뭐 하지?」→ 목적·제약·기준·다음 행동을 색 카드로",
+    agent: "일상 맥락 에이전트 · 애매한 추천 질문 구체화",
+  },
+] as const;
 
 export default function HomePage() {
   return (
@@ -22,136 +38,105 @@ export default function HomePage() {
                 IntentSpec
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Intent → Spec → Audit
+                핵심 무기 · 의도 구체화 에이전트
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <StatusPill />
-            <Link
-              href="/console/semantic?tab=analyze"
-              className="inline-flex h-8 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground"
-            >
-              콘솔 열기
-            </Link>
-          </div>
+          <StatusPill />
         </nav>
       </header>
 
       <section className="border-b border-border/60 bg-[color-mix(in_oklab,var(--mist)_70%,white)]">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-12">
-          <div>
-            <p className="text-xs font-medium tracking-[0.14em] text-primary uppercase">
-              Analysis console
-            </p>
-            <h1 className="mt-3 max-w-xl font-display text-3xl leading-tight text-ink sm:text-4xl lg:text-[2.75rem]">
-              잘 돌아가는 분석이 틀린 답을 줄 때
-            </h1>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-foreground/80 sm:text-base">
-              ‘최근’·식별키·실패 정의를 먼저 고정한 뒤 SQL을 만들고, 결과까지
-              다시 맞춥니다. 소개와 분석은 여기, 카탈로그·온톨로지는 콘솔에서
-              이어집니다.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link
-                href="/console/semantic?tab=analyze"
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-foreground"
-              >
-                콘솔에서 분석
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="#workspace"
-                className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3.5 text-sm font-medium shadow-sm hover:bg-mist"
-              >
-                이 페이지에서 예제
-              </Link>
-            </div>
-          </div>
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+          <p className="inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.14em] text-primary uppercase">
+            <Sparkles className="size-3.5" />
+            One agent · three scopes
+          </p>
+          <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-ink sm:text-5xl">
+            애매한 질문을 선택지로 구체화하는
+            <br />
+            에이전트가 제품의 핵심입니다
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+            데이터 분석 콘솔, 연구 챗, 일상 챗봇 모두 같은 무기입니다. 목적·제약·기준·다음을
+            고르게 한 뒤 잠그고, 잠그기 전에는 답을 확정하지 않습니다.
+          </p>
 
-          <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border/70 bg-mist/50 px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-primary" />
-              pipeline · question → confirm → sql → audit
-            </div>
-            <div className="grid grid-cols-2 gap-px bg-border/60 sm:grid-cols-4">
+          {/* Core agent diagram */}
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <p className="mb-3 text-center text-[11px] font-semibold tracking-wide text-muted-foreground">
+              코어 에이전트 루프
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-semibold sm:text-xs">
               {[
-                { t: "질문", d: "최근 6개월 실패율" },
-                { t: "함정", d: "적재일 · 키 충돌" },
-                { t: "결정", d: "시험일 · 복합키" },
-                { t: "점검", d: "불일치 점수 84" },
-              ].map((cell) => (
-                <div key={cell.t} className="bg-card px-3 py-3.5">
-                  <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                    {cell.t}
-                  </p>
-                  <p className="mt-1 text-sm font-medium leading-snug text-ink">
-                    {cell.d}
-                  </p>
-                </div>
+                { t: "애매한 질문", c: "bg-zinc-700 text-white" },
+                { t: "🎯 목적", c: "bg-violet-400 text-violet-950" },
+                { t: "🧱 제약", c: "bg-amber-400 text-amber-950" },
+                { t: "⚖️ 기준", c: "bg-sky-400 text-sky-950" },
+                { t: "🧭 다음", c: "bg-teal-500 text-white" },
+                { t: "🔒 잠금 카드", c: "bg-rose-500 text-white" },
+              ].map((n, i, arr) => (
+                <span key={n.t} className="inline-flex items-center gap-1.5">
+                  <span className={`rounded-full px-2.5 py-1.5 ${n.c}`}>{n.t}</span>
+                  {i < arr.length - 1 ? (
+                    <span className="text-muted-foreground">→</span>
+                  ) : null}
+                </span>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-border/60 bg-card/40">
-        <div className="mx-auto grid max-w-6xl gap-3 px-4 py-8 sm:px-6 md:grid-cols-3">
-          <Feature
-            icon={<SearchCheck className="size-4" />}
-            title="기준 먼저"
-            body="쿼리가 돌아가도 ‘최근’·키·실패 정의가 틀리면 답이 틀립니다."
-          />
-          <Feature
-            icon={<GitBranch className="size-4" />}
-            title="확인 → SQL"
-            body="모호한 기준을 고른 뒤 IntentSpec이 SQL과 점검 포인트를 만듭니다."
-          />
-          <Feature
-            icon={<Layers3 className="size-4" />}
-            title="시맨틱 콘솔"
-            body="Catalog·Ontology·Metrics에서 표와 용어 연결을 이어 봅니다."
-          />
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          적용 범위 3가지
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          각각 전용 페이지 · 안에서 돌아가는 구체화 에이전트가 동일합니다
+        </p>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {SCOPES.map((s, i) => (
+            <Link
+              key={s.id}
+              href={s.href}
+              className="group flex flex-col rounded-2xl border-2 bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              style={{ borderColor: `${s.swatch}55` }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-2xl">{s.emoji}</span>
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                  style={{ backgroundColor: s.swatch }}
+                >
+                  0{i + 1}
+                </span>
+              </div>
+              <h3 className="mt-3 text-lg font-semibold text-ink">{s.label}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{s.blurb}</p>
+              <p className="mt-4 flex-1 rounded-xl bg-mist/80 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+                <span className="font-semibold">예 · </span>
+                {s.example}
+              </p>
+              <p className="mt-3 text-[11px] font-medium" style={{ color: s.swatch }}>
+                {s.agent}
+              </p>
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2">
+                페이지 열기
+                <ArrowRight className="size-4" />
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
-
-      <div id="workspace" className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
-          <div className="border-b border-border/70 bg-mist/40 px-4 py-2.5 text-xs text-muted-foreground">
-            Workspace · 로컬 세션에 저장됩니다
-          </div>
-          <div className="p-4 md:p-5">
-            <Workspace />
-          </div>
-        </div>
-      </div>
 
       <footer className="border-t border-border/70 bg-card">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="font-medium text-ink">IntentSpec</p>
-          <p>Liner Model · Scholar · 가상 데이터 · .EXE-THON</p>
+          <p>의도 구체화 에이전트 · Liner Model · .EXE-THON</p>
         </div>
       </footer>
     </main>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border/70 bg-card p-4">
-      <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-        {icon}
-      </div>
-      <h2 className="text-sm font-semibold text-ink">{title}</h2>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
-    </div>
   );
 }

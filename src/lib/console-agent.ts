@@ -204,6 +204,7 @@ export function demoWorkspaceSeed(): {
   glossary: string;
   schema: string;
   resultCsv: string;
+  candidateSql: string;
   linkedTables: string[];
   draft: AnalysisDraft;
 } {
@@ -212,6 +213,7 @@ export function demoWorkspaceSeed(): {
     glossary: SAMPLE_PROJECT.glossary,
     schema: SAMPLE_PROJECT.schema,
     resultCsv: SAMPLE_PROJECT.resultRowsCsv,
+    candidateSql: SAMPLE_PROJECT.naiveSql,
     linkedTables: allCatalogTableNames(),
     draft: mockAnalyzeDraft(),
   };

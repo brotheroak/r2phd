@@ -4,26 +4,25 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   AlertTriangle,
   ArrowRight,
-  CheckCircle2,
   ClipboardCheck,
   FileSearch,
   Loader2,
+  Lock,
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
-import { KIND_LABEL } from "@/lib/intent-axes";
+import { undecidedCount } from "@/lib/intent-lock";
 import { SAMPLE_PROJECT } from "@/lib/sample-project";
-import type {
-  AnalysisDraft,
-  ResearcherDecision,
-} from "@/lib/types";
-import Link from "next/link";
 import { useConsoleStore } from "@/lib/console-store";
+import {
+  IntentAxisMap,
+  IntentChoicePanel,
+} from "@/components/intent-interview";
+import { IntentLockCard } from "@/components/intent-lock-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -40,16 +39,16 @@ const SEVERITY_LABEL = {
 } as const;
 
 type Step = "input" | "confirm" | "spec" | "audit";
+type EntryMode = "verify" | "fresh";
 
-const STEPS: { id: Step; label: string }[] = [
-  { id: "input", label: "1 질문" },
-  { id: "confirm", label: "2 기준 확인" },
-  { id: "spec", label: "3 SQL" },
-  { id: "audit", label: "4 결과 점검" },
+const STEPS: { id: Step; label: string; gate?: boolean }[] = [
+  { id: "input", label: "1 입력" },
+  { id: "confirm", label: "2 기준 잠금", gate: true },
+  { id: "spec", label: "3 반출 명세" },
+  { id: "audit", label: "4 반출 전 점검" },
 ];
 
 type WorkspaceProps = {
-  /** Console embed: denser chrome, no marketing headline. */
   variant?: "landing" | "console";
 };
 
@@ -60,33 +59,39 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     glossary,
     schema,
     resultCsv,
+    candidateSql,
     draft,
     scholar,
     decisions,
     spec,
     report,
     hydrated,
-    linkedTables,
+    intentLocked,
+    lockedAt,
     setResearchQuestion,
     setGlossary,
     setSchema,
     setResultCsv,
+    setCandidateSql,
     setDraft,
     setScholar,
     setDecisions,
     setSpec,
     setReport,
     setLinkedTables,
+    setIntentLocked,
     patch,
   } = store;
   const isConsole = variant === "console";
 
   const [step, setStep] = useState<Step>("input");
+  const [mode, setMode] = useState<EntryMode>("verify");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [showNaive, setShowNaive] = useState(true);
   const [bootstrapped, setBootstrapped] = useState(false);
+  /** Interview cursor: ask one ambiguity at a time */
+  const [focusIdx, setFocusIdx] = useState(0);
 
   useEffect(() => {
     if (!hydrated || bootstrapped) return;
@@ -96,17 +101,38 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
         glossary: SAMPLE_PROJECT.glossary,
         schema: SAMPLE_PROJECT.schema,
         resultCsv: SAMPLE_PROJECT.resultRowsCsv,
+        candidateSql: SAMPLE_PROJECT.naiveSql,
       });
     }
-    if (report) setStep("audit");
-    else if (spec) setStep("spec");
+    if (report && intentLocked) setStep("audit");
+    else if (spec && intentLocked) setStep("spec");
     else if (draft) setStep("confirm");
     setBootstrapped(true);
-  }, [hydrated, bootstrapped, researchQuestion, draft, spec, report, patch]);
+  }, [
+    hydrated,
+    bootstrapped,
+    researchQuestion,
+    draft,
+    spec,
+    report,
+    intentLocked,
+    patch,
+  ]);
 
-  const allAmbiguitiesDecided = useMemo(() => {
-    if (!draft) return false;
-    return draft.ambiguities.every((a) => decisions[a.id]?.chosenOption);
+  const openCount = useMemo(
+    () => undecidedCount(draft, decisions),
+    [draft, decisions],
+  );
+  const allAmbiguitiesDecided = Boolean(draft) && openCount === 0;
+
+  const orderedAmbiguities = draft?.ambiguities ?? [];
+
+  useEffect(() => {
+    if (!draft) return;
+    const firstOpen = draft.ambiguities.findIndex(
+      (a) => !decisions[a.id]?.chosenOption,
+    );
+    if (firstOpen >= 0) setFocusIdx(firstOpen);
   }, [draft, decisions]);
 
   function loadSample() {
@@ -114,8 +140,18 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     setGlossary(SAMPLE_PROJECT.glossary);
     setSchema(SAMPLE_PROJECT.schema);
     setResultCsv(SAMPLE_PROJECT.resultRowsCsv);
+    setCandidateSql(SAMPLE_PROJECT.naiveSql);
     setLinkedTables(["products", "lots", "tests", "dispositions"]);
-    setNotice("로트 실패율 예시를 넣었습니다. Catalog에 네 테이블이 연결됩니다.");
+    setDraft(null);
+    setSpec(null);
+    setReport(null);
+    setDecisions({});
+    setIntentLocked(false);
+    setMode("verify");
+    setStep("input");
+    setNotice(
+      "의심 쿼리·결과 CSV 예제를 넣었습니다. 기준을 잠그기 전에는 반출할 수 없습니다.",
+    );
   }
 
   function chooseOption(ambiguityId: string, chosenOption: string) {
@@ -127,6 +163,17 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
         note: prev[ambiguityId]?.note,
       },
     }));
+    // Advance interview to next unanswered
+    if (draft) {
+      const next = draft.ambiguities.findIndex(
+        (a, i) => i > focusIdx && !decisions[a.id]?.chosenOption && a.id !== ambiguityId,
+      );
+      const fallback = draft.ambiguities.findIndex(
+        (a) => a.id !== ambiguityId && !decisions[a.id]?.chosenOption,
+      );
+      const idx = next >= 0 ? next : fallback;
+      if (idx >= 0) setFocusIdx(idx);
+    }
   }
 
   function setNote(ambiguityId: string, note: string) {
@@ -155,28 +202,21 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "분석을 끝내지 못했습니다.");
+        setError(json.error ?? "기준을 찾지 못했습니다.");
         return;
       }
+      // Do NOT auto-pick recommendations — person must choose
       setDraft(json.draft);
       setScholar(json.scholar ?? []);
-      setNotice(json.notice ?? null);
-      const seeded: Record<string, ResearcherDecision> = {};
-      for (const a of json.draft.ambiguities as AnalysisDraft["ambiguities"]) {
-        if (a.recommended) {
-          seeded[a.id] = {
-            ambiguityId: a.id,
-            chosenOption: a.recommended,
-          };
-        }
-      }
-      setDecisions(seeded);
+      setDecisions({});
+      setSpec(null);
+      setReport(null);
+      setIntentLocked(false);
+      setFocusIdx(0);
       setStep("confirm");
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          (isConsole
-            ? "Ontology 탭에서 매핑을 확인하세요."
-            : "시맨틱 콘솔 Ontology에서 매핑을 확인할 수 있습니다."),
+          "헷갈리는 기준을 하나씩 고르세요. 잠그기 전에는 SQL을 반출하지 않습니다.",
       );
     });
   }
@@ -198,17 +238,24 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "기준과 SQL을 만들지 못했습니다.");
+        setError(json.error ?? "의도를 잠그지 못했습니다.");
         return;
       }
+      const when = new Date().toLocaleString("ko-KR", {
+        timeZone: "Asia/Seoul",
+      });
       setSpec(json.spec);
-      setNotice(json.notice ?? null);
+      setIntentLocked(true, `${when} (Asia/Seoul)`);
+      setNotice(
+        (json.notice ? json.notice + " · " : "") +
+          "의도가 잠겼습니다. 잠금 카드와 함께 SQL·결과를 공유하세요.",
+      );
       setStep("spec");
     });
   }
 
   function runAudit() {
-    if (!spec) return;
+    if (!spec || !intentLocked) return;
     setError(null);
     startTransition(async () => {
       const res = await fetch("/api/audit", {
@@ -221,7 +268,7 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "결과를 다시 보지 못했습니다.");
+        setError(json.error ?? "결과를 점검하지 못했습니다.");
         return;
       }
       setReport(json.report);
@@ -230,69 +277,129 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
     });
   }
 
+  function goStep(next: Step) {
+    if (next === "input") {
+      setStep("input");
+      return;
+    }
+    if (next === "confirm" && draft) {
+      setStep("confirm");
+      return;
+    }
+    if (next === "spec") {
+      if (!intentLocked || !spec) {
+        setError("의도를 잠가야 반출 명세·SQL을 볼 수 있습니다.");
+        setStep(draft ? "confirm" : "input");
+        return;
+      }
+      setStep("spec");
+      return;
+    }
+    if (next === "audit") {
+      if (!intentLocked || !report) {
+        if (intentLocked && spec) setStep("spec");
+        else setError("잠금 후 결과 점검을 먼저 실행하세요.");
+        return;
+      }
+      setStep("audit");
+    }
+  }
+
   return (
     <section className={cn(isConsole && "space-y-0")}>
-      {isConsole ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="font-normal">
-              {linkedTables.length
-                ? `연결 테이블 ${linkedTables.length}`
-                : "테이블 미연결"}
-            </Badge>
-            <Link
-              href="/console/semantic?tab=catalog"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Catalog에서 연결
-            </Link>
-          </div>
-          <Link
-            href="/console/semantic?tab=ontology"
-            className="inline-flex h-8 items-center rounded-lg border border-border bg-card px-2.5 text-xs font-medium shadow-sm hover:bg-accent/40"
-          >
-            Ontology 보기
-          </Link>
+      {/* Gate status strip */}
+      <div
+        className={cn(
+          "mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-sm",
+          intentLocked
+            ? "border-ok/35 bg-ok/5"
+            : "border-signal/35 bg-signal/5",
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <Lock
+            className={cn(
+              "size-4",
+              intentLocked ? "text-ok" : "text-signal",
+            )}
+          />
+          <span className="font-medium text-foreground">
+            {intentLocked
+              ? "의도 잠금 · SQL·숫자 반출 가능"
+              : "의도 미잠금 · SQL·숫자 반출 불가"}
+          </span>
+          {draft && !intentLocked ? (
+            <span className="text-xs text-muted-foreground">
+              남은 선택 {openCount}개
+            </span>
+          ) : null}
         </div>
-      ) : (
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">이 페이지에서 분석하기</p>
-            <h2 className="font-display text-3xl text-ink sm:text-4xl">
-              질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
-            </h2>
-          </div>
-          <Link
-            href="/console/semantic?tab=analyze"
-            className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium shadow-sm hover:bg-accent/40"
-          >
-            시맨틱 콘솔 열기
-          </Link>
-        </div>
-      )}
+        <span className="text-xs text-muted-foreground">
+          선택지로 기준을 구체화한 뒤에만 반출합니다
+        </span>
+      </div>
 
-      <ol className={cn("mb-6 flex flex-wrap gap-1.5", !isConsole && "mb-8 gap-2")}>
-        {STEPS.map((s) => (
-          <li key={s.id}>
-            <button
-              type="button"
-              onClick={() => {
-                if (s.id === "input") setStep("input");
-                if (s.id === "confirm" && draft) setStep("confirm");
-                if (s.id === "spec" && spec) setStep("spec");
-                if (s.id === "audit" && report) setStep("audit");
-              }}
-              className={cn(
-                "rounded-md border px-3 py-1.5 text-xs transition sm:text-sm",
-                step === s.id
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border/80 bg-card/60 text-muted-foreground hover:border-primary/40",
-              )}
-            >
-              {s.label}
-            </button>
-          </li>
-        ))}
+      {!isConsole ? (
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground">의도 게이트</p>
+          <h2 className="font-display text-3xl text-ink sm:text-4xl">
+            애매한 기준을 고르게 한 뒤, 잠그고 내보냅니다
+          </h2>
+        </div>
+      ) : null}
+
+      {/* Entry mode */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("verify")}
+          className={cn(
+            "rounded-md border px-3 py-1.5 text-xs sm:text-sm",
+            mode === "verify"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-card text-muted-foreground",
+          )}
+        >
+          이미 나온 쿼리·결과 검증
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("fresh")}
+          className={cn(
+            "rounded-md border px-3 py-1.5 text-xs sm:text-sm",
+            mode === "fresh"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-card text-muted-foreground",
+          )}
+        >
+          새 질문에서 시작
+        </button>
+      </div>
+
+      <ol className="mb-6 flex flex-wrap gap-1.5">
+        {STEPS.map((s) => {
+          const blocked =
+            (s.id === "spec" || s.id === "audit") && !intentLocked;
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={() => goStep(s.id)}
+                className={cn(
+                  "rounded-md border px-3 py-1.5 text-xs transition sm:text-sm",
+                  step === s.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : blocked
+                      ? "border-border/50 bg-muted/40 text-muted-foreground/70"
+                      : "border-border/80 bg-card/60 text-muted-foreground hover:border-primary/40",
+                )}
+              >
+                {s.label}
+                {s.gate && !intentLocked ? " 🔒" : null}
+              </button>
+            </li>
+          );
+        })}
       </ol>
 
       {notice ? (
@@ -306,43 +413,62 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
       {error ? (
         <Alert variant="destructive" className="mb-6">
           <AlertTriangle className="size-4" />
-          <AlertTitle>오류</AlertTitle>
+          <AlertTitle>막힘</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
 
       {step === "input" ? (
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-5">
+        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" variant="secondary" onClick={loadSample}>
-                예시 불러오기
+                의심 예제 불러오기
               </Button>
               <Badge variant="outline" className="font-normal">
-                가상 데이터만 사용합니다
+                가상 데이터 · 추천 자동선택 없음
               </Badge>
             </div>
 
             <Field
-              label="하고 싶은 질문"
+              label="하고 싶은 질문 / 검증할 분석 의도"
               value={researchQuestion}
               onChange={setResearchQuestion}
-              rows={7}
+              rows={6}
             />
             <Field
               label="용어 정의"
               value={glossary}
               onChange={setGlossary}
-              rows={10}
+              rows={8}
               mono
             />
             <Field
               label="표 구조"
               value={schema}
               onChange={setSchema}
-              rows={10}
+              rows={8}
               mono
             />
+
+            {mode === "verify" ? (
+              <>
+                <Field
+                  label="의심되는 SQL (이미 돌아간 쿼리)"
+                  value={candidateSql}
+                  onChange={setCandidateSql}
+                  rows={8}
+                  mono
+                />
+                <Field
+                  label="결과 CSV (반출 직전 표)"
+                  value={resultCsv}
+                  onChange={setResultCsv}
+                  rows={6}
+                  mono
+                />
+              </>
+            ) : null}
 
             <Button
               type="button"
@@ -361,203 +487,83 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
             </Button>
           </div>
 
-          <aside className="space-y-6">
-            <div className="rounded-xl border border-border bg-muted p-5">
-              <p className="text-xs tracking-wide text-muted-foreground">
-                이런 일이 자주 있습니다
+          <aside className="space-y-4">
+            <div className="rounded-lg border border-border bg-muted p-4">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                게이트 규칙
               </p>
-              <h3 className="mt-2 text-lg font-semibold text-foreground">
-                쿼리는 됐는데 답이 이상할 때
-              </h3>
-              <dl className="mt-4 space-y-3 text-sm text-foreground/90">
-                <div>
-                  <dt className="text-xs text-muted-foreground">누구</dt>
-                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.who}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">언제</dt>
-                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.when}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">왜 답답한가</dt>
-                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.pain}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">얼마나 걸리냐면</dt>
-                  <dd className="mt-0.5">{SAMPLE_PROJECT.drama.cost}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-foreground">
-                  겉보기엔 정상인 SQL
-                </h3>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowNaive((v) => !v)}
-                >
-                  {showNaive ? "접기" : "펼치기"}
-                </Button>
-              </div>
-              <p className="mb-3 text-sm text-muted-foreground">
-                AI가 자주 짜 주는 쿼리입니다. 실행은 되지만 기준이 다릅니다.
-              </p>
-              {showNaive ? (
-                <pre className="overflow-x-auto rounded-lg border border-border bg-muted p-4 font-mono text-[11px] leading-relaxed text-foreground">
-                  {SAMPLE_PROJECT.naiveSql}
-                </pre>
-              ) : null}
-              <ul className="mt-4 space-y-2">
-                {SAMPLE_PROJECT.knownTraps.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex gap-2 text-sm text-foreground"
-                  >
-                    <ShieldAlert className="mt-0.5 size-4 shrink-0 text-signal" />
-                    <span>
-                      <strong className="font-medium">{t.title}</strong> — {t.detail}
-                    </span>
-                  </li>
-                ))}
+              <ul className="mt-3 space-y-2 text-sm text-foreground">
+                <li>1. 애매한 축만 선택지로 묻습니다.</li>
+                <li>2. 추천은 보이되, 자동으로 고르지 않습니다.</li>
+                <li>3. 전부 고르고 「의도 잠금」해야 SQL이 나갑니다.</li>
+                <li>4. 기준을 바꾸면 잠금·SQL·점검이 무효가 됩니다.</li>
               </ul>
             </div>
+            {mode === "verify" && candidateSql ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <p className="text-sm font-medium text-foreground">
+                  반출 직전 쿼리 (잠금 전 신뢰 금지)
+                </p>
+                <pre className="mt-2 max-h-48 overflow-auto font-mono text-[11px] text-muted-foreground">
+                  {candidateSql.slice(0, 900)}
+                  {candidateSql.length > 900 ? "…" : ""}
+                </pre>
+              </div>
+            ) : null}
           </aside>
         </div>
       ) : null}
 
       {step === "confirm" && draft ? (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-border/70 bg-card/80 p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">{draft.mode === "live" ? "Liner Model" : "Demo"}</Badge>
-              <Badge variant="outline">확인할 점 {draft.ambiguities.length}개</Badge>
-            </div>
-            <p className="mt-3 text-base leading-relaxed">{draft.summary}</p>
+        <div className="space-y-5">
+          <IntentLockCard
+            researchQuestion={researchQuestion}
+            draft={draft}
+            decisions={decisions}
+            spec={spec}
+            locked={intentLocked}
+            lockedAt={lockedAt}
+          />
+
+          <div className="rounded-lg border border-violet-300 bg-violet-50 p-4 dark:border-violet-500/40 dark:bg-violet-500/10">
+            <p className="text-sm font-medium text-foreground">{draft.summary}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              아래 색 카드를 보고 A/B/C만 고르면 됩니다. 추천은 보이기만 하고 자동
+              선택은 하지 않습니다.
+            </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {draft.concepts.map((c) => (
-              <div
-                key={`${c.concept}-${c.glossaryTerm}`}
-                className="rounded-xl border border-border/70 bg-card/60 p-4"
-              >
-                <h3 className="font-display text-lg">{c.concept}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {c.glossaryTerm} · {c.columns.join(", ")}
-                </p>
-                <p className="mt-2 text-sm">{c.condition}</p>
-                {c.exceptions.length ? (
-                  <p className="mt-2 text-xs text-signal">
-                    빼야 할 것: {c.exceptions.join(", ")}
-                  </p>
-                ) : null}
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h3 className="font-display text-2xl">기준을 정해 주세요</h3>
-            {draft.ambiguities.map((a) => (
-              <div
-                key={a.id}
-                className="rounded-xl border border-border/80 bg-card/80 p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <Badge variant="outline" className="mb-2 font-normal">
-                      {KIND_LABEL[a.kind] ?? a.kind}
-                    </Badge>
-                    <h4 className="text-lg font-medium">{a.title}</h4>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {a.whyItMatters}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-col gap-2">
-                  {a.options.map((opt) => {
-                    const selected = decisions[a.id]?.chosenOption === opt;
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => chooseOption(a.id, opt)}
-                        className={cn(
-                          "rounded-lg border px-3 py-2 text-left text-sm transition",
-                          selected
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-border/70 bg-background/50 hover:border-primary/40",
-                        )}
-                      >
-                        <span className="inline-flex items-center gap-2">
-                          {selected ? (
-                            <CheckCircle2 className="size-4 text-primary" />
-                          ) : (
-                            <span className="size-4 rounded-full border border-border" />
-                          )}
-                          {opt}
-                          {a.recommended === opt ? (
-                            <Badge className="ml-1" variant="secondary">
-                              추천
-                            </Badge>
-                          ) : null}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="mt-3">
-                  <Label htmlFor={`note-${a.id}`} className="text-xs text-muted-foreground">
-                    메모 (선택 사항)
-                  </Label>
-                  <Textarea
-                    id={`note-${a.id}`}
-                    className="mt-1"
-                    rows={2}
-                    value={decisions[a.id]?.note ?? ""}
-                    onChange={(e) => setNote(a.id, e.target.value)}
-                    placeholder="왜 이렇게 골랐는지 적어 두세요"
-                  />
-                </div>
-                {a.evidence?.length ? (
-                  <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                    {a.evidence.map((e) => (
-                      <li key={e}>{e}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ))}
+          <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+            <IntentAxisMap
+              ambiguities={orderedAmbiguities}
+              decisions={decisions}
+              focusIdx={focusIdx}
+              onFocus={setFocusIdx}
+            />
+            <IntentChoicePanel
+              ambiguities={orderedAmbiguities}
+              decisions={decisions}
+              focusIdx={focusIdx}
+              onFocus={setFocusIdx}
+              onChoose={chooseOption}
+              onNote={setNote}
+            />
           </div>
 
           {scholar.length ? (
-            <div className="rounded-xl border border-border/70 bg-card/70 p-5">
-              <h3 className="font-display text-xl">Liner Scholar로 찾은 글</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                헷갈리는 기준을 논문·자료로 같이 살펴봅니다.
-              </p>
-              <ul className="mt-4 space-y-3">
-                {scholar.map((h) => (
-                  <li key={h.url} className="text-sm">
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="text-sm font-medium">참고 자료 (Scholar)</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                {scholar.slice(0, 3).map((h) => (
+                  <li key={h.url}>
                     <a
                       href={h.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-primary underline-offset-2 hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {h.title}
                     </a>
-                    <p className="text-muted-foreground">{h.description}</p>
-                    <p className="text-xs text-muted-foreground/80">
-                      {[h.journal, h.date, h.citationCount != null ? `cited ${h.citationCount}` : null]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
                   </li>
                 ))}
               </ul>
@@ -576,84 +582,89 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
             ) : (
               <ClipboardCheck className="size-4" />
             )}
-            정한 기준으로 SQL 만들기
+            {allAmbiguitiesDecided
+              ? "의도 잠금 · SQL 만들기"
+              : `아직 ${openCount}개 · 색 카드에서 골라 주세요`}
           </Button>
         </div>
       ) : null}
 
-      {step === "spec" && spec ? (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-border/70 bg-card/80 p-6">
+      {step === "spec" && spec && intentLocked ? (
+        <div className="space-y-5">
+          {draft ? (
+            <IntentLockCard
+              researchQuestion={researchQuestion}
+              draft={draft}
+              decisions={decisions}
+              spec={spec}
+              locked={intentLocked}
+              lockedAt={lockedAt}
+            />
+          ) : null}
+
+          <div className="rounded-lg border border-ok/30 bg-ok/5 px-3 py-2 text-sm text-foreground">
+            이 SQL은 잠긴 기준에서만 나왔습니다. 카드 없이 숫자만 공유하지 마세요.
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex flex-wrap gap-2">
-              <Badge>{spec.mode === "live" ? "Liner로 작성" : "예시로 작성"}</Badge>
-              <Badge variant="outline">확인 항목 {spec.checks.length}개</Badge>
+              <Badge>{spec.mode === "live" ? "Liner" : "Demo"}</Badge>
+              <Badge variant="outline" className="border-ok/40 text-ok">
+                잠금 반영
+              </Badge>
             </div>
-            <h3 className="mt-3 font-display text-3xl">{spec.title}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">{spec.researchQuestion}</p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <SpecBlock label="누구를 보나" value={spec.population} />
-              <SpecBlock label="기간은" value={spec.dateAnchor} />
-              <SpecBlock label="같은 걸로 묶는 기준" value={spec.identifierScope} />
+            <h3 className="mt-3 text-xl font-semibold">{spec.title}</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
+              <SpecBlock label="기간" value={spec.dateAnchor} />
+              <SpecBlock label="식별" value={spec.identifierScope} />
+              <SpecBlock label="대상" value={spec.population} />
               <SpecBlock
-                label="빼는 것"
+                label="제외"
                 value={spec.exclusions.join(", ") || "없음"}
               />
-            </div>
-            <div className="mt-4">
-              <p className="text-xs tracking-wide text-muted-foreground">
-                무엇을 세나
-              </p>
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
-                {spec.measures.map((m) => (
-                  <li key={m}>{m}</li>
-                ))}
-              </ul>
             </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-border bg-muted p-4">
+            <div className="rounded-lg border border-border bg-muted p-4">
               <h4 className="mb-2 text-sm font-medium text-muted-foreground">
-                만든 SQL
+                잠금 기준 SQL
               </h4>
-              <pre className="max-h-[420px] overflow-auto font-mono text-[11px] leading-relaxed text-foreground">
+              <pre className="max-h-[360px] overflow-auto font-mono text-[11px] text-foreground">
                 {spec.sql}
               </pre>
             </div>
-            <div className="rounded-xl border border-border/70 bg-card/80 p-4">
-              <h4 className="mb-3 font-display text-xl">나중에 볼 것</h4>
-              <ul className="space-y-3">
-                {spec.checks.map((c) => (
-                  <li key={c.id} className="border-b border-border/50 pb-3 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          c.severity === "blocker"
-                            ? "destructive"
-                            : c.severity === "warning"
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {SEVERITY_LABEL[c.severity] ?? c.severity}
+            {candidateSql ? (
+              <div className="rounded-lg border border-destructive/25 bg-destructive/5 p-4">
+                <h4 className="mb-2 text-sm font-medium text-foreground">
+                  잠금 전 의심 SQL (비교)
+                </h4>
+                <pre className="max-h-[360px] overflow-auto font-mono text-[11px] text-muted-foreground">
+                  {candidateSql}
+                </pre>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-card p-4">
+                <h4 className="mb-3 text-sm font-medium">점검 항목</h4>
+                <ul className="space-y-2 text-sm">
+                  {spec.checks.map((c) => (
+                    <li key={c.id}>
+                      <Badge variant="outline" className="mr-2">
+                        {SEVERITY_LABEL[c.severity]}
                       </Badge>
-                      <span className="font-medium">{c.name}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      {c.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          <div className="rounded-xl border border-border/70 bg-card/70 p-5">
-            <h4 className="font-display text-xl">결과표 (CSV)</h4>
-            <p className="mt-1 text-sm text-muted-foreground">
-              예제에는 기준과 다른 값이 들어 있습니다. 실제 결과로 바꿔도 됩니다.
-            </p>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h4 className="font-medium">결과 CSV · 반출 전 점검</h4>
             <Textarea
               className="mt-3 font-mono text-xs"
-              rows={8}
+              rows={7}
               value={resultCsv}
               onChange={(e) => setResultCsv(e.target.value)}
             />
@@ -669,27 +680,53 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
               ) : (
                 <ShieldAlert className="size-4" />
               )}
-              결과와 기준이 맞는지 보기
+              잠금 기준과 결과가 맞는지 보기
             </Button>
           </div>
         </div>
       ) : null}
 
-      {step === "audit" && report ? (
-        <div className="space-y-6">
+      {step === "spec" && !intentLocked ? (
+        <div className="rounded-lg border border-signal/40 bg-signal/5 p-5">
+          <p className="font-medium text-foreground">반출 차단</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            의도가 잠기지 않아 SQL·명세를 보여 주지 않습니다. 기준 잠금 단계로
+            돌아가세요.
+          </p>
+          <Button
+            type="button"
+            className="mt-3"
+            onClick={() => setStep(draft ? "confirm" : "input")}
+          >
+            기준 잠금으로
+          </Button>
+        </div>
+      ) : null}
+
+      {step === "audit" && report && intentLocked ? (
+        <div className="space-y-5">
+          {draft ? (
+            <IntentLockCard
+              researchQuestion={researchQuestion}
+              draft={draft}
+              decisions={decisions}
+              spec={spec}
+              locked={intentLocked}
+              lockedAt={lockedAt}
+            />
+          ) : null}
+
           <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-xl border border-signal/30 bg-signal/10 p-6">
-              <p className="text-xs tracking-wide text-signal">
-                불일치 점수
-              </p>
-              <p className="drift-pulse mt-2 font-display text-6xl text-signal">
+            <div className="rounded-lg border border-signal/30 bg-signal/10 p-5">
+              <p className="text-xs tracking-wide text-signal">불일치 점수</p>
+              <p className="mt-2 font-display text-5xl text-signal">
                 {report.intentDriftScore}
               </p>
-              <p className="mt-2 text-sm text-foreground/80">{report.summary}</p>
+              <p className="mt-2 text-sm">{report.summary}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-card/80 p-6">
-              <h3 className="font-display text-2xl">다음에 하면 좋은 일</h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <h3 className="font-semibold">다음에</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                 {report.nextActions.map((a) => (
                   <li key={a}>{a}</li>
                 ))}
@@ -702,7 +739,7 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
               <div
                 key={f.id}
                 className={cn(
-                  "rounded-xl border p-4",
+                  "rounded-lg border p-4",
                   f.status === "fail"
                     ? "border-destructive/40 bg-destructive/5"
                     : f.status === "needs_review"
@@ -720,27 +757,13 @@ export function Workspace({ variant = "landing" }: WorkspaceProps) {
                           : "outline"
                     }
                   >
-                    {STATUS_LABEL[f.status] ?? f.status}
+                    {STATUS_LABEL[f.status]}
                   </Badge>
                   <h4 className="font-medium">{f.title}</h4>
                 </div>
                 <p className="mt-2 text-sm">{f.detail}</p>
-                {f.evidenceRows?.length ? (
-                  <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-muted p-3 font-mono text-[11px] text-foreground">
-                    {f.evidenceRows.join("\n")}
-                  </pre>
-                ) : null}
               </div>
             ))}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={() => setStep("input")}>
-              다른 질문 쓰기
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setStep("spec")}>
-              SQL 단계로
-            </Button>
           </div>
         </div>
       ) : null}
@@ -777,7 +800,9 @@ function Field({
 function SpecBlock({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-sm">{value}</p>
     </div>
   );

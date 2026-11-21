@@ -1,57 +1,46 @@
-# IntentSpec · 의도명세
+# IntentSpec · 의도 구체화 에이전트
 
 GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)  
-[.EXE-THON](https://contests.liner.com/hackathon/exe-thon-2611/) 출품용 에이전트.
+[.EXE-THON](https://contests.liner.com/hackathon/exe-thon-2611/) 출품용.
 
-연구 질문·용어 정의서·데이터 구조를 넣으면 **분석 의도를 구조화**하고, 모호한 점은 연구자에게 확인한 뒤 **명세 · SQL · 검증 항목**을 만들며, 결과 CSV에서 **의도 드리프트**를 감사합니다.
+**핵심 무기**는 SQL 생성기가 아니라, 애매한 질문을 **선택지로 구체화하고 잠그는 에이전트**입니다.  
+데이터 분석 · 연구 대화 · 일상 챗봇에 같은 루프를 붙입니다.
 
-## 왜 만들었나
+## 적용 범위 3가지
 
-LLM이 짠 SQL은 종종 “정상 실행”됩니다. 그런데
+| 범위 | 경로 | 하는 일 |
+| --- | --- | --- |
+| 📊 데이터 분석 | `/console/semantic` | 기준 잠금 게이트 → SQL · 결과 점검 · 시맨틱 콘솔 |
+| 🔬 연구·조사 | `/clarify/research` | 범위·근거·주장·다음 산출물을 색 카드로 고르기 |
+| 💬 일상 질문 | `/clarify/everyday` | 목적·제약·기준·다음 행동으로 추천 질문 구체화 |
 
-- 같은 제조번호라도 제품이 다르면 다른 기록이고
-- “최근”이 시험일인지 적재일인지에 따라 결과가 갈리며
-- 재시험 합격을 실패로 넣으면 실패율이 왜곡됩니다.
+홈(`/`)에서 세 페이지로 들어갑니다.
 
-IntentSpec은 이 **조용한 실패**를 시연 가능한 파이프라인으로 막습니다.
+## 코어 루프
 
-## Liner API 사용
+애매한 질문 → 목적 / 제약 / 기준 / 다음 → **잠금 카드** → (분석이면 SQL·감사)
+
+- 추천은 보이되 **자동 선택하지 않음**
+- 잠그기 전에는 반출·확정 불가
+- 기준을 바꾸면 잠금이 풀림
+
+## Liner API
 
 | API | 역할 |
 | --- | --- |
-| **Liner Model API** (`liner-gpt-router`, OpenAI 호환) | 개념 연결, 모호함 추출, 명세/SQL 컴파일, 결과 감사 |
-| **Liner Scholar Search** | 날짜 기준·식별자 스코프 등 방법론 용어 보강 |
+| Model (`liner-gpt-router`) | analyze / confirm / audit / clarify |
+| Scholar Search | 분석 모호 용어 보강 |
 
-`LINER_API_KEY`가 없으면 **데모 엔진**으로 동일 시나리오가 동작합니다.
+`LINER_API_KEY`가 없으면 데모 엔진으로 동일 시나리오가 동작합니다.
 
 ## 로컬 실행
 
 ```bash
 cp .env.example .env.local
-# LINER_API_KEY=...  (https://platform.liner.com)
-
 npm install
 npm run dev
 ```
 
-기본 포트: **3847** → http://127.0.0.1:3847
-
-## 화면 구성
-
-| 경로 | 역할 |
-| --- | --- |
-| `/` | 소개 + 분석 워크스페이스 |
-| `/console/semantic` | 시맨틱 레이어 콘솔 (카탈로그 · 온톨로지 · 지표) |
-
-## 시연 순서 (5분)
-
-1. 소개 페이지에서 **예시 불러오기**
-2. 헷갈리는 기준 찾기 → 추천 옵션으로 확인
-3. `/console/semantic`에서 매핑·지표 확인
-4. 소개 페이지로 돌아와 SQL·결과 점검
+포트 **3847** → http://127.0.0.1:3847
 
 데이터는 전부 **가상**입니다 (참가 규정 제5조).
-
-## 스택
-
-Next.js · TypeScript · Tailwind · shadcn/ui · OpenAI SDK → Liner Platform
