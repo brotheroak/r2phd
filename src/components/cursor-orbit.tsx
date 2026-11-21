@@ -17,15 +17,15 @@ const N = 28;
 const CYCLE = 4.2;
 const R = 1; // unit ring radius in local space
 
-/** Palette stops — teal ↔ coral, slate ↔ peach, ink accents */
+/** Palette stops — tone lowered ~20% to match page washes */
 const PALETTE = [
-  { r: 15, g: 107, b: 99 }, // primary teal
-  { r: 183, g: 223, b: 215 }, // wash-teal
-  { r: 236, g: 192, b: 182 }, // wash-coral
-  { r: 196, g: 92, b: 74 }, // glow-coral
-  { r: 197, g: 210, b: 228 }, // wash-slate
-  { r: 239, g: 208, b: 168 }, // wash-peach
-  { r: 217, g: 119, b: 6 }, // signal
+  { r: 12, g: 86, b: 80 }, // glow-teal
+  { r: 146, g: 179, b: 172 }, // wash-teal
+  { r: 188, g: 154, b: 144 }, // wash-coral
+  { r: 157, g: 74, b: 59 }, // glow-coral
+  { r: 158, g: 168, b: 182 }, // wash-slate
+  { r: 191, g: 166, b: 134 }, // wash-peach
+  { r: 174, g: 95, b: 5 }, // signal (toned)
   { r: 13, g: 44, b: 48 }, // ink
 ];
 
