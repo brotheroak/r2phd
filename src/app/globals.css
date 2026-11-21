@@ -236,6 +236,31 @@
     background-size: 220% 100%;
     animation: pipe-slide 3.2s ease-in-out infinite;
   }
+  .human-ai-pulse {
+    animation: human-ai-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes human-ai-pulse {
+    0% {
+      transform: translateX(-30%);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translateX(110%);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(160%);
+      opacity: 0.2;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .human-ai-pulse {
+      animation: none;
+      transform: translateX(35%);
+      opacity: 0.85;
+    }
+  }
+
   .rise-in {
     animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }

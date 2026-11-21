@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
 import { ConsoleEntryButton } from "@/components/console-entry-button";
 import { HeroAtmosphere } from "@/components/hero-atmosphere";
+import { HumanAiMark } from "@/components/human-ai-mark";
 import {
   WORK_CASE_CATEGORIES,
   WORK_CASES,
@@ -25,13 +26,11 @@ export default function HomePage() {
       {/* Slim sticky bar — Astryx-style chrome */}
       <nav className="sticky top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-3">
             <span className="font-display text-2xl tracking-tight text-ink">
               IntentSpec
             </span>
-            <span className="hidden text-sm text-muted-foreground md:inline">
-              인간 ↔ AI 소통
-            </span>
+            <HumanAiMark className="hidden md:inline-flex" />
           </div>
           <div className="flex items-center gap-4">
             <StatusPill />
@@ -50,12 +49,11 @@ export default function HomePage() {
       <header className="relative overflow-hidden">
         <HeroAtmosphere />
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 sm:py-24">
-          <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.14em] text-primary uppercase">
-            <Sparkles className="size-4" />
-            Communication first
-          </p>
+          <div className="rise-in">
+            <HumanAiMark size="hero" />
+          </div>
 
-          <h1 className="rise-in-delay-1 mt-5 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
+          <h1 className="rise-in-delay-1 mt-7 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
             결국 문제는 소통입니다.
             <br />
             뜻이 맞으면 일이 풀립니다
@@ -190,7 +188,10 @@ export default function HomePage() {
       <footer className="border-t border-border/70 bg-white/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:px-8">
           <p className="font-display text-xl text-ink">IntentSpec</p>
-          <p>인간 ↔ AI 소통 · 의도 잠금 · .EXE-THON</p>
+          <p className="inline-flex items-center gap-2">
+            <HumanAiMark />
+            <span>· 의도 잠금 · .EXE-THON</span>
+          </p>
         </div>
       </footer>
     </main>
