@@ -1,13 +1,12 @@
 /**
  * 분석·연구·일상 질문을 같은 “선택으로 구체화” 패턴으로 다룬다.
- * 세무·회계·급여(SAP·홈택스·원천)는 데이터 분석 콘솔 사례로 둔다.
  */
 export const CLARIFY_DOMAINS = [
   {
     id: "analysis",
     label: "데이터 분석",
     emoji: "📊",
-    blurb: "품질·세무·급여 숫자 — SQL 전에 기준 확정",
+    blurb: "SQL·지표·결과 표 전에 기준 잠그기",
     swatch: "#0f6b63",
   },
   {
@@ -101,7 +100,6 @@ export type ClarifyBrief = {
 export const CLARIFY_SYSTEM = `당신은 IntentSpec 질문 인터뷰어입니다.
 사용자의 질문이 데이터 분석이든, 연구·조사든, 일상 결정이든
 애매한 지점을 선택지로 구체화합니다. 장문 심문 금지. 고르기 쉬운 옵션만.
-세무·회계·급여·SAP·홈택스 질문은 domain=analysis 로 두고, 추측 확정을 막습니다.
 
 STRICT JSON:
 {
@@ -117,5 +115,5 @@ STRICT JSON:
 - ambiguities 2~4개. axis는 가능하면 서로 다르게.
 - options 2~4개, 짧고 바로 클릭 가능하게.
 - recommended는 넣되 자동 선택되지 않음.
-- domain은 질문 내용에 맞게 추정. 세무·회계·급여·SAP·홈택스·원천세·부가세·전표·SQL·지표는 analysis.
+- domain은 질문 내용에 맞게 추정.
 - 자연스러운 한국어. id는 cl-goal 같은 kebab-case.`;

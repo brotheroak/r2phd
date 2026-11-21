@@ -84,7 +84,20 @@ WHERE f.company_code = 'KR01'
   AND f.reversal_of IS NULL
   -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
 ;`
-        : `-- IntentSpec 확정 명세 (품질 데모)
+        : scenario.id === "sap"
+          ? `-- IntentSpec 확정 명세 (RFC/EAI 메타 잠금 데모)
+SELECT
+  s.table_name, s.field_name, s.data_element,
+  m.target_field, m.transform
+FROM sap_field_catalog s
+JOIN eai_maps m
+  ON m.source_field = s.field_name
+ AND m.source_system = 'SAP'
+WHERE s.managed = true
+  AND m.stale = false
+  -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
+;`
+          : `-- IntentSpec 확정 명세 (품질 데모)
 SELECT product_code, lot_no, fail_rate_pct
 FROM /* locked grain */ lots
 -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}

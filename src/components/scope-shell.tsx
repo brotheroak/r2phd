@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const SCOPES = [
   {
     ...CLARIFY_DOMAINS[0],
-    href: "/console/semantic?tab=analyze",
+    href: "/console/semantic?tab=analyze&case=quality",
     match: (p: string) => p.startsWith("/console"),
   },
   {
@@ -42,16 +42,11 @@ export function ScopeShell({
     <div className="min-h-svh bg-[color-mix(in_oklab,var(--mist)_55%,white)]">
       <header className="border-b border-border/70 bg-card/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
-              IS
+          <Link href="/" className="flex items-baseline gap-2.5">
+            <span className="font-display text-xl text-ink">IntentSpec</span>
+            <span className="hidden text-[11px] text-muted-foreground sm:inline">
+              의도 구체화 에이전트
             </span>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-ink">IntentSpec</p>
-              <p className="text-[11px] text-muted-foreground">
-                핵심 · 의도 구체화 에이전트
-              </p>
-            </div>
           </Link>
           <div className="flex items-center gap-2">
             <StatusPill />

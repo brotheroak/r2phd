@@ -100,6 +100,71 @@ export const PHYSICAL_CATALOG = {
         },
       ],
     },
+    {
+      name: "integration",
+      tables: [
+        {
+          name: "rfc_interfaces",
+          columns: [
+            "iface_id",
+            "function_module",
+            "direction",
+            "owner_team",
+            "last_reviewed_at",
+          ],
+          role: "메타",
+        },
+        {
+          name: "eai_maps",
+          columns: [
+            "map_id",
+            "source_system",
+            "target_system",
+            "source_field",
+            "target_field",
+            "transform",
+            "stale",
+          ],
+          role: "메타",
+        },
+        {
+          name: "sap_field_catalog",
+          columns: [
+            "field_id",
+            "table_name",
+            "field_name",
+            "data_element",
+            "description_ko",
+            "managed",
+          ],
+          role: "메타",
+        },
+        {
+          name: "warehouse_field_catalog",
+          columns: [
+            "field_id",
+            "schema_name",
+            "table_name",
+            "column_name",
+            "description",
+            "managed",
+          ],
+          role: "메타",
+        },
+        {
+          name: "sync_runs",
+          columns: [
+            "run_id",
+            "iface_id",
+            "started_at",
+            "finished_at",
+            "row_count",
+            "status",
+          ],
+          role: "사실",
+        },
+      ],
+    },
   ],
 } as const;
 
@@ -126,6 +191,24 @@ export const ENTITY_GRAPH = [
     to: "withholding_lines",
     on: "run_id",
     label: "1:N",
+  },
+  {
+    from: "rfc_interfaces",
+    to: "sync_runs",
+    on: "iface_id",
+    label: "1:N",
+  },
+  {
+    from: "sap_field_catalog",
+    to: "eai_maps",
+    on: "field≈source_field",
+    label: "매핑",
+  },
+  {
+    from: "eai_maps",
+    to: "warehouse_field_catalog",
+    on: "target_field≈column",
+    label: "매핑",
   },
 ] as const;
 

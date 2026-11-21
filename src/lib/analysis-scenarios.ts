@@ -1,13 +1,13 @@
 /**
  * Fictional demo scenarios only (Exe-thon §5).
- * High-stakes finance cases need the same Analyze gate as quality analytics:
- * wrong grain / date / join → wrong 신고·지급 numbers.
+ * Quality analytics and SAP integration stay separate — mixing them dilutes both.
+ * SAP path stresses RFC/EAI + unmanaged metadata/schema drift across systems.
  */
 
 import type { AnalysisDraft } from "./types";
 import { SAMPLE_PROJECT } from "./sample-project";
 
-export type AnalysisScenarioId = "quality" | "vat" | "payroll";
+export type AnalysisScenarioId = "quality" | "sap" | "vat" | "payroll";
 
 export type AnalysisScenario = {
   id: AnalysisScenarioId;
@@ -447,7 +447,7 @@ const QUALITY_SCENARIO: AnalysisScenario = {
   label: "품질 · 로트 실패율",
   blurb: SAMPLE_PROJECT.tagline,
   systems: "품질 시험 · 판정 웨어하우스",
-  workspaceHint: "quality_lab · core",
+  workspaceHint: "ops_lab · core",
   linkedTables: ["products", "lots", "tests", "dispositions"],
   researchQuestion: SAMPLE_PROJECT.researchQuestion,
   glossary: SAMPLE_PROJECT.glossary,
@@ -458,29 +458,230 @@ const QUALITY_SCENARIO: AnalysisScenario = {
   draft: QUALITY_DRAFT,
 };
 
+/** Cross-system SAP RFC/EAI — metadata & schema often unmanaged. */
+const SAP_SCENARIO: AnalysisScenario = {
+  id: "sap",
+  label: "추가 예 · 연동 메타",
+  blurb:
+    "인터페이스 메타가 안 맞을 때(문서화된 RFC 메타 미갱신 등) 의도만 잠그는 보조 예제.",
+  systems: "데모 카탈로그 · RFC/PI 메타 이슈를 모형화",
+  workspaceHint: "ops_lab · integration",
+  linkedTables: [
+    "rfc_interfaces",
+    "eai_maps",
+    "sap_field_catalog",
+    "warehouse_field_catalog",
+    "sync_runs",
+  ],
+  researchQuestion: `SAP FI 전표를 RFC로 뽑아 EAI로 웨어하우스에 넣고, 홈택스·급여 숫자와 맞추려 한다.
+문제는 각 시스템에 메타데이터·스키마가 따로 있고, 필드 설명이 오래됐거나 비어 있는 경우가 많다.
+RFC 함수 모듈이 주는 BUDAT와 EAI가 넣는 posting_date, 창고 load_date가 같은 뜻인지 확정이 없다.
+eai_maps.stale = true 인 매핑을 그대로 쓰면 세금코드·임금유형이 엉뚱한 컬럼으로 간다.
+실연결·실신고는 하지 않고, 연동 의도(진실 원천·필드 뜻·동기 기준)만 잠근다.`,
+  glossary: `# 용어 정의서 (가상 · SAP 연동)
+
+RFC (Remote Function Call)
+- SAP 함수 모듈로 전표·마스터를 읽는 통로. iface마다 function_module·direction·owner가 있다.
+- last_reviewed_at 이 비어 있으면 메타가 방치된 인터페이스로 본다.
+
+EAI 맵
+- source_system → target_system 필드 대응. transform·stale 플래그가 있다.
+- stale=true 는 “예전에 맞춰 둔 맵, 지금 스키마와 맞는지 모름”.
+
+메타데이터 / 스키마
+- sap_field_catalog: SAP 쪽 data_element·설명.
+- warehouse_field_catalog: 창고 쪽 column·설명.
+- managed=false 인 필드는 공식 설명이 없거나 팀 합의가 없다.
+
+동기 기준 시각
+- RFC 추출 시각(sync_runs.started_at) ≠ SAP 전기일(BUDAT/posting_date) ≠ 창고 load_date.
+- “최신 데이터”가 어느 시각인지 잠그지 않으면 홈택스·급여 대조가 틀린다.
+
+진실 원천
+- 신고·지급 전 숫자의 기준 시스템(SAP / 웨어하우스 / 홈택스 화면)을 하나로 고른다.`,
+  schema: `# 데이터 구조 (가상 · integration)
+
+rfc_interfaces(iface_id, function_module, direction, owner_team, last_reviewed_at)
+eai_maps(map_id, source_system, target_system, source_field, target_field, transform, stale)
+sap_field_catalog(field_id, table_name, field_name, data_element, description_ko, managed)
+warehouse_field_catalog(field_id, schema_name, table_name, column_name, description, managed)
+sync_runs(run_id, iface_id, started_at, finished_at, row_count, status)
+
+주의
+- 시스템마다 스키마·메타가 분리되어 있고, managed=false / stale=true 가 흔하다
+- 필드 이름만 같다고 뜻이 같지 않음 (BUDAT ≠ load_date)
+- RFC·EAI 실호출 데모 없음 — 의도·매핑 잠금만`,
+  naiveSql: `-- ⚠ 메타를 무시하고 이름만으로 조인한 연동 점검
+SELECT
+  s.field_name AS sap_field,
+  w.column_name AS wh_col,
+  m.transform
+FROM sap_field_catalog s
+JOIN eai_maps m
+  ON m.source_field = s.field_name   -- ❌ 테이블·data_element 무시
+JOIN warehouse_field_catalog w
+  ON w.column_name = m.target_field  -- ❌ schema 무시, stale 미필터
+WHERE s.managed = false              -- ❌ 방치 메타를 그대로 신뢰
+;`,
+  resultRowsCsv: `sap_field,wh_col,stale,managed,notes
+BUDAT,load_date,true,false,전기일↔적재일 혼동 — 메타 미관리
+MWSKZ,tax_code,false,true,정상 매핑 예시
+MWSKZ,wage_type,true,false,EAI stale 맵이 세금코드를 임금유형으로
+PERNR,employee_id,true,false,인사 키 설명 공란`,
+  knownTraps: [
+    {
+      id: "trap-meta-unmanaged",
+      title: "메타·스키마 방치",
+      detail: "managed=false·설명 공란인 필드를 그대로 조인하면 뜻이 틀린다.",
+    },
+    {
+      id: "trap-eai-stale",
+      title: "EAI stale 맵",
+      detail: "예전에 맞춘 맵이 스키마 변경 후에도 남아 엉뚱한 컬럼으로 간다.",
+    },
+    {
+      id: "trap-rfc-clock",
+      title: "RFC 시각 ≠ 업무 날짜",
+      detail: "추출 시각과 전기일·귀속월을 같은 ‘최신’으로 보면 신고 구간이 어긋난다.",
+    },
+    {
+      id: "trap-name-join",
+      title: "필드 이름만 같은 조인",
+      detail: "테이블·data_element·스키마를 무시하고 이름만 맞추면 교차 오염이 난다.",
+    },
+  ],
+  draft: {
+    mode: "demo",
+    summary:
+      "SAP↔EAI↔창고는 스키마가 갈라져 있고 메타가 헐거운 경우가 많습니다. RFC 통로·필드 뜻·진실 원천을 잠그기 전에는 부가세·급여 숫자를 확정하면 안 됩니다.",
+    concepts: [
+      {
+        concept: "연동 통로",
+        glossaryTerm: "RFC",
+        columns: ["rfc_interfaces.function_module", "rfc_interfaces.iface_id"],
+        condition: "검토된 RFC iface만",
+        exceptions: ["last_reviewed_at 비어 있으면 보류"],
+      },
+      {
+        concept: "필드 뜻",
+        glossaryTerm: "메타데이터 / 스키마",
+        columns: [
+          "sap_field_catalog.data_element",
+          "warehouse_field_catalog.column_name",
+        ],
+        condition: "managed=true 이고 설명이 합의된 필드",
+        exceptions: ["이름만 같은 조인 금지"],
+      },
+      {
+        concept: "매핑 유효성",
+        glossaryTerm: "EAI 맵",
+        columns: ["eai_maps.stale", "eai_maps.transform"],
+        condition: "stale = false",
+        exceptions: ["stale 맵으로 신고·지급 숫자 확정 금지"],
+      },
+      {
+        concept: "동기 ‘최신’",
+        glossaryTerm: "동기 기준 시각",
+        columns: ["sync_runs.started_at"],
+        condition: "업무 날짜(전기일/귀속월)와 분리해 기록",
+        exceptions: ["load_date를 전기일로 쓰지 않음"],
+      },
+    ],
+    ambiguities: [
+      {
+        id: "amb-sap-truth",
+        kind: "identifier_scope",
+        title: "숫자 맞출 때 진실 원천",
+        whyItMatters:
+          "SAP·창고·홈택스 화면이 제각각이면 ‘맞다’의 기준이 세 갈래가 됩니다.",
+        options: [
+          "SAP 원천 (RFC 직후)",
+          "웨어하우스 적재본",
+          "홈택스/급여 화면",
+          "아직 미정 (잠금 금지)",
+        ],
+        recommended: "SAP 원천 (RFC 직후)",
+        evidence: ["연동 정의: 신고 전 대조는 SAP 기준"],
+      },
+      {
+        id: "amb-sap-pipe",
+        kind: "term_conflict",
+        title: "어떤 연동 통로를 쓸까",
+        whyItMatters: "RFC 직접과 EAI 경유는 필드 변환·지연이 다릅니다.",
+        options: [
+          "RFC 직접 추출",
+          "EAI 경유 (검증된 맵만)",
+          "둘 다 대조 후 합의",
+          "아직 모름",
+        ],
+        recommended: "EAI 경유 (검증된 맵만)",
+        evidence: ["EAI stale 맵은 제외"],
+      },
+      {
+        id: "amb-sap-meta",
+        kind: "missing_definition",
+        title: "메타·스키마가 비어 있을 때",
+        whyItMatters: "관리되지 않은 필드를 추측으로 채우면 연동이 ‘된 것처럼’ 보입니다.",
+        options: [
+          "managed=false 필드는 분석 제외",
+          "담당자가 설명을 채운 뒤만 사용",
+          "이름 유사도로 임시 매핑",
+          "아직 미정 (잠금 금지)",
+        ],
+        recommended: "담당자가 설명을 채운 뒤만 사용",
+        evidence: ["방치 메타는 잠금 전 금지"],
+      },
+      {
+        id: "amb-sap-clock",
+        kind: "date_anchor",
+        title: "‘최신 동기’의 시각",
+        whyItMatters: "RFC 추출 시각과 전기일·귀속월을 섞으면 신고 구간이 틀립니다.",
+        options: [
+          "업무 날짜(전기일/귀속월)",
+          "RFC sync_runs.started_at",
+          "창고 load_date",
+        ],
+        recommended: "업무 날짜(전기일/귀속월)",
+        evidence: ["정의서: 동기 시각 ≠ 업무 날짜"],
+      },
+    ],
+    assumedDefaults: [
+      "데모는 가상 RFC/EAI — 실시스템 호출 없음",
+      "실신고·실지급 대행 없음",
+    ],
+    sourcesUsed: [
+      "연동 정의서(가상)",
+      "RFC/EAI 메타 카탈로그",
+      "방치 스키마 주의 문구",
+    ],
+  },
+};
+
 export const ANALYSIS_SCENARIOS: AnalysisScenario[] = [
+  QUALITY_SCENARIO,
+  SAP_SCENARIO,
   VAT_SCENARIO,
   PAYROLL_SCENARIO,
-  QUALITY_SCENARIO,
 ];
 
 export const ANALYSIS_SCENARIO_BY_ID = Object.fromEntries(
   ANALYSIS_SCENARIOS.map((s) => [s.id, s]),
 ) as Record<AnalysisScenarioId, AnalysisScenario>;
 
-/** Default demo when Analyze opens empty — high-stakes finance first. */
-export const DEFAULT_ANALYSIS_SCENARIO_ID: AnalysisScenarioId = "payroll";
+/** Default analyze demo is quality — other cases are optional extras. */
+export const DEFAULT_ANALYSIS_SCENARIO_ID: AnalysisScenarioId = "quality";
 
 export function resolveScenarioId(
   hint?: string | null,
 ): AnalysisScenarioId {
   const h = (hint ?? "").toLowerCase();
-  if (/payroll|급여|원천|인사|withhold|wage/.test(h)) return "payroll";
-  if (/vat|부가|홈택스|sap|전표|세금코드|세무|회계/.test(h)) return "vat";
-  if (/lot|실패|품질|quality|로트/.test(h)) return "quality";
-  if (h === "payroll" || h === "vat" || h === "quality") {
-    return h as AnalysisScenarioId;
+  if (h === "payroll" || h === "vat" || h === "quality" || h === "sap") {
+    return h;
   }
+  if (/payroll|급여|원천|인사|withhold|wage/.test(h)) return "payroll";
+  if (/vat|부가|홈택스|전표|세금코드/.test(h)) return "vat";
+  if (/rfc|eai|idoc|연동|인터페이스|메타데이터 캐시|sap/.test(h)) return "sap";
+  if (/lot|실패|품질|quality|로트|제조/.test(h)) return "quality";
   return DEFAULT_ANALYSIS_SCENARIO_ID;
 }
 

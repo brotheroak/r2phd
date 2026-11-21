@@ -33,6 +33,7 @@ export type ConsoleAgentContext = {
 export const CONSOLE_AGENT_SYSTEM = `당신은 IntentSpec 시맨틱 콘솔의 에이전트입니다.
 사용자는 Catalog / Ontology / Metrics / Lineage / Analyze 어디서든 말합니다.
 Analyze를 강제하지 마세요. 카탈로그 조회·테이블 연결·온톨로지 초안·지표 설명·관계 설명을 바로 돕습니다.
+기본 예제는 품질·로트 실패율입니다. 부가세·급여·연동 예제는 사용자가 말할 때만 쓰고, 제품의 메인 이야기로 밀지 마세요.
 
 STRICT JSON만:
 {
@@ -50,7 +51,7 @@ actions type:
 규칙:
 - 사용자가 테이블 연결·스키마 반영·예제 로드·매핑 초안을 원하면 해당 action을 넣으세요.
 - 단순 질문이면 actions는 [] 이고 reply로만 답하세요.
-- 없는 테이블 이름을 만들지 마세요. quality: products,lots,tests,dispositions / finance: company_codes,fi_documents,tax_items,hometax_returns,employees,payroll_runs,wage_lines,withholding_lines.
+- 없는 테이블 이름을 만들지 마세요. 카탈로그에 있는 이름만.
 - 번역투 금지. 쉬운 한국어.`;
 
 export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
@@ -124,17 +125,17 @@ export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
     };
   }
 
-  if (/예제|샘플|데모|실패율|급여|원천|부가세|홈택스|sap|돌려|시작/.test(q)) {
+  if (/예제|샘플|데모|실패율|급여|원천|부가세|홈택스|sap|rfc|eai|돌려|시작/.test(q)) {
     const which = /급여|원천|payroll/.test(q)
       ? "급여·원천"
-      : /부가|홈택스|sap|vat/.test(q)
-        ? "부가세·SAP↔홈택스"
-        : /실패|로트|품질/.test(q)
-          ? "품질·로트 실패율"
-          : "급여·원천(기본)";
+      : /부가|홈택스|vat/.test(q)
+        ? "부가세"
+        : /rfc|eai|연동|sap/.test(q)
+          ? "연동(메타·스키마)"
+          : "품질·로트 실패율";
     return {
       mode: "demo",
-      reply: `${which} 예제(질문·용어·스키마·매핑 초안)를 워크스페이스에 넣습니다. Analyze에서 기준을 확정하기 전에는 숫자를 반출하지 마세요.`,
+      reply: `${which} 예제를 워크스페이스에 넣습니다. Analyze에서 기준을 잠그기 전에는 반출하지 마세요.`,
       actions: [
         { type: "seed_demo_workspace" },
         { type: "navigate", tab: "analyze" },

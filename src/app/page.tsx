@@ -6,10 +6,9 @@ import { CLARIFY_DOMAINS } from "@/lib/clarify";
 const SCOPES = [
   {
     ...CLARIFY_DOMAINS[0],
-    href: "/console/semantic?tab=analyze&case=payroll",
-    example:
-      "「급여 원천세가 홈택스랑 안 맞아」·「SAP 부가세 합이 달라」→ 기간·세금코드·키를 고른 뒤 SQL 잠금",
-    gap: "틀리면 신고·지급이 틀어지는 숫자와, AI가 편의로 고른 날짜·조인의 간극",
+    href: "/console/semantic?tab=analyze&case=quality",
+    example: "「최근 실패율이 왜 올랐지?」→ 기간·키·실패 정의를 고른 뒤 SQL 잠금",
+    gap: "사람이 말한 ‘최근’과 모델이 고른 날짜 컬럼의 간극",
   },
   {
     ...CLARIFY_DOMAINS[1],
@@ -55,7 +54,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <StatusPill />
             <Link
-              href="/console/semantic?tab=analyze&case=payroll"
+              href="/console/semantic?tab=analyze&case=quality"
               className="hidden rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground sm:inline"
             >
               분석 콘솔
@@ -75,8 +74,7 @@ export default function HomePage() {
           </h1>
           <p className="rise-in-delay-2 mt-6 max-w-xl text-base leading-relaxed text-foreground/80 sm:text-lg">
             애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
-            분석·조사·추천으로 넘어갑니다. 세무·회계·급여처럼 틀리면 안 되는
-            숫자도 같은 흐름입니다.
+            분석·조사·추천으로 넘어갑니다.
           </p>
 
           <div className="rise-in-delay-2 mt-8 max-w-3xl overflow-hidden rounded-2xl border border-border bg-card/90 p-4 shadow-sm backdrop-blur-sm">
@@ -101,17 +99,17 @@ export default function HomePage() {
 
           <div className="rise-in-delay-2 mt-6 flex flex-wrap gap-3">
             <Link
-              href="/console/semantic?tab=analyze&case=payroll"
+              href="/console/semantic?tab=analyze&case=quality"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              급여·원천 사례로 콘솔 열기
+              분석 콘솔 열기
               <ArrowRight className="size-4" />
             </Link>
             <Link
-              href="/console/semantic?tab=analyze&case=vat"
+              href="/clarify/research"
               className="inline-flex h-10 items-center rounded-lg border border-border bg-card/80 px-4 text-sm font-medium text-foreground backdrop-blur-sm hover:bg-card"
             >
-              SAP↔홈택스 부가세
+              연구 구체화
             </Link>
           </div>
         </div>
@@ -122,8 +120,8 @@ export default function HomePage() {
           같은 소통, 세 현장
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          데이터 분석 콘솔은 품질 지표뿐 아니라, SAP·홈택스·급여처럼 한 줄이 틀려도
-          비용이 되는 숫자에도 같은 게이트를 붙입니다.
+          분석·연구·일상은 현장이 다릅니다. 콘솔 안에는 품질 외에 부가세·급여·연동
+          같은 추가 예시도 있지만, 랜딩의 주인공은 이 세 가지입니다.
         </p>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
