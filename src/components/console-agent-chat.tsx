@@ -215,7 +215,8 @@ export function ConsoleAgentChat({
 
   const suggestions = SUGGESTIONS[tab] ?? SUGGESTIONS.analyze;
 
-  if (!embedded && !open) return null;
+  // Closed panels must unmount so header toggles are the only Agent controls.
+  if (!open) return null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">

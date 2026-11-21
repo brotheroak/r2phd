@@ -112,6 +112,28 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
     }
   }, [navOpen, agentOpen, hydratedUi]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+      if (typing) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setNavOpen((v) => !v);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setAgentOpen((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div
       className={cn(
@@ -119,21 +141,24 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
         isDark && "console-dark",
       )}
     >
-      {/* Top chrome */}
-      <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3">
+      {/* Top chrome — above drawers so toggles stay clickable */}
+      <header className="relative z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
+            data-testid="console-nav-toggle"
             onClick={() => setNavOpen((v) => !v)}
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-mist hover:text-foreground"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border px-2 text-muted-foreground hover:bg-mist hover:text-foreground"
             title={navOpen ? "메뉴 숨기기" : "메뉴 보이기"}
             aria-label={navOpen ? "메뉴 숨기기" : "메뉴 보이기"}
+            aria-pressed={navOpen}
           >
             {navOpen ? (
               <PanelLeftClose className="size-4" />
             ) : (
               <PanelLeftOpen className="size-4" />
             )}
+            <span className="hidden text-xs font-medium sm:inline">메뉴</span>
           </button>
           <div className="flex min-w-0 items-center gap-2">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">
@@ -163,6 +188,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
           </button>
           <button
             type="button"
+            data-testid="console-agent-toggle"
             onClick={() => setAgentOpen((v) => !v)}
             className={cn(
               "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
@@ -172,6 +198,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
             )}
             title={agentOpen ? "Agent 숨기기" : "Agent 보이기"}
             aria-label={agentOpen ? "Agent 숨기기" : "Agent 보이기"}
+            aria-pressed={agentOpen}
           >
             {agentOpen ? (
               <PanelRightClose className="size-4" />
@@ -296,26 +323,24 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
 
         {/* Agent — drawer on mobile, column on md+; closed = no layout space */}
         <aside
+          aria-hidden={!agentOpen}
           className={cn(
             "z-30 flex shrink-0 flex-col border-l border-border bg-card transition-[width,transform] duration-200",
             "absolute inset-y-0 right-0 w-[min(100vw,340px)] md:static md:translate-x-0",
             agentOpen
               ? "translate-x-0 md:w-[340px]"
-              : "translate-x-full md:w-0 md:border-l-0 md:overflow-hidden md:translate-x-0",
+              : "pointer-events-none translate-x-full md:w-0 md:border-l-0 md:overflow-hidden md:translate-x-0",
           )}
         >
-          <div
-            className={cn(
-              "flex h-full w-[min(100vw,340px)] min-h-0 flex-col md:w-[340px]",
-              !agentOpen && "pointer-events-none",
-            )}
-          >
-            <ConsoleAgentChat
-              open={agentOpen}
-              onOpenChange={setAgentOpen}
-              embedded
-            />
-          </div>
+          {agentOpen ? (
+            <div className="flex h-full w-[min(100vw,340px)] min-h-0 flex-col md:w-[340px]">
+              <ConsoleAgentChat
+                open={agentOpen}
+                onOpenChange={setAgentOpen}
+                embedded
+              />
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>
