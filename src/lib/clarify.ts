@@ -1,5 +1,6 @@
 /**
- * 분석·연구·일상 질문을 같은 “선택으로 구체화” 패턴으로 다룬다.
+ * Soft clarify domains (분석 콘솔 시나리오와 별개).
+ * collab = 사람↔에이전트가 주고받다 의도를 못 읽는 케이스.
  */
 export const CLARIFY_DOMAINS = [
   {
@@ -20,8 +21,15 @@ export const CLARIFY_DOMAINS = [
     id: "everyday",
     label: "일상 질문",
     emoji: "💬",
-    blurb: "여행·구매·일정처럼 애매한 일상 결정",
+    blurb: "여행·구매·일정처럼 애매한 일상 요청",
     swatch: "#d97706",
+  },
+  {
+    id: "collab",
+    label: "에이전트 티키타카",
+    emoji: "🤝",
+    blurb: "사람과 AI가 주고받다 의도가 틀어질 때",
+    swatch: "#7c3aed",
   },
 ] as const;
 
@@ -98,12 +106,12 @@ export type ClarifyBrief = {
 };
 
 export const CLARIFY_SYSTEM = `당신은 IntentSpec 질문 인터뷰어입니다.
-사용자의 질문이 데이터 분석이든, 연구·조사든, 일상 결정이든
+사용자의 질문이 데이터 분석·연구·일상·에이전트 티키타카든
 애매한 지점을 선택지로 구체화합니다. 장문 심문 금지. 고르기 쉬운 옵션만.
 
 STRICT JSON:
 {
-  "domain": "analysis"|"research"|"everyday",
+  "domain": "analysis"|"research"|"everyday"|"collab",
   "summary": string,
   "refinedQuestion": string,
   "direction": string,
@@ -115,5 +123,6 @@ STRICT JSON:
 - ambiguities 2~4개. axis는 가능하면 서로 다르게.
 - options 2~4개, 짧고 바로 클릭 가능하게.
 - recommended는 넣되 자동 선택되지 않음.
-- domain은 질문 내용에 맞게 추정.
+- domain은 질문 내용에 맞게 추정. 사람↔에이전트 지시가 계속 엇갈리면 collab.
+- collab에서는 “바로 고치지 말고 먼저 합의”가 핵심이다.
 - 자연스러운 한국어. id는 cl-goal 같은 kebab-case.`;

@@ -12,7 +12,8 @@ export type ConsoleAgentAction =
   | { type: "apply_schema" }
   | { type: "seed_demo_workspace" }
   | { type: "seed_ontology_draft" }
-  | { type: "navigate"; tab: "analyze" | "catalog" | "ontology" | "metrics" | "lineage" };
+  | { type: "navigate"; tab: "analyze" | "catalog" | "ontology" | "metrics" | "lineage" }
+  | { type: "open_collab" };
 
 export type ConsoleAgentReply = {
   reply: string;
@@ -47,9 +48,11 @@ actions type:
 - {"type":"seed_demo_workspace"}  // 예제 질문·용어·스키마·초안 채우기
 - {"type":"seed_ontology_draft"}  // 온톨로지/매핑 초안만 채우기
 - {"type":"navigate","tab":"catalog"|"ontology"|"metrics"|"lineage"|"analyze"}
+- {"type":"open_collab"}  // 의도 합의(티키타카) 페이지로 이동
 
 규칙:
 - 사용자가 테이블 연결·스키마 반영·예제 로드·매핑 초안을 원하면 해당 action을 넣으세요.
+- 사용자가 “지맘대로 / 의도 못 읽음 / 합의 전에 고치지 마 / 티키타카”를 말하면 콘솔 작업을 멈추고 open_collab을 넣으세요.
 - 단순 질문이면 actions는 [] 이고 reply로만 답하세요.
 - 없는 테이블 이름을 만들지 마세요. 카탈로그에 있는 이름만.
 - 번역투 금지. 쉬운 한국어.`;
@@ -57,6 +60,19 @@ actions type:
 export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
   const q = ctx.message.trim().toLowerCase();
   const tables = allCatalogTableNames();
+
+  if (
+    /티키타카|인텐트|의도\s*못|지맘대로|합의\s*전|뭔\s*생각|소통\s*→|케이스\s*넣|cta/.test(
+      q,
+    )
+  ) {
+    return {
+      mode: "demo",
+      reply:
+        "지금은 콘솔을 더 건드리면 안 됩니다. 목적이 어긋난 티키타카입니다. 에이전트 티키타카 케이스로 가서 목적·제약·기준·다음을 잠근 뒤, 잠금 카드를 지시서로 쓰세요.",
+      actions: [{ type: "open_collab" }],
+    };
+  }
 
   if (/전체|모두|다 연결|전부 연결|link all|select all/.test(q)) {
     return {

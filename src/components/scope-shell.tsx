@@ -1,29 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
-import { CLARIFY_DOMAINS } from "@/lib/clarify";
+import { WORK_CASES } from "@/lib/work-cases";
 import { cn } from "@/lib/utils";
-
-const SCOPES = [
-  {
-    ...CLARIFY_DOMAINS[0],
-    href: "/console/semantic?tab=analyze&case=quality",
-    match: (p: string) => p.startsWith("/console"),
-  },
-  {
-    ...CLARIFY_DOMAINS[1],
-    href: "/clarify/research",
-    match: (p: string) => p.startsWith("/clarify/research"),
-  },
-  {
-    ...CLARIFY_DOMAINS[2],
-    href: "/clarify/everyday",
-    match: (p: string) => p.startsWith("/clarify/everyday"),
-  },
-] as const;
 
 export function ScopeShell({
   children,
@@ -37,6 +19,8 @@ export function ScopeShell({
   subtitle: string;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const caseParam = searchParams.get("case");
 
   return (
     <div className="min-h-svh bg-[color-mix(in_oklab,var(--mist)_55%,white)]">
@@ -51,24 +35,29 @@ export function ScopeShell({
           <div className="flex items-center gap-2">
             <StatusPill />
             <Link
-              href="/"
+              href="/#cases"
               className="hidden text-xs text-muted-foreground hover:text-foreground sm:inline"
             >
-              적용 범위
+              케이스
             </Link>
           </div>
         </div>
 
         <div className="mx-auto max-w-6xl px-4 pb-3 sm:px-6">
-          <div className="grid gap-2 sm:grid-cols-3">
-            {SCOPES.map((s) => {
-              const active = s.match(pathname);
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {WORK_CASES.map((s) => {
+              const active =
+                s.kind === "clarify"
+                  ? pathname.startsWith(s.href)
+                  : pathname.startsWith("/console") &&
+                    (caseParam === s.id ||
+                      (!caseParam && s.id === "quality"));
               return (
                 <Link
                   key={s.id}
                   href={s.href}
                   className={cn(
-                    "rounded-xl border-2 px-3 py-2.5 transition",
+                    "shrink-0 rounded-xl border-2 px-3 py-2 transition",
                     active
                       ? "shadow-sm"
                       : "border-border bg-card/70 opacity-80 hover:opacity-100",
@@ -82,11 +71,8 @@ export function ScopeShell({
                       : undefined
                   }
                 >
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold whitespace-nowrap text-foreground">
                     {s.emoji} {s.label}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {s.blurb}
                   </p>
                 </Link>
               );

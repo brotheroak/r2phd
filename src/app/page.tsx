@@ -1,28 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
-import { CLARIFY_DOMAINS } from "@/lib/clarify";
-
-const SCOPES = [
-  {
-    ...CLARIFY_DOMAINS[0],
-    href: "/console/semantic?tab=analyze&case=quality",
-    example: "「최근 실패율이 왜 올랐지?」→ 기간·키·실패 정의를 고른 뒤 SQL 잠금",
-    gap: "사람이 말한 ‘최근’과 모델이 고른 날짜 컬럼의 간극",
-  },
-  {
-    ...CLARIFY_DOMAINS[1],
-    href: "/clarify/research",
-    example: "「재시험 합격을 실패로 볼까?」→ 범위·근거·주장 강도·다음 산출물",
-    gap: "연구자가 묻고 싶은 것과 챗봇이 넓게 답하는 간극",
-  },
-  {
-    ...CLARIFY_DOMAINS[2],
-    href: "/clarify/everyday",
-    example: "「주말에 뭐 하지?」→ 목적·제약·기준·다음 행동을 색 카드로",
-    gap: "막연한 일상 말과 AI 추천이 엇갈리는 간극",
-  },
-] as const;
+import { WORK_CASES } from "@/lib/work-cases";
 
 const FLOW = [
   { t: "사람의 말", c: "bg-zinc-700 text-white" },
@@ -52,12 +31,12 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <StatusPill />
-            <Link
-              href="/console/semantic?tab=analyze&case=quality"
+            <a
+              href="#cases"
               className="hidden rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground sm:inline"
             >
-              분석 콘솔
-            </Link>
+              케이스 보기
+            </a>
           </div>
         </nav>
 
@@ -67,7 +46,6 @@ export default function HomePage() {
             Communication first
           </p>
 
-          {/* Single left column — keep title line rhythm intact */}
           <h1 className="rise-in-delay-1 mt-4 font-display text-[2.5rem] leading-[1.15] text-ink sm:text-6xl sm:leading-[1.12] lg:text-7xl lg:leading-[1.1]">
             결국 문제는 소통입니다.
             <br />
@@ -75,25 +53,9 @@ export default function HomePage() {
           </h1>
           <p className="rise-in-delay-2 mt-5 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
             애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
-            분석·조사·추천으로 넘어갑니다.
+            분석·조사·추천·에이전트 실행으로 넘어갑니다.
           </p>
-          <div className="rise-in-delay-2 mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/console/semantic?tab=analyze&case=quality"
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              분석 콘솔 열기
-              <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              href="/clarify/research"
-              className="inline-flex h-11 items-center rounded-lg border border-border bg-card/80 px-5 text-sm font-medium text-foreground backdrop-blur-sm hover:bg-card"
-            >
-              연구 구체화
-            </Link>
-          </div>
 
-          {/* Big section title + white diagram card */}
           <div className="rise-in-delay-2 mt-14">
             <h2 className="text-center font-display text-4xl leading-tight tracking-tight text-ink sm:text-5xl lg:text-6xl">
               소통 → 합의 → 실행
@@ -123,16 +85,31 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <section id="cases" className="mx-auto max-w-6xl scroll-mt-6 px-4 py-10 sm:px-6">
         <h2 className="font-display text-2xl text-ink sm:text-3xl">
-          같은 소통, 세 현장
+          같은 소통, 여러 케이스
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          분석·연구·일상 — 현장이 달라도 같은 패턴으로 뜻을 맞춥니다.
+          품질·SAP·부가세·급여·연구·일상·에이전트 티키타카까지 — 현장이 달라도
+          같은 패턴으로 뜻을 맞춥니다. 아래가 바로 진입입니다.
         </p>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          {SCOPES.map((s, i) => (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {WORK_CASES.map((c) => (
+            <Link
+              key={`cta-${c.id}`}
+              href={c.href}
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-mist/60"
+            >
+              <span aria-hidden>{c.emoji}</span>
+              {c.label}
+              <ArrowRight className="size-3.5 opacity-50" />
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {WORK_CASES.map((s, i) => (
             <Link
               key={s.id}
               href={s.href}
@@ -145,7 +122,7 @@ export default function HomePage() {
                   className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
                   style={{ backgroundColor: s.swatch }}
                 >
-                  0{i + 1}
+                  {String(i + 1).padStart(2, "0")}
                 </span>
               </div>
               <h3 className="mt-3 text-lg font-semibold text-ink">{s.label}</h3>
@@ -158,7 +135,7 @@ export default function HomePage() {
                 {s.example}
               </p>
               <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2">
-                이 현장에서 소통하기
+                이 케이스 열기
                 <ArrowRight className="size-4" />
               </span>
             </Link>

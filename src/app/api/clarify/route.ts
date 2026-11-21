@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   question: z.string().min(3).max(4000),
-  domain: z.enum(["analysis", "research", "everyday"]).optional(),
+  domain: z.enum(["analysis", "research", "everyday", "collab"]).optional(),
   context: z.string().max(8000).optional(),
 });
 

@@ -27,6 +27,8 @@ const SAMPLES: Record<ClarifyDomain, string> = {
   analysis: "최근 로트 실패율이 왜 올랐는지, 회의 전에 원인을 잡고 싶다",
   research: "재시험 합격을 실패로 볼지에 대한 방법론을 정리하고 싶다",
   everyday: "주말에 아이랑 두 시간 안에 할 만한 걸 추천해 줘",
+  collab:
+    "에이전트가 CTA를 혼자 연구 옆에 붙이고, 세 현장만 남기고, 합의도 없이 코드를 고친다. 내 인텐트를 못 읽고 있다. 합의 전에는 손대지 말고 선택지로 맞춰라",
 };
 
 type Props = {
@@ -203,7 +205,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           <span className="font-medium">
             {clarifyLocked
               ? "질문 잠금 · 방향 카드 공유 가능"
-              : "질문 미잠금 · 분석·연구·일상 모두 동일 패턴"}
+              : "질문 미잠금 · 분석·연구·일상·티키타카 동일 패턴"}
           </span>
         </div>
         {ambiguities.length ? (
@@ -218,7 +220,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             질문 종류
           </p>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {CLARIFY_DOMAINS.map((d) => (
               <button
                 key={d.id}
@@ -253,7 +255,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           rows={4}
           value={clarifyQuestion}
           onChange={(e) => setClarifyQuestion(e.target.value)}
-          placeholder="분석·연구·일상 무엇이든. 예: 주말에 뭐 하지? / 실패율이 왜 올랐지?"
+          placeholder="분석·연구·일상·티키타카 무엇이든. 예: 에이전트가 내 뜻을 못 읽고 지맘대로 고친다"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={loadSample}>

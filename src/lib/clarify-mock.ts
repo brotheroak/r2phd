@@ -9,13 +9,19 @@ export function mockClarifyBrief(
     /부가세|원천세|홈택스|sap|전표|급여|원천징수|회계|세무|payroll|fi\/co|인사/i.test(
       q,
     );
+  const collabAsk =
+    /티키타카|인텐트|의도|지맘대로|합의|소통\s*→|뭔\s*생각|CTA|줄맞춤|흰\s*바탕|세\s*현장|케이스\s*넣/i.test(
+      q,
+    );
   const domain =
     domainHint ??
-    (financeAsk || /sql|실패율|로트|스키마|지표|집계|csv/i.test(q)
-      ? "analysis"
-      : /논문|연구|문헌|조사|가설/i.test(q)
-        ? "research"
-        : "everyday");
+    (collabAsk
+      ? "collab"
+      : financeAsk || /sql|실패율|로트|스키마|지표|집계|csv/i.test(q)
+        ? "analysis"
+        : /논문|연구|문헌|조사|가설/i.test(q)
+          ? "research"
+          : "everyday");
 
   if (domain === "analysis") {
     if (financeAsk || /급여|원천|부가|홈택스|sap/i.test(q)) {
@@ -232,6 +238,79 @@ export function mockClarifyBrief(
     };
   }
 
+  if (domain === "collab") {
+    return {
+      mode: "demo",
+      domain: "collab",
+      summary:
+        "에이전트가 질문을 듣고 바로 고쳐 버린 상태입니다. 실행 전에 목적·제약·기준을 사람 말로 잠가야 합니다.",
+      refinedQuestion:
+        q ||
+        "에이전트가 CTA·케이스·카피를 내 뜻과 다르게 고치고 있다. 합의 없이 코드 손대지 말고, 선택지로 먼저 맞춰라",
+      direction:
+        "선택지를 고르고 잠근 뒤에만 레이아웃·카피·케이스 목록을 수정합니다. 잠금 카드가 에이전트 지시서가 됩니다.",
+      ambiguities: [
+        {
+          id: "cl-goal",
+          axis: "goal",
+          title: "이번 티키타카에서 먼저 얻을 것",
+          whyItMatters:
+            "코드를 더 고치는 것과 뜻을 맞추는 것은 다른 일입니다.",
+          options: [
+            "의도 합의 카드 (목적·제약·기준·다음)",
+            "내가 원한 화면 상태를 한 줄로 재진술",
+            "케이스 목록만 확정",
+            "코드부터 바로 수정",
+          ],
+          recommended: "의도 합의 카드 (목적·제약·기준·다음)",
+        },
+        {
+          id: "cl-constraint",
+          axis: "constraint",
+          title: "에이전트가 절대 깨면 안 되는 것",
+          whyItMatters: "합의 전에 손대면 티키타카만 늘어납니다.",
+          options: [
+            "합의 전 코드/레이아웃 변경 금지",
+            "묻지 않은 케이스·카피 임의 추가 금지",
+            "메인 CTA로 SAP 등 단일 예제 격상 금지",
+            "제약 없음 (알아서 해)",
+          ],
+          recommended: "합의 전 코드/레이아웃 변경 금지",
+        },
+        {
+          id: "cl-criteria",
+          axis: "criteria",
+          title: "뜻이 맞았는지 판정 기준",
+          whyItMatters: "에이전트 자기 판단으로 ‘고쳤다’고 끝내면 또 엇갈립니다.",
+          options: [
+            "내가 고른 선택지와 잠금 카드가 일치",
+            "화면이 내가 말한 위치·크기를 따름",
+            "케이스가 빠진 것 없이 보임 (SAP·티키타카 포함)",
+            "에이전트가 ‘완료’라고 하면 OK",
+          ],
+          recommended: "내가 고른 선택지와 잠금 카드가 일치",
+        },
+        {
+          id: "cl-next",
+          axis: "next",
+          title: "잠근 뒤 바로 할 일",
+          whyItMatters: "다음이 없으면 다시 지맘대로 실행합니다.",
+          options: [
+            "잠금 카드를 에이전트 지시서로 붙여넣기",
+            "합의된 항목만 코드 수정",
+            "케이스 카드·CTA 위치만 먼저 반영",
+            "아직 더 물어보기",
+          ],
+          recommended: "합의된 항목만 코드 수정",
+        },
+      ],
+      assumedDefaults: [
+        "추천 자동선택 없음",
+        "잠금 전 실행 = 의도 실패로 간주",
+      ],
+    };
+  }
+
   // everyday
   return {
     mode: "demo",
@@ -289,6 +368,6 @@ export function mockClarifyBrief(
         recommended: "오늘 할 일 체크리스트",
       },
     ],
-    assumedDefaults: ["추천 자동선택 없음", "일상·연구·분석 동일 패턴"],
+    assumedDefaults: ["추천 자동선택 없음", "일상·연구·분석·티키타카 동일 패턴"],
   };
 }
