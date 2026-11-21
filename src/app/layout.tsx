@@ -22,7 +22,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "IntentSpec · 의도명세 | .EXE-THON",
   description:
-    "연구 질문의 분석 의도가 데이터 처리 과정에서에서 깨지지 않게, 모호함을 고정하고 SQL·검증 항목으로 잠그는 에이전트.",
+    "실행은 되는데 기준이 다른 분석을 잡는 IntentSpec. 헷갈리는 기준을 정리한 뒤 SQL과 결과를 맞춰 봅니다.",
 };
 
 export default function RootLayout({

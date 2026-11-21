@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
           draft,
           scholar,
-          notice: "데모 모드: LINER_API_KEY가 없어 샘플 추론을 사용합니다.",
+          notice: "API 키가 없어 예제 추론으로 진행합니다.",
         });
       }
       // Live call failed — fall back so the demo never bricks
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         draft: { ...draft, mode: "demo" as const },
         scholar: mockScholarHits(body.researchQuestion),
-        notice: `Liner 호출 실패로 데모 엔진 사용: ${e instanceof Error ? e.message : "unknown"}`,
+        notice: `Liner 호출에 실패해 예제로 진행합니다. (${e instanceof Error ? e.message : "unknown"})`,
         mode,
       });
     }

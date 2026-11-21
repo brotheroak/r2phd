@@ -34,8 +34,8 @@ export async function POST(req: Request) {
       const report = mockAudit(body.spec, body.resultRowsCsv);
       const notice =
         e instanceof Error && e.message === "NO_LINER_KEY"
-          ? "데모 모드: 샘플 결과 행 기준 의도 감사를 수행했습니다."
-          : `Liner 호출 실패로 데모 감사 엔진 사용: ${e instanceof Error ? e.message : "unknown"}`;
+          ? "예제 결과로 기준과 맞는지 점검했습니다."
+          : `Liner 호출에 실패해 예제로 진행합니다. (${e instanceof Error ? e.message : "unknown"})`;
       return NextResponse.json({ report, notice });
     }
   } catch (e) {

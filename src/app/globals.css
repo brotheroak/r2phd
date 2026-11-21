@@ -44,6 +44,9 @@
   --color-mist: var(--mist);
   --color-signal: var(--signal);
   --color-ok: var(--ok);
+  --color-sky: var(--sky);
+  --color-amber: var(--amber);
+  --color-lilac: var(--lilac);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -52,42 +55,46 @@
 }
 
 :root {
-  --background: #e8eef2;
-  --foreground: #102027;
-  --card: #f4f7f9;
-  --card-foreground: #102027;
-  --popover: #f7fafb;
-  --popover-foreground: #102027;
-  --primary: #0c4a45;
-  --primary-foreground: #eef7f5;
-  --secondary: #d5e2e8;
-  --secondary-foreground: #163038;
-  --muted: #d9e4ea;
-  --muted-foreground: #4a646e;
-  --accent: #c8dde0;
-  --accent-foreground: #0c4a45;
-  --destructive: #b42318;
-  --border: #b7c9d1;
-  --input: #b7c9d1;
-  --ring: #0c4a45;
-  --ink: #071c22;
-  --mist: #cfdce3;
-  --signal: #c45c26;
-  --ok: #1f6b4a;
-  --chart-1: #0c4a45;
-  --chart-2: #c45c26;
-  --chart-3: #3d6e8c;
-  --chart-4: #1f6b4a;
-  --chart-5: #6b5b4a;
-  --radius: 0.55rem;
-  --sidebar: #e8eef2;
-  --sidebar-foreground: #102027;
-  --sidebar-primary: #0c4a45;
-  --sidebar-primary-foreground: #eef7f5;
-  --sidebar-accent: #d5e2e8;
-  --sidebar-accent-foreground: #163038;
-  --sidebar-border: #b7c9d1;
-  --sidebar-ring: #0c4a45;
+  /* Cool paper + teal/sky/amber — colorful, not gray mono */
+  --background: #f3f7f9;
+  --foreground: #15262b;
+  --card: #ffffff;
+  --card-foreground: #15262b;
+  --popover: #ffffff;
+  --popover-foreground: #15262b;
+  --primary: #0f6b63;
+  --primary-foreground: #f3fffc;
+  --secondary: #e2eef5;
+  --secondary-foreground: #1f3a42;
+  --muted: #e8eef2;
+  --muted-foreground: #5a6b72;
+  --accent: #d7f0ec;
+  --accent-foreground: #0f6b63;
+  --destructive: #c23b2e;
+  --border: #c9d8e0;
+  --input: #c9d8e0;
+  --ring: #0f6b63;
+  --ink: #0d2c30;
+  --mist: #e8f3f1;
+  --signal: #d97706;
+  --ok: #15803d;
+  --sky: #0284c7;
+  --amber: #f59e0b;
+  --lilac: #5b7c99;
+  --chart-1: #0f6b63;
+  --chart-2: #d97706;
+  --chart-3: #0284c7;
+  --chart-4: #15803d;
+  --chart-5: #5b7c99;
+  --radius: 0.75rem;
+  --sidebar: #f3f7f9;
+  --sidebar-foreground: #15262b;
+  --sidebar-primary: #0f6b63;
+  --sidebar-primary-foreground: #f3fffc;
+  --sidebar-accent: #e2eef5;
+  --sidebar-accent-foreground: #1f3a42;
+  --sidebar-border: #c9d8e0;
+  --sidebar-ring: #0f6b63;
 }
 
 @layer base {
@@ -100,31 +107,33 @@
   body {
     @apply bg-background text-foreground antialiased;
     background-image:
-      radial-gradient(1200px 600px at 10% -10%, #d7ebe7 0%, transparent 55%),
-      radial-gradient(900px 500px at 100% 0%, #d6e0ea 0%, transparent 50%),
-      linear-gradient(180deg, #e8eef2 0%, #dfe8ee 100%);
+      radial-gradient(900px 480px at 0% -5%, #c8ebe4 0%, transparent 55%),
+      radial-gradient(800px 420px at 100% 5%, #fde68a66 0%, transparent 50%),
+      radial-gradient(700px 380px at 70% 100%, #bae6fd66 0%, transparent 45%),
+      linear-gradient(180deg, #f3f7f9 0%, #e8f0f4 100%);
     background-attachment: fixed;
-    font-family: var(--font-sans), sans-serif;
+    font-family: var(--font-sans), "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-display), serif;
+    font-family: var(--font-display), "Apple SD Gothic Neo", serif;
   }
   .grid-atmosphere {
     background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--ink) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 6%, transparent) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+      linear-gradient(to right, color-mix(in oklab, var(--ink) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 5%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at 40% 30%, black 15%, transparent 70%);
   }
   .pipe-flow {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      color-mix(in oklab, var(--signal) 55%, white) 40%,
-      transparent 80%
+      color-mix(in oklab, var(--amber) 70%, white) 35%,
+      color-mix(in oklab, var(--sky) 55%, white) 65%,
+      transparent 100%
     );
     background-size: 220% 100%;
     animation: pipe-slide 3.2s ease-in-out infinite;
@@ -140,6 +149,21 @@
   }
   .drift-pulse {
     animation: drift-pulse 1.8s ease-in-out infinite;
+  }
+  .panel {
+    @apply rounded-2xl border border-border/80 bg-card shadow-sm;
+  }
+  .tint-teal {
+    background: linear-gradient(160deg, #d7f0ec 0%, #fffcf7 70%);
+  }
+  .tint-amber {
+    background: linear-gradient(160deg, #fef3c7 0%, #fffcf7 70%);
+  }
+  .tint-sky {
+    background: linear-gradient(160deg, #e0f2fe 0%, #fffcf7 70%);
+  }
+  .tint-ok {
+    background: linear-gradient(160deg, #dcfce7 0%, #fffcf7 70%);
   }
 }
 

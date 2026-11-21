@@ -6,8 +6,8 @@
 
 export const SAMPLE_PROJECT = {
   id: "lot-intent-demo",
-  name: "로트 실패율 · 의도 드리프트 데모",
-  tagline: "정상 실행된 SQL이 연구 의도와 어긋나는 순간을 잡습니다.",
+  name: "로트 실패율 예제",
+  tagline: "실행은 되는데 기준이 다른 SQL을 잡습니다.",
   researchQuestion: `최근 6개월 제조번호별 실패율을 보고 싶다.
 실패는 '부적합'으로 판정된 건만 포함하고, 재시험으로 합격한 건은 제외한다.
 같은 제조번호라도 제품코드가 다르면 다른 로트로 본다.
@@ -46,7 +46,7 @@ dispositions(test_id PK, disposition, decided_at, note)
   /**
    * Naive LLM-style SQL that "runs fine" but violates intent in three ways.
    */
-  naiveSql: `-- ⚠ 의도 드리프트 버전 (겉보기엔 정상)
+  naiveSql: `-- ⚠ 겉보기엔 정상, 기준은 다른 버전
 SELECT
   l.lot_no,
   COUNT(*) FILTER (WHERE d.disposition IN ('FAIL', 'PASS_AFTER_RETEST')) AS fails,
@@ -71,31 +71,31 @@ L-3002,VAX-A,0,4,0.0,test_date,정상 케이스
 L-3002,VAX-A,0,4,0.0,test_date,중복 집계 의심 행 (동일 키 반복)
 L-4110,,3,3,100.0,ingest_date,product_code 누락 — 식별자 스코프 붕괴`,
   drama: {
-    who: "품질·임상 데이터 연구자 / 분석 리뷰어",
-    when: "LLM이 SQL을 짜 준 직후, 대시보드에 숫자가 올라온 순간",
-    pain: "쿼리는 성공하고 숫자도 나와서 의심이 안 남는다. 그런데 제조번호 충돌·날짜 기준·실패 정의가 어긋나면 의사결정이 틀린다.",
-    cost: "리뷰어가 용어·날짜·식별자를 일일이 대조하는 데 분석 1건당 30~90분. 놓치면 잘못된 실패율이 회의 자료에 고정된다.",
+    who: "품질·임상 데이터를 보는 사람, 그리고 그 표를 검토하는 동료",
+    when: "AI가 SQL을 짜 주고, 화면에 숫자가 막 올라온 직후",
+    pain: "돌아가니까 일단 안심합니다. 그런데 제조번호를 어떻게 묶었는지, ‘최근’이 어느 날짜인지, 실패를 뭐로 봤는지가 틀리면 회의 자료가 그대로 틀립니다.",
+    cost: "사람이 용어랑 날짜를 다시 맞춰 보려면 건당 삼십 분에서 한 시간 반. 놓치면 틀린 실패율이 회의록에 박힙니다.",
   },
   knownTraps: [
     {
       id: "trap-id-scope",
-      title: "제조번호 단독 조인",
-      detail: "같은 lot_no 가 제품마다 다른 기록인데 product_code 없이 조인·집계됨.",
+      title: "제조번호만으로 조인",
+      detail: "제품이 다른데 번호만 같으면 다른 로트인데, 번호만으로 묶어 버립니다.",
     },
     {
       id: "trap-date",
-      title: "‘최근’ = 적재일",
-      detail: "ingest_date 로 잘라 시험일은 오래된 로트가 최근 구간에 섞임.",
+      title: "‘최근’을 적재일로",
+      detail: "시험은 예전에 끝났는데, 나중에 쌓인 데이터라 최근처럼 들어갑니다.",
     },
     {
       id: "trap-fail-def",
-      title: "재시험 합격 = 실패",
-      detail: "PASS_AFTER_RETEST 를 실패로 넣어 실패율이 과대 추정됨.",
+      title: "재시험 합격을 실패로",
+      detail: "다시 시험해서 합격한 건까지 실패로 세면 실패율이 커집니다.",
     },
     {
       id: "trap-dup",
-      title: "중복 집계",
-      detail: "동일 (product_code, lot_no) 행이 결과에 두 번 나와 분모·분자가 왜곡됨.",
+      title: "같은 로트가 두 번",
+      detail: "같은 제품·번호가 결과에 반복되면 분모와 분자가 틀어집니다.",
     },
   ],
 } as const;

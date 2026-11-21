@@ -43,8 +43,8 @@ export async function POST(req: Request) {
       const spec = mockConfirmSpec(payload);
       const notice =
         e instanceof Error && e.message === "NO_LINER_KEY"
-          ? "데모 모드: 확정 옵션을 반영한 명세/SQL을 생성했습니다."
-          : `Liner 호출 실패로 데모 컴파일러 사용: ${e instanceof Error ? e.message : "unknown"}`;
+          ? "정하신 기준으로 SQL 예제를 만들었습니다."
+          : `Liner 호출에 실패해 예제로 진행합니다. (${e instanceof Error ? e.message : "unknown"})`;
       return NextResponse.json({ spec, notice });
     }
   } catch (e) {

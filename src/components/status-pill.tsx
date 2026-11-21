@@ -22,7 +22,10 @@ export function StatusPill() {
       })
       .catch(() => {
         if (!cancelled) {
-          setHealth({ mode: "demo", message: "상태 확인 실패 — 데모로 진행" });
+          setHealth({
+            mode: "demo",
+            message: "상태를 못 읽어서 예시 모드로 이어갑니다.",
+          });
         }
       });
     return () => {
@@ -43,12 +46,12 @@ export function StatusPill() {
       variant="secondary"
       className={
         health.mode === "live"
-          ? "border border-ok/30 bg-ok/10 text-ok font-normal"
-          : "border border-signal/30 bg-signal/10 text-signal font-normal"
+          ? "border border-ok/30 bg-ok/10 font-normal text-ok"
+          : "border border-signal/30 bg-signal/10 font-normal text-signal"
       }
       title={health.message}
     >
-      {health.mode === "live" ? "Liner API 연결" : "데모 엔진"}
+      {health.mode === "live" ? "Liner 연결됨" : "예시 모드"}
     </Badge>
   );
 }

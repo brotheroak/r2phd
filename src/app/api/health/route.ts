@@ -10,7 +10,7 @@ export async function GET() {
       ok: true,
       mode: "demo",
       liner: { configured: false },
-      message: "LINER_API_KEY 없음 — 데모 엔진으로 동작합니다.",
+      message: "API 키가 없어 예제 모드로 동작합니다.",
     });
   }
 
@@ -25,7 +25,7 @@ export async function GET() {
       error: balance.error,
     },
     message: balance.ok
-      ? "Liner Model/Search API 연결됨"
-      : "키는 있으나 잔액 조회 실패 — 요청 시 오류가 날 수 있습니다.",
+      ? "Liner API에 연결되었습니다."
+      : "키는 있지만 잔액 조회에 실패했습니다. 요청 시 오류가 날 수 있습니다.",
   });
 }

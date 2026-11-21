@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
+import { KIND_LABEL } from "@/lib/intent-axes";
 import { SAMPLE_PROJECT } from "@/lib/sample-project";
 import type {
   AnalysisDraft,
@@ -19,6 +20,7 @@ import type {
   ResearcherDecision,
   ScholarHit,
 } from "@/lib/types";
+import { SemanticLayer } from "@/components/semantic-layer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,17 +29,31 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+const STATUS_LABEL = {
+  pass: "문제 없음",
+  fail: "불일치",
+  needs_review: "재확인",
+} as const;
+
+const SEVERITY_LABEL = {
+  blocker: "필수",
+  warning: "주의",
+  info: "참고",
+} as const;
+
 type Step = "input" | "confirm" | "spec" | "audit";
+type Pane = "flow" | "semantic";
 
 const STEPS: { id: Step; label: string }[] = [
-  { id: "input", label: "1 의도 입력" },
-  { id: "confirm", label: "2 모호함 고정" },
-  { id: "spec", label: "3 명세·SQL" },
-  { id: "audit", label: "4 결과 감사" },
+  { id: "input", label: "1 질문" },
+  { id: "confirm", label: "2 기준 확인" },
+  { id: "spec", label: "3 SQL" },
+  { id: "audit", label: "4 결과 점검" },
 ];
 
 export function Workspace() {
   const [step, setStep] = useState<Step>("input");
+  const [pane, setPane] = useState<Pane>("flow");
   const [researchQuestion, setResearchQuestion] = useState<string>(
     SAMPLE_PROJECT.researchQuestion,
   );
@@ -68,7 +84,7 @@ export function Workspace() {
     setGlossary(SAMPLE_PROJECT.glossary);
     setSchema(SAMPLE_PROJECT.schema);
     setResultCsv(SAMPLE_PROJECT.resultRowsCsv);
-    setNotice("가상 로트 실패율 시나리오를 불러왔습니다.");
+    setNotice("로트 실패율 예시를 넣었습니다.");
   }
 
   function chooseOption(ambiguityId: string, chosenOption: string) {
@@ -108,7 +124,7 @@ export function Workspace() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "분석 실패");
+        setError(json.error ?? "분석을 끝내지 못했습니다.");
         return;
       }
       setDraft(json.draft);
@@ -125,6 +141,7 @@ export function Workspace() {
       }
       setDecisions(seeded);
       setStep("confirm");
+      setPane("semantic");
     });
   }
 
@@ -145,7 +162,7 @@ export function Workspace() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "명세 생성 실패");
+        setError(json.error ?? "기준과 SQL을 만들지 못했습니다.");
         return;
       }
       setSpec(json.spec);
@@ -168,7 +185,7 @@ export function Workspace() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "감사 실패");
+        setError(json.error ?? "결과를 다시 보지 못했습니다.");
         return;
       }
       setReport(json.report);
@@ -179,14 +196,45 @@ export function Workspace() {
 
   return (
     <section id="workspace" className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm tracking-wide text-muted-foreground">워크스페이스</p>
+          <p className="text-sm text-muted-foreground">체험해 보기</p>
           <h2 className="font-display text-3xl text-ink sm:text-4xl">
-            의도를 고정하고, 드리프트를 드러내세요
+            질문을 적은 뒤, 헷갈리는 기준부터 정리하세요
           </h2>
         </div>
-        <ol className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { id: "flow", label: "분석 흐름" },
+              { id: "semantic", label: "시맨틱 레이어" },
+            ] as const
+          ).map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPane(p.id)}
+              className={cn(
+                "rounded-xl border px-3 py-1.5 text-sm transition",
+                pane === p.id
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-border/80 bg-card text-muted-foreground hover:border-primary/40",
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {pane === "semantic" ? (
+        <div className="mb-10">
+          <SemanticLayer draft={draft} spec={spec} decisions={decisions} />
+        </div>
+      ) : null}
+
+      {pane === "flow" ? (
+        <ol className="mb-8 flex flex-wrap gap-2">
           {STEPS.map((s) => (
             <li key={s.id}>
               <button
@@ -209,12 +257,15 @@ export function Workspace() {
             </li>
           ))}
         </ol>
-      </div>
+      ) : null}
+
+      {pane === "flow" ? (
+      <>
 
       {notice ? (
         <Alert className="mb-6 border-primary/20 bg-primary/5">
           <Sparkles className="size-4" />
-          <AlertTitle>엔진 상태</AlertTitle>
+          <AlertTitle>안내</AlertTitle>
           <AlertDescription>{notice}</AlertDescription>
         </Alert>
       ) : null}
@@ -232,28 +283,28 @@ export function Workspace() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" variant="secondary" onClick={loadSample}>
-                가상 시나리오 불러오기
+                예시 불러오기
               </Button>
               <Badge variant="outline" className="font-normal">
-                실제 회사 자료 없음 · Exe-thon §5
+                가상 데이터만 사용합니다
               </Badge>
             </div>
 
             <Field
-              label="연구 질문"
+              label="하고 싶은 질문"
               value={researchQuestion}
               onChange={setResearchQuestion}
               rows={7}
             />
             <Field
-              label="용어 정의서"
+              label="용어 정의"
               value={glossary}
               onChange={setGlossary}
               rows={10}
               mono
             />
             <Field
-              label="데이터 구조"
+              label="표 구조"
               value={schema}
               onChange={setSchema}
               rows={10}
@@ -272,22 +323,22 @@ export function Workspace() {
               ) : (
                 <FileSearch className="size-4" />
               )}
-              개념 연결 · 모호함 추출
+              헷갈리는 기준 찾기
               <ArrowRight className="size-4" />
             </Button>
           </div>
 
           <aside className="space-y-6">
             <div className="rounded-xl border border-border/70 bg-ink text-primary-foreground p-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-white/60">
-                Problem drama
+              <p className="text-xs tracking-wide text-white/60">
+                이런 일이 자주 있습니다
               </p>
               <h3 className="mt-2 font-display text-2xl text-white">
-                쿼리는 성공했는데, 의도는 틀렸다
+                쿼리는 됐는데 답이 이상할 때
               </h3>
               <dl className="mt-5 space-y-4 text-sm text-white/85">
                 <div>
-                  <dt className="text-white/50">누가</dt>
+                  <dt className="text-white/50">누구</dt>
                   <dd>{SAMPLE_PROJECT.drama.who}</dd>
                 </div>
                 <div>
@@ -295,11 +346,11 @@ export function Workspace() {
                   <dd>{SAMPLE_PROJECT.drama.when}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/50">왜 아픈가</dt>
+                  <dt className="text-white/50">왜 답답한가</dt>
                   <dd>{SAMPLE_PROJECT.drama.pain}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/50">비용</dt>
+                  <dt className="text-white/50">얼마나 걸리냐면</dt>
                   <dd>{SAMPLE_PROJECT.drama.cost}</dd>
                 </div>
               </dl>
@@ -307,7 +358,7 @@ export function Workspace() {
 
             <div className="rounded-xl border border-border/70 bg-card/70 p-5">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h3 className="font-display text-xl">의도 드리프트 SQL</h3>
+                <h3 className="font-display text-xl">겉보기엔 정상인 SQL</h3>
                 <Button
                   type="button"
                   size="sm"
@@ -318,7 +369,7 @@ export function Workspace() {
                 </Button>
               </div>
               <p className="mb-3 text-sm text-muted-foreground">
-                LLM이 흔히 짜는 “정상 실행” 쿼리. 함정 3개가 이미 들어 있습니다.
+                AI가 자주 짜 주는 쿼리입니다. 실행은 되지만 기준이 다릅니다.
               </p>
               {showNaive ? (
                 <pre className="overflow-x-auto rounded-lg bg-ink p-4 font-mono text-[11px] leading-relaxed text-emerald-100/90">
@@ -348,7 +399,7 @@ export function Workspace() {
           <div className="rounded-xl border border-border/70 bg-card/80 p-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{draft.mode === "live" ? "Liner Model" : "Demo"}</Badge>
-              <Badge variant="outline">{draft.ambiguities.length}개 확인 필요</Badge>
+              <Badge variant="outline">확인할 점 {draft.ambiguities.length}개</Badge>
             </div>
             <p className="mt-3 text-base leading-relaxed">{draft.summary}</p>
           </div>
@@ -366,7 +417,7 @@ export function Workspace() {
                 <p className="mt-2 text-sm">{c.condition}</p>
                 {c.exceptions.length ? (
                   <p className="mt-2 text-xs text-signal">
-                    예외: {c.exceptions.join(" · ")}
+                    빼야 할 것: {c.exceptions.join(", ")}
                   </p>
                 ) : null}
               </div>
@@ -376,7 +427,7 @@ export function Workspace() {
           <Separator />
 
           <div className="space-y-4">
-            <h3 className="font-display text-2xl">연구자 확인</h3>
+            <h3 className="font-display text-2xl">기준을 정해 주세요</h3>
             {draft.ambiguities.map((a) => (
               <div
                 key={a.id}
@@ -385,7 +436,7 @@ export function Workspace() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <Badge variant="outline" className="mb-2 font-normal">
-                      {a.kind}
+                      {KIND_LABEL[a.kind] ?? a.kind}
                     </Badge>
                     <h4 className="text-lg font-medium">{a.title}</h4>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -417,7 +468,7 @@ export function Workspace() {
                           {opt}
                           {a.recommended === opt ? (
                             <Badge className="ml-1" variant="secondary">
-                              권장
+                              추천
                             </Badge>
                           ) : null}
                         </span>
@@ -427,7 +478,7 @@ export function Workspace() {
                 </div>
                 <div className="mt-3">
                   <Label htmlFor={`note-${a.id}`} className="text-xs text-muted-foreground">
-                    메모 (선택)
+                    메모 (선택 사항)
                   </Label>
                   <Textarea
                     id={`note-${a.id}`}
@@ -435,7 +486,7 @@ export function Workspace() {
                     rows={2}
                     value={decisions[a.id]?.note ?? ""}
                     onChange={(e) => setNote(a.id, e.target.value)}
-                    placeholder="팀에 남길 결정 근거"
+                    placeholder="왜 이렇게 골랐는지 적어 두세요"
                   />
                 </div>
                 {a.evidence?.length ? (
@@ -451,9 +502,9 @@ export function Workspace() {
 
           {scholar.length ? (
             <div className="rounded-xl border border-border/70 bg-card/70 p-5">
-              <h3 className="font-display text-xl">Liner Scholar 근거</h3>
+              <h3 className="font-display text-xl">Liner Scholar로 찾은 글</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                모호한 방법론 용어를 학술 검색으로 보강합니다.
+                헷갈리는 기준을 논문·자료로 같이 살펴봅니다.
               </p>
               <ul className="mt-4 space-y-3">
                 {scholar.map((h) => (
@@ -490,7 +541,7 @@ export function Workspace() {
             ) : (
               <ClipboardCheck className="size-4" />
             )}
-            확정 → 명세·SQL·검증 항목
+            정한 기준으로 SQL 만들기
           </Button>
         </div>
       ) : null}
@@ -499,23 +550,23 @@ export function Workspace() {
         <div className="space-y-6">
           <div className="rounded-xl border border-border/70 bg-card/80 p-6">
             <div className="flex flex-wrap gap-2">
-              <Badge>{spec.mode === "live" ? "Liner 컴파일" : "Demo 컴파일"}</Badge>
-              <Badge variant="outline">{spec.checks.length} checks</Badge>
+              <Badge>{spec.mode === "live" ? "Liner로 작성" : "예시로 작성"}</Badge>
+              <Badge variant="outline">확인 항목 {spec.checks.length}개</Badge>
             </div>
             <h3 className="mt-3 font-display text-3xl">{spec.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{spec.researchQuestion}</p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <SpecBlock label="Population" value={spec.population} />
-              <SpecBlock label="Date anchor" value={spec.dateAnchor} />
-              <SpecBlock label="Identifier scope" value={spec.identifierScope} />
+              <SpecBlock label="누구를 보나" value={spec.population} />
+              <SpecBlock label="기간은" value={spec.dateAnchor} />
+              <SpecBlock label="같은 걸로 묶는 기준" value={spec.identifierScope} />
               <SpecBlock
-                label="Exclusions"
-                value={spec.exclusions.join(" · ") || "—"}
+                label="빼는 것"
+                value={spec.exclusions.join(", ") || "없음"}
               />
             </div>
             <div className="mt-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Measures
+              <p className="text-xs tracking-wide text-muted-foreground">
+                무엇을 세나
               </p>
               <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
                 {spec.measures.map((m) => (
@@ -527,13 +578,13 @@ export function Workspace() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border/70 bg-ink p-4">
-              <h4 className="mb-2 text-sm text-white/70">확정 SQL</h4>
+              <h4 className="mb-2 text-sm text-white/70">만든 SQL</h4>
               <pre className="max-h-[420px] overflow-auto font-mono text-[11px] leading-relaxed text-emerald-100/90">
                 {spec.sql}
               </pre>
             </div>
             <div className="rounded-xl border border-border/70 bg-card/80 p-4">
-              <h4 className="mb-3 font-display text-xl">검증 항목</h4>
+              <h4 className="mb-3 font-display text-xl">나중에 볼 것</h4>
               <ul className="space-y-3">
                 {spec.checks.map((c) => (
                   <li key={c.id} className="border-b border-border/50 pb-3 last:border-0">
@@ -547,7 +598,7 @@ export function Workspace() {
                               : "outline"
                         }
                       >
-                        {c.severity}
+                        {SEVERITY_LABEL[c.severity] ?? c.severity}
                       </Badge>
                       <span className="font-medium">{c.name}</span>
                     </div>
@@ -559,9 +610,9 @@ export function Workspace() {
           </div>
 
           <div className="rounded-xl border border-border/70 bg-card/70 p-5">
-            <h4 className="font-display text-xl">감사할 결과 CSV</h4>
+            <h4 className="font-display text-xl">결과표 (CSV)</h4>
             <p className="mt-1 text-sm text-muted-foreground">
-              샘플에는 의도 드리프트가 심어져 있습니다. 실제 결과로 바꿔도 됩니다.
+              예제에는 기준과 다른 값이 들어 있습니다. 실제 결과로 바꿔도 됩니다.
             </p>
             <Textarea
               className="mt-3 font-mono text-xs"
@@ -581,7 +632,7 @@ export function Workspace() {
               ) : (
                 <ShieldAlert className="size-4" />
               )}
-              결과 의도 감사 실행
+              결과와 기준이 맞는지 보기
             </Button>
           </div>
         </div>
@@ -591,8 +642,8 @@ export function Workspace() {
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
             <div className="rounded-xl border border-signal/30 bg-signal/10 p-6">
-              <p className="text-xs uppercase tracking-[0.16em] text-signal">
-                Intent drift score
+              <p className="text-xs tracking-wide text-signal">
+                불일치 점수
               </p>
               <p className="drift-pulse mt-2 font-display text-6xl text-signal">
                 {report.intentDriftScore}
@@ -600,7 +651,7 @@ export function Workspace() {
               <p className="mt-2 text-sm text-foreground/80">{report.summary}</p>
             </div>
             <div className="rounded-xl border border-border/70 bg-card/80 p-6">
-              <h3 className="font-display text-2xl">다음 액션</h3>
+              <h3 className="font-display text-2xl">다음에 하면 좋은 일</h3>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
                 {report.nextActions.map((a) => (
                   <li key={a}>{a}</li>
@@ -632,7 +683,7 @@ export function Workspace() {
                           : "outline"
                     }
                   >
-                    {f.status}
+                    {STATUS_LABEL[f.status] ?? f.status}
                   </Badge>
                   <h4 className="font-medium">{f.title}</h4>
                 </div>
@@ -648,13 +699,15 @@ export function Workspace() {
 
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep("input")}>
-              다른 질문으로
+              다른 질문 쓰기
             </Button>
             <Button type="button" variant="outline" onClick={() => setStep("spec")}>
-              명세로 돌아가기
+              SQL 단계로
             </Button>
           </div>
         </div>
+      ) : null}
+      </>
       ) : null}
     </section>
   );
