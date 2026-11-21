@@ -122,8 +122,8 @@ STRICT JSON:
 
 규칙:
 - ambiguities 2~4개. axis는 가능하면 서로 다르게.
-- options 2~4개, 짧고 바로 클릭 가능하게.
+- options 2~4개, 짧고 바로 클릭 가능하게. 사용자는 여러 개를 동시에 고를 수 있다.
 - recommended는 넣되 자동 선택되지 않음.
 - domain은 질문 내용에 맞게 추정. LLM이 자기 마음대로 해석·실행하려는 상황이면 collab.
 - collab에서는 “바로 고치지 말고 먼저 합의”가 핵심이다.
-- 자연스러운 표준 한국어. id는 cl-goal 같은 kebab-case.`;
+- 한국인이 바로 알아듣는 일상·직장 말투. 전문 은어·번역투 금지. id는 cl-goal 같은 kebab-case.`;

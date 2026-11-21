@@ -24,13 +24,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const SAMPLES: Record<ClarifyDomain, string> = {
-  analysis: "최근 불량률이 왜 올랐는지, 회의 전에 기간·대상·불량 정의를 맞춰 두고 싶다",
+  analysis:
+    "이번 주 회의 전에, 최근 불량률이 왜 올랐는지 원인을 좁히고 싶어요. ‘최근’이랑 ‘불량’부터 맞춰 주세요",
   research:
-    "고객 불만 문구에서 ‘품질’이 제품·배송·응대 중 무엇을 가리키는지, 조사 전에 범위를 정하고 싶다",
-  everyday: "주말에 두 시간 안에 할 만한 걸 추천해 줘",
+    "고객 불만에 적힌 ‘품질’이 제품 문제인지, 배송인지, 응대인지 헷갈려요. 조사 범위를 먼저 정하고 싶어요",
+  everyday: "이번 주말, 두 시간 안에 할 만한 거 추천해 줘. 너무 피곤하지 않았으면 좋겠어요",
   collab:
-    "에이전트에게 「이거 좀 고쳐 줘」라고만 했더니 내가 원한 것과 다른 방향으로 바뀌었다. 실행하기 전에 목적·제약·기준을 선택지로 맞춰 달라",
+    "코딩 에이전트에게 「화면 좀 고쳐 줘」라고만 했더니 내가 원한 것과 다르게 바뀌었어요. 합의하기 전에는 손대지 말고, 선택지로 먼저 맞춰 주세요",
 };
+
+function chosenList(
+  decisions: Record<string, { chosenOptions?: string[] }>,
+  id: string,
+): string[] {
+  return decisions[id]?.chosenOptions ?? [];
+}
+
+function hasChoice(
+  decisions: Record<string, { chosenOptions?: string[] }>,
+  id: string,
+) {
+  return chosenList(decisions, id).length > 0;
+}
 
 type Props = {
   /** Lock UI to one scope page (research / everyday / analysis). */
@@ -85,11 +100,12 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
 
   const ambiguities = clarifyBrief?.ambiguities ?? [];
   const openCount = ambiguities.filter(
-    (a) => !clarifyDecisions[a.id]?.chosenOption,
+    (a) => !hasChoice(clarifyDecisions, a.id),
   ).length;
   const allDone = ambiguities.length > 0 && openCount === 0;
   const focus =
     ambiguities[Math.min(focusIdx, Math.max(ambiguities.length - 1, 0))];
+  const focusChosen = focus ? chosenList(clarifyDecisions, focus.id) : [];
 
   const lockedCard = useMemo(() => {
     if (!clarifyBrief || !allDone) return "";
@@ -108,10 +124,11 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       `## 방향`,
       clarifyBrief.direction,
       ``,
-      `## 선택`,
+      `## 선택 (복수 가능)`,
       ...ambiguities.map((a) => {
         const axis = CLARIFY_AXIS_BY_ID[a.axis];
-        return `- ${axis.emoji} ${axis.label}: ${clarifyDecisions[a.id]?.chosenOption ?? "—"}`;
+        const picked = chosenList(clarifyDecisions, a.id);
+        return `- ${axis.emoji} ${axis.label}: ${picked.length ? picked.join(" · ") : "—"}`;
       }),
       ``,
       `잠금 카드 없이 답을 확정하지 마세요.`,
@@ -149,29 +166,34 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       setFocusIdx(0);
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "색 카드에서 골라 주세요. 추천은 자동 선택되지 않습니다.",
+          "여러 개를 골라도 됩니다. 추천은 눌러야 선택됩니다.",
       );
     });
   }
 
-  function choose(id: string, option: string) {
-    setClarifyDecisions((prev) => ({
-      ...prev,
-      [id]: { chosenOption: option, note: prev[id]?.note },
-    }));
-    if (clarifyBrief) {
-      const next = clarifyBrief.ambiguities.findIndex(
-        (a, i) =>
-          i > focusIdx &&
-          a.id !== id &&
-          !clarifyDecisions[a.id]?.chosenOption,
-      );
-      const fallback = clarifyBrief.ambiguities.findIndex(
-        (a) => a.id !== id && !clarifyDecisions[a.id]?.chosenOption,
-      );
-      const idx = next >= 0 ? next : fallback;
-      if (idx >= 0) setFocusIdx(idx);
-    }
+  function toggle(id: string, option: string) {
+    setClarifyDecisions((prev) => {
+      const cur = prev[id]?.chosenOptions ?? [];
+      const next = cur.includes(option)
+        ? cur.filter((o) => o !== option)
+        : [...cur, option];
+      return {
+        ...prev,
+        [id]: { chosenOptions: next, note: prev[id]?.note },
+      };
+    });
+  }
+
+  function goNextQuestion() {
+    if (!clarifyBrief || !focus || focusChosen.length === 0) return;
+    const next = clarifyBrief.ambiguities.findIndex(
+      (a, i) => i > focusIdx && !hasChoice(clarifyDecisions, a.id),
+    );
+    const fallback = clarifyBrief.ambiguities.findIndex(
+      (a) => a.id !== focus.id && !hasChoice(clarifyDecisions, a.id),
+    );
+    const idx = next >= 0 ? next : fallback;
+    if (idx >= 0) setFocusIdx(idx);
   }
 
   function lock() {
@@ -324,9 +346,12 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                 .filter(({ a }) => a.axis === axis.id);
               const done =
                 related.length > 0 &&
-                related.every(({ a }) => clarifyDecisions[a.id]?.chosenOption);
+                related.every(({ a }) => hasChoice(clarifyDecisions, a.id));
               const first = related[0];
               const active = related.some(({ i }) => i === focusIdx);
+              const picked = first
+                ? chosenList(clarifyDecisions, first.a.id)
+                : [];
               return (
                 <button
                   key={axis.id}
@@ -351,9 +376,9 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                   </div>
                   <p className="mt-1 text-sm font-bold">{axis.label}</p>
                   <p className="mt-0.5 text-xs opacity-80">{axis.question}</p>
-                  {first && clarifyDecisions[first.a.id]?.chosenOption ? (
+                  {picked.length ? (
                     <p className="mt-2 rounded-md bg-white/50 px-2 py-1 text-[11px] font-medium dark:bg-black/20">
-                      → {clarifyDecisions[first.a.id].chosenOption}
+                      → {picked.join(" · ")}
                     </p>
                   ) : null}
                 </button>
@@ -400,11 +425,13 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
               </div>
               <h3 className="mt-2 text-xl font-bold">{focus.title}</h3>
               <p className="mt-1 text-sm opacity-90">{focus.whyItMatters}</p>
+              <p className="mt-2 text-xs font-medium opacity-70">
+                복수 선택 가능 · {focusChosen.length}개 고름
+              </p>
 
               <div className="mt-4 space-y-2">
                 {focus.options.map((opt, oi) => {
-                  const selected =
-                    clarifyDecisions[focus.id]?.chosenOption === opt;
+                  const selected = focusChosen.includes(opt);
                   const letter = String.fromCharCode(65 + oi);
                   const swatch = CLARIFY_AXIS_BY_ID[focus.axis].swatch;
                   return (
@@ -412,7 +439,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                       key={opt}
                       type="button"
                       data-testid="clarify-option"
-                      onClick={() => choose(focus.id, opt)}
+                      onClick={() => toggle(focus.id, opt)}
                       className={cn(
                         "flex w-full items-start gap-3 rounded-xl border-2 bg-white/80 p-3 text-left dark:bg-black/30",
                         selected
@@ -446,12 +473,33 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                           </span>
                         ) : null}
                       </span>
-                      {!selected ? (
-                        <Circle className="mt-1 size-4 opacity-30" />
-                      ) : null}
+                      <Circle
+                        className={cn(
+                          "mt-1 size-4",
+                          selected ? "opacity-0" : "opacity-30",
+                        )}
+                      />
                     </button>
                   );
                 })}
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={goNextQuestion}
+                  disabled={focusChosen.length === 0}
+                  className="gap-2"
+                >
+                  {openCount <= 1 && focusChosen.length > 0
+                    ? "선택 완료 · 잠금으로"
+                    : "다음 질문"}
+                </Button>
+                {focusChosen.length > 0 ? (
+                  <span className="self-center text-xs opacity-70">
+                    {focusChosen.join(" · ")}
+                  </span>
+                ) : null}
               </div>
             </div>
           ) : null}
