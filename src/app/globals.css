@@ -169,9 +169,49 @@
     background: #f3f7f9;
     color: var(--foreground);
   }
+  /* Remap design tokens so shadcn + Workspace stay readable in dark console */
   .console-surface.console-dark {
+    --background: #111318;
+    --foreground: #f4f4f5;
+    --card: #16181d;
+    --card-foreground: #f4f4f5;
+    --popover: #16181d;
+    --popover-foreground: #f4f4f5;
+    --primary: #2dd4bf;
+    --primary-foreground: #042f2e;
+    --secondary: #1e242b;
+    --secondary-foreground: #e4e4e7;
+    --muted: #1c2026;
+    --muted-foreground: #a8b0b8;
+    --accent: #134e4a;
+    --accent-foreground: #99f6e4;
+    --destructive: #f87171;
+    --border: #2f363f;
+    --input: #2f363f;
+    --ring: #2dd4bf;
+    --ink: #fafafa;
+    --mist: #1a1f24;
+    --signal: #fbbf24;
+    --ok: #4ade80;
+    --sky: #38bdf8;
+    --amber: #fbbf24;
+    --lilac: #94a3b8;
+    --sidebar: #0b0d10;
+    --sidebar-foreground: #f4f4f5;
+    --sidebar-primary: #2dd4bf;
+    --sidebar-primary-foreground: #042f2e;
+    --sidebar-accent: #1e242b;
+    --sidebar-accent-foreground: #e4e4e7;
+    --sidebar-border: #2f363f;
+    --sidebar-ring: #2dd4bf;
     background: #0b0d10;
-    color: #f4f4f5;
+    color: var(--foreground);
+  }
+  .console-surface.console-dark .tint-teal,
+  .console-surface.console-dark .tint-amber,
+  .console-surface.console-dark .tint-sky,
+  .console-surface.console-dark .tint-ok {
+    background: color-mix(in oklab, var(--card) 88%, var(--primary));
   }
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -8,10 +9,12 @@ import {
   GitBranchPlus,
   Layers3,
   Link2,
+  MessageSquare,
   Moon,
   Sun,
   Table2,
 } from "lucide-react";
+import { ConsoleAgentChat } from "@/components/console-agent-chat";
 import { StatusPill } from "@/components/status-pill";
 import {
   ConsoleThemeProvider,
@@ -70,75 +73,47 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
       ? (raw as ConsoleTab)
       : "analyze";
   const { isDark, toggleTheme } = useConsoleTheme();
+  const [agentOpen, setAgentOpen] = useState(false);
 
   return (
     <div
       className={cn(
-        "console-surface min-h-svh lg:grid lg:grid-cols-[250px_1fr]",
-        isDark ? "console-dark text-zinc-100" : "text-foreground",
+        "console-surface min-h-svh lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px]",
+        isDark && "console-dark",
       )}
     >
       <aside
         className={cn(
-          "flex flex-col border-b lg:min-h-svh lg:border-b-0 lg:border-r",
-          isDark
-            ? "border-white/10 bg-[#0b0d10]"
-            : "border-border/80 bg-card/90",
+          "flex flex-col border-b bg-card lg:min-h-svh lg:border-b-0 lg:border-r",
+          "border-border",
         )}
       >
-        <div className="flex items-center gap-3 px-5 py-5">
-          <div className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+        <div className="flex items-center gap-3 px-4 py-4">
+          <div className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
             IS
           </div>
           <div>
-            <p className="text-sm font-medium tracking-tight">IntentSpec</p>
-            <p
-              className={cn(
-                "text-[11px]",
-                isDark ? "text-zinc-500" : "text-muted-foreground",
-              )}
-            >
-              Semantic Console
+            <p className="text-sm font-semibold tracking-tight text-foreground">
+              IntentSpec
             </p>
+            <p className="text-[11px] text-muted-foreground">Semantic Console</p>
           </div>
         </div>
 
         <div className="px-3 pb-3">
-          <div
-            className={cn(
-              "rounded-lg border px-3 py-2.5",
-              isDark
-                ? "border-white/10 bg-white/[0.04]"
-                : "border-border/70 bg-mist/60",
-            )}
-          >
-            <p
-              className={cn(
-                "flex items-center gap-2 text-xs",
-                isDark ? "text-zinc-300" : "text-foreground",
-              )}
-            >
+          <div className="rounded-lg border border-border bg-mist/50 px-3 py-2.5">
+            <p className="flex items-center gap-2 text-xs text-foreground">
               <Boxes className="size-3.5 text-primary" />
               quality_lab
             </p>
-            <p
-              className={cn(
-                "mt-1 pl-5 font-mono text-[10px]",
-                isDark ? "text-zinc-500" : "text-muted-foreground",
-              )}
-            >
+            <p className="mt-1 pl-5 font-mono text-[10px] text-muted-foreground">
               workspace · core
             </p>
           </div>
         </div>
 
         <nav className="flex-1 space-y-0.5 px-3 pb-4">
-          <p
-            className={cn(
-              "mb-2 px-2 text-[10px] font-medium tracking-[0.16em] uppercase",
-              isDark ? "text-zinc-600" : "text-muted-foreground",
-            )}
-          >
+          <p className="mb-2 px-2 text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
             Workspace
           </p>
           {CONSOLE_TABS.map((item) => {
@@ -150,13 +125,9 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
                 href={`/console/semantic?tab=${item.id}`}
                 className={cn(
                   "flex items-start gap-3 rounded-lg px-3 py-2.5 transition",
-                  isDark
-                    ? active
-                      ? "bg-white/[0.09] text-white"
-                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
-                    : active
-                      ? "bg-primary/10 text-ink"
-                      : "text-muted-foreground hover:bg-mist hover:text-foreground",
+                  active
+                    ? "bg-primary/10 text-foreground"
+                    : "text-muted-foreground hover:bg-mist hover:text-foreground",
                 )}
               >
                 <Icon
@@ -167,12 +138,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
                 />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">{item.label}</span>
-                  <span
-                    className={cn(
-                      "mt-0.5 block text-[11px] leading-snug",
-                      isDark ? "text-zinc-500" : "text-muted-foreground",
-                    )}
-                  >
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
                     {item.description}
                   </span>
                 </span>
@@ -181,51 +147,42 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div
-          className={cn(
-            "space-y-3 border-t px-5 py-4",
-            isDark ? "border-white/10" : "border-border/70",
-          )}
-        >
+        <div className="space-y-3 border-t border-border px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <StatusPill appearance={isDark ? "dark" : "light"} />
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className={cn(
-                "inline-flex size-8 items-center justify-center rounded-lg border transition",
-                isDark
-                  ? "border-white/10 text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200"
-                  : "border-border bg-card text-muted-foreground hover:bg-mist hover:text-foreground",
-              )}
-              title={isDark ? "라이트 모드" : "다크 모드"}
-              aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-            >
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setAgentOpen((v) => !v)}
+                className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-mist hover:text-foreground lg:hidden"
+                title="Agent"
+                aria-label="Agent 채팅"
+              >
+                <MessageSquare className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-mist hover:text-foreground"
+                title={isDark ? "라이트 모드" : "다크 모드"}
+                aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              >
+                {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </button>
+            </div>
           </div>
           <Link
             href="/"
-            className={cn(
-              "block text-[11px] transition",
-              isDark
-                ? "text-zinc-600 hover:text-zinc-400"
-                : "text-muted-foreground hover:text-foreground",
-            )}
+            className="block text-[11px] text-muted-foreground transition hover:text-foreground"
           >
             ← 소개 페이지
           </Link>
         </div>
       </aside>
 
-      <div
-        className={cn(
-          "min-w-0",
-          isDark ? "bg-[#111318]" : "bg-[color-mix(in_oklab,var(--mist)_55%,white)]",
-        )}
-      >
-        {children}
-      </div>
+      <div className="min-w-0 bg-background">{children}</div>
+
+      <ConsoleAgentChat open={agentOpen} onOpenChange={setAgentOpen} />
     </div>
   );
 }

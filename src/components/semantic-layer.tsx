@@ -74,7 +74,7 @@ export function SemanticLayer({
           hint={
             draft
               ? "의도 → 용어 → 컬럼 연결"
-              : "Analyze 탭에서 분석을 돌리면 채워집니다"
+              : "Agent에게 「온톨로지 초안」또는 Analyze에서 채우기"
           }
           badge={
             lockedMaps === mappings.length && draft ? (
