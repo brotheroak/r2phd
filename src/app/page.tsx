@@ -97,27 +97,27 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Full-width flow — fills the viewport band */}
-        <div className="relative z-10 mt-14 w-full px-3 pb-16 sm:px-5 sm:pb-20 lg:px-8">
+        {/* Full-bleed flow — nearly edge-to-edge */}
+        <div className="relative z-10 mt-14 w-full px-2 pb-16 sm:px-3 sm:pb-20">
           <p className="mb-5 text-center text-sm font-semibold tracking-[0.22em] text-muted-foreground uppercase">
             소통 → 합의 → 실행
           </p>
-          <div className="rise-in-delay-2 mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-7 lg:gap-3">
+          <div className="rise-in-delay-2 grid w-full grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5 lg:grid-cols-7 lg:gap-2">
             {FLOW.map((step, i) => (
               <div key={step.label} className="relative min-w-0">
                 <div
-                  className={`flex h-full min-h-[9rem] flex-col items-center justify-center rounded-2xl px-2 py-6 text-center shadow-sm sm:min-h-[10.5rem] lg:min-h-[11.5rem] ${step.tint}`}
+                  className={`flex h-full min-h-[9.5rem] flex-col items-center justify-center rounded-2xl px-1.5 py-6 text-center shadow-sm sm:min-h-[11rem] lg:min-h-[12rem] ${step.tint}`}
                 >
                   <span className="text-3xl sm:text-4xl" aria-hidden>
                     {step.emoji}
                   </span>
-                  <span className="mt-4 font-display text-2xl leading-none tracking-tight sm:text-3xl lg:text-[2rem]">
+                  <span className="mt-4 font-display text-[1.65rem] leading-none tracking-tight sm:text-3xl lg:text-[2.15rem]">
                     {step.label}
                   </span>
                 </div>
                 {i < FLOW.length - 1 ? (
                   <span
-                    className="pointer-events-none absolute top-1/2 -right-2.5 z-10 hidden -translate-y-1/2 text-2xl font-bold text-ink/40 lg:block"
+                    className="pointer-events-none absolute top-1/2 -right-1.5 z-10 hidden -translate-y-1/2 text-xl font-bold text-ink/35 lg:block"
                     aria-hidden
                   >
                     →
