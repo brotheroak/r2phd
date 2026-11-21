@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { HumanAiMark } from "@/components/human-ai-mark";
 import {
   FOV,
   buildSphereField,
@@ -16,14 +15,8 @@ import {
 
 type Size = "nav" | "hero" | "footer";
 
-/**
- * Identical 3D fill for every mark size.
- * Unit-sphere radius projects to ~SPHERE_SCALE * px from center
- * → visual diameter ≈ 2 * SPHERE_SCALE * px
- */
+/** Unit-sphere radius → ~SPHERE_SCALE * px from center */
 const SPHERE_SCALE = 0.42;
-/** Communication glyph width as a fraction of the visual sphere diameter */
-const GLYPH_OF_SPHERE = 0.58;
 
 const PRESETS: Record<Size, { px: number; n: number }> = {
   nav: { px: 40, n: 64 },
@@ -32,8 +25,8 @@ const PRESETS: Record<Size, { px: number; n: number }> = {
 };
 
 /**
- * Brand mark — rotating sphere + centered discs.
- * Disc size/spacing lock to the 3D sphere diameter, not the CSS box.
+ * Brand mark — rotating wire sphere only.
+ * No center discs. Cursor assemble/shatter stays in CursorOrbit.
  */
 export function SphereMark({
   size = "nav",
@@ -44,10 +37,7 @@ export function SphereMark({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const preset = PRESETS[size];
-
-  // Visual sphere diameter in CSS px (unit radius * 2 * scale)
   const sphereDiameter = preset.px * SPHERE_SCALE * 2;
-  const glyphW = Math.round(sphereDiameter * GLYPH_OF_SPHERE);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -162,15 +152,10 @@ export function SphereMark({
         className
       )}
       style={{ width: preset.px, height: preset.px }}
-      aria-label="IntentSpec — 뜻이 모이는 소통"
-      title="뜻이 모이는 소통"
-      data-sphere-d={sphereDiameter}
-      data-glyph-w={glyphW}
+      aria-label="IntentSpec"
+      title="IntentSpec"
     >
-      <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden />
-      <span className="pointer-events-none relative z-[1] flex items-center justify-center">
-        <HumanAiMark width={glyphW} quiet />
-      </span>
+      <canvas ref={canvasRef} className="block" aria-hidden />
     </span>
   );
 }
