@@ -35,7 +35,6 @@ type ConsoleState = {
   report: AuditReport | null;
   intentLocked: boolean;
   lockedAt: string | null;
-  /** Unified clarify: analysis / research / everyday */
   clarifyDomain: ClarifyDomain;
   clarifyQuestion: string;
   clarifyBrief: ClarifyBrief | null;
@@ -125,53 +124,155 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
   }, [state, hydrated]);
 
   const patch = useCallback((partial: Partial<ConsoleState>) => {
-    setState((prev) => ({ ...prev, ...partial }));
+    setState((prev) => {
+      let changed = false;
+      for (const key of Object.keys(partial) as (keyof ConsoleState)[]) {
+        if (prev[key] !== partial[key]) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) return prev;
+      return { ...prev, ...partial };
+    });
   }, []);
+
+  const setResearchQuestion = useCallback(
+    (v: string) => patch({ researchQuestion: v }),
+    [patch],
+  );
+  const setGlossary = useCallback((v: string) => patch({ glossary: v }), [patch]);
+  const setSchema = useCallback((v: string) => patch({ schema: v }), [patch]);
+  const setResultCsv = useCallback(
+    (v: string) => patch({ resultCsv: v }),
+    [patch],
+  );
+  const setCandidateSql = useCallback(
+    (v: string) => patch({ candidateSql: v }),
+    [patch],
+  );
+  const setLinkedTables = useCallback(
+    (v: string[]) => patch({ linkedTables: v }),
+    [patch],
+  );
+  const setIntentLocked = useCallback(
+    (v: boolean, lockedAt: string | null = null) =>
+      patch({ intentLocked: v, lockedAt: v ? lockedAt : null }),
+    [patch],
+  );
+  const setClarifyDomain = useCallback(
+    (v: ClarifyDomain) => patch({ clarifyDomain: v }),
+    [patch],
+  );
+  const setClarifyQuestion = useCallback(
+    (v: string) => patch({ clarifyQuestion: v }),
+    [patch],
+  );
+  const setClarifyBrief = useCallback(
+    (v: ClarifyBrief | null) => patch({ clarifyBrief: v }),
+    [patch],
+  );
+  const setClarifyDecisions = useCallback(
+    (v: ChoiceMap | ((prev: ChoiceMap) => ChoiceMap)) => {
+      setState((prev) => ({
+        ...prev,
+        clarifyDecisions:
+          typeof v === "function" ? v(prev.clarifyDecisions) : v,
+        clarifyLocked: false,
+        clarifyLockedAt: null,
+      }));
+    },
+    [],
+  );
+  const setClarifyLocked = useCallback(
+    (v: boolean, lockedAt: string | null = null) =>
+      patch({
+        clarifyLocked: v,
+        clarifyLockedAt: v ? lockedAt : null,
+      }),
+    [patch],
+  );
+  const setDraft = useCallback(
+    (v: AnalysisDraft | null) => patch({ draft: v }),
+    [patch],
+  );
+  const setScholar = useCallback(
+    (v: ScholarHit[]) => patch({ scholar: v }),
+    [patch],
+  );
+  const setDecisions = useCallback(
+    (
+      v:
+        | Record<string, ResearcherDecision>
+        | ((
+            prev: Record<string, ResearcherDecision>,
+          ) => Record<string, ResearcherDecision>),
+    ) => {
+      setState((prev) => ({
+        ...prev,
+        decisions: typeof v === "function" ? v(prev.decisions) : v,
+        intentLocked: false,
+        lockedAt: null,
+        spec: null,
+        report: null,
+      }));
+    },
+    [],
+  );
+  const setSpec = useCallback(
+    (v: AnalysisSpec | null) => patch({ spec: v }),
+    [patch],
+  );
+  const setReport = useCallback(
+    (v: AuditReport | null) => patch({ report: v }),
+    [patch],
+  );
 
   const value = useMemo<ConsoleContextValue>(
     () => ({
       ...state,
       hydrated,
-      setResearchQuestion: (v) => patch({ researchQuestion: v }),
-      setGlossary: (v) => patch({ glossary: v }),
-      setSchema: (v) => patch({ schema: v }),
-      setResultCsv: (v) => patch({ resultCsv: v }),
-      setCandidateSql: (v) => patch({ candidateSql: v }),
-      setLinkedTables: (v) => patch({ linkedTables: v }),
-      setIntentLocked: (v, lockedAt = null) =>
-        patch({ intentLocked: v, lockedAt: v ? lockedAt : null }),
-      setClarifyDomain: (v) => patch({ clarifyDomain: v }),
-      setClarifyQuestion: (v) => patch({ clarifyQuestion: v }),
-      setClarifyBrief: (v) => patch({ clarifyBrief: v }),
-      setClarifyDecisions: (v) =>
-        setState((prev) => ({
-          ...prev,
-          clarifyDecisions:
-            typeof v === "function" ? v(prev.clarifyDecisions) : v,
-          clarifyLocked: false,
-          clarifyLockedAt: null,
-        })),
-      setClarifyLocked: (v, lockedAt = null) =>
-        patch({
-          clarifyLocked: v,
-          clarifyLockedAt: v ? lockedAt : null,
-        }),
-      setDraft: (v) => patch({ draft: v }),
-      setScholar: (v) => patch({ scholar: v }),
-      setDecisions: (v) =>
-        setState((prev) => ({
-          ...prev,
-          decisions: typeof v === "function" ? v(prev.decisions) : v,
-          intentLocked: false,
-          lockedAt: null,
-          spec: null,
-          report: null,
-        })),
-      setSpec: (v) => patch({ spec: v }),
-      setReport: (v) => patch({ report: v }),
+      setResearchQuestion,
+      setGlossary,
+      setSchema,
+      setResultCsv,
+      setCandidateSql,
+      setLinkedTables,
+      setIntentLocked,
+      setClarifyDomain,
+      setClarifyQuestion,
+      setClarifyBrief,
+      setClarifyDecisions,
+      setClarifyLocked,
+      setDraft,
+      setScholar,
+      setDecisions,
+      setSpec,
+      setReport,
       patch,
     }),
-    [state, hydrated, patch],
+    [
+      state,
+      hydrated,
+      setResearchQuestion,
+      setGlossary,
+      setSchema,
+      setResultCsv,
+      setCandidateSql,
+      setLinkedTables,
+      setIntentLocked,
+      setClarifyDomain,
+      setClarifyQuestion,
+      setClarifyBrief,
+      setClarifyDecisions,
+      setClarifyLocked,
+      setDraft,
+      setScholar,
+      setDecisions,
+      setSpec,
+      setReport,
+      patch,
+    ],
   );
 
   return (
