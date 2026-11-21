@@ -90,7 +90,7 @@ export default function HomePage() {
           같은 소통, 여러 케이스
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          품질·SAP·부가세·급여·연구·일상·에이전트 티키타카까지 — 현장이 달라도
+          품질·SAP·부가세·급여·연구·일상·LLM에게 의도 설명하기까지 — 현장이 달라도
           같은 패턴으로 뜻을 맞춥니다. 아래가 바로 진입입니다.
         </p>
 

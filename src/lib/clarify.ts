@@ -1,6 +1,6 @@
 /**
  * Soft clarify domains (분석 콘솔 시나리오와 별개).
- * collab = 사람↔에이전트가 주고받다 의도를 못 읽는 케이스.
+ * collab = LLM에게 의도를 설명·잠그는 케이스.
  */
 export const CLARIFY_DOMAINS = [
   {
@@ -26,9 +26,9 @@ export const CLARIFY_DOMAINS = [
   },
   {
     id: "collab",
-    label: "에이전트 티키타카",
+    label: "LLM에게 의도 설명하기",
     emoji: "🤝",
-    blurb: "사람과 AI가 주고받다 의도가 틀어질 때",
+    blurb: "LLM이 자기 마음대로 해석하기 전에 뜻을 고르기",
     swatch: "#7c3aed",
   },
 ] as const;
@@ -106,8 +106,9 @@ export type ClarifyBrief = {
 };
 
 export const CLARIFY_SYSTEM = `당신은 IntentSpec 질문 인터뷰어입니다.
-사용자의 질문이 데이터 분석·연구·일상·에이전트 티키타카든
+사용자의 질문이 데이터 분석·연구·일상이든, LLM에게 의도를 설명하는 상황이든
 애매한 지점을 선택지로 구체화합니다. 장문 심문 금지. 고르기 쉬운 옵션만.
+한국어는 표준어로 씁니다. 은어·축약 속어는 쓰지 마세요.
 
 STRICT JSON:
 {
@@ -123,6 +124,6 @@ STRICT JSON:
 - ambiguities 2~4개. axis는 가능하면 서로 다르게.
 - options 2~4개, 짧고 바로 클릭 가능하게.
 - recommended는 넣되 자동 선택되지 않음.
-- domain은 질문 내용에 맞게 추정. 사람↔에이전트 지시가 계속 엇갈리면 collab.
+- domain은 질문 내용에 맞게 추정. LLM이 자기 마음대로 해석·실행하려는 상황이면 collab.
 - collab에서는 “바로 고치지 말고 먼저 합의”가 핵심이다.
-- 자연스러운 한국어. id는 cl-goal 같은 kebab-case.`;
+- 자연스러운 표준 한국어. id는 cl-goal 같은 kebab-case.`;

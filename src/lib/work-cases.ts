@@ -85,11 +85,11 @@ export const WORK_CASES: WorkCase[] = [
   },
   {
     id: "collab",
-    label: "에이전트 티키타카",
+    label: "LLM에게 의도 설명하기",
     emoji: "🤝",
-    blurb: "에이전트가 인텐트를 못 읽고 지맘대로 고칠 때",
+    blurb: "LLM이 자기 마음대로 고치기 전에 뜻을 고르기",
     example:
-      "「CTA는 케이스 쪽으로」「세 현장 아니잖아」「이 케이스 넣어」→ 합의 잠금 전에는 코드 손대지 않기",
+      "「CTA는 케이스 쪽으로」「세 현장이 아니다」「이 케이스도 넣어」→ 합의 잠금 전에는 코드를 손대지 않기",
     gap: "질문만 듣고 바로 실행해서, 사람이 원한 뜻과 결과물이 계속 어긋나는 간극",
     href: "/clarify/collab",
     swatch: "#7c3aed",

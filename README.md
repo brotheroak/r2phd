@@ -17,7 +17,7 @@ GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)
 | 💸 급여·원천 | `/console/semantic?case=payroll` | 지급·신고 전 원천 기준 잠금 |
 | 🔬 연구·조사 | `/clarify/research` | 범위·근거·주장·다음 산출물 |
 | 💬 일상 질문 | `/clarify/everyday` | 목적·제약·기준·다음 행동 |
-| 🤝 에이전트 티키타카 | `/clarify/collab` | 의도 못 읽음 → 합의 전 실행 금지 |
+| 🤝 LLM에게 의도 설명하기 | `/clarify/collab` | 자기 마음대로 실행하기 전에 의도 잠금 |
 
 진입 CTA는 홈 히어로가 아니라 **같은 소통, 여러 케이스** 구역에 둡니다.
 
@@ -27,7 +27,7 @@ GitHub: [brotheroak/r2phd](https://github.com/brotheroak/r2phd)
 
 - 추천은 보이되 **자동 선택하지 않음**
 - 잠그기 전에는 반출·확정·코드 확정 불가
-- 콘솔 Agent가 “지맘대로 / 의도”를 감지하면 티키타카 케이스로 보냄
+- 콘솔 Agent가 “자기 마음대로 / 의도”를 감지하면 의도 설명 케이스로 보냄
 
 ## Liner API
 

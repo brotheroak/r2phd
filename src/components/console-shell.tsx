@@ -316,7 +316,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
                 href="/clarify/collab"
                 className="block font-medium text-violet-700 hover:underline dark:text-violet-300"
               >
-                에이전트 티키타카
+                LLM에게 의도 설명하기
               </Link>
               <Link
                 href="/#cases"

@@ -29,7 +29,7 @@ const SUGGESTIONS: Record<string, string[]> = {
   analyze: [
     "예제 불러와줘",
     "기준 잠그기 전에 뭘 고르지?",
-    "내 의도 못 읽고 지맘대로 고치지 마",
+    "내 의도 못 읽고 자기 마음대로 고치지 마",
   ],
 };
 
