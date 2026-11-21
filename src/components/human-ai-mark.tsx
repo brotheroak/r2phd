@@ -1,106 +1,83 @@
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** nav: compact wordmark chip · hero: larger brand signal under eyebrow */
   size?: "nav" | "hero";
   className?: string;
 };
 
 /**
- * Iconic human ↔ AI communication mark.
- * Two nodes + bridging pulse — meaning without plain text "인간 ↔ AI 소통".
+ * Brand signal for human↔AI communication.
+ * Typographic + geometric — not a clipart pill.
  */
 export function HumanAiMark({ size = "nav", className }: Props) {
   const hero = size === "hero";
+
+  if (hero) {
+    return (
+      <div
+        className={cn(
+          "inline-flex flex-col items-center gap-4 text-ink",
+          className,
+        )}
+      >
+        <div
+          className="relative flex h-14 w-[min(72vw,420px)] items-center justify-center"
+          aria-hidden
+        >
+          {/* Left disc — human */}
+          <span className="absolute left-[12%] top-1/2 size-11 -translate-y-1/2 rounded-full border border-ink/25 bg-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]" />
+          {/* Right disc — AI */}
+          <span className="absolute right-[12%] top-1/2 size-11 -translate-y-1/2 rounded-full bg-ink" />
+          {/* Bridging arc */}
+          <svg
+            className="absolute inset-x-[18%] top-1/2 h-10 -translate-y-1/2 overflow-visible"
+            viewBox="0 0 240 40"
+            fill="none"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M8 20 C 70 2, 170 2, 232 20"
+              className="human-ai-arc stroke-ink/25"
+              strokeWidth="1.25"
+            />
+            <path
+              d="M8 20 C 70 2, 170 2, 232 20"
+              className="human-ai-arc-draw stroke-primary"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            />
+          </svg>
+          {/* Center lock glyph */}
+          <span className="relative z-[1] flex size-9 items-center justify-center rounded-full border border-primary/30 bg-white font-display text-lg text-ink">
+            ⟷
+          </span>
+        </div>
+        <p className="font-display text-xl tracking-tight text-ink sm:text-2xl">
+          사람 <span className="text-primary">⟷</span> AI
+        </p>
+        <p className="text-sm tracking-[0.18em] text-muted-foreground uppercase">
+          뜻이 맞는 소통
+        </p>
+      </div>
+    );
+  }
+
   return (
     <span
       className={cn(
-        "human-ai-mark inline-flex items-center gap-2.5",
-        hero ? "flex-col gap-3" : "rounded-full border border-border/80 bg-white/70 px-2.5 py-1 backdrop-blur-sm",
+        "inline-flex items-center gap-2 text-ink",
         className,
       )}
-      title="인간 ↔ AI 소통"
+      title="사람 ⟷ AI · 뜻이 맞는 소통"
     >
-      <span
-        className={cn(
-          "relative inline-flex items-center",
-          hero ? "gap-3" : "gap-1.5",
-        )}
-        aria-hidden
-      >
-        {/* Human node */}
-        <span
-          className={cn(
-            "relative z-[1] inline-flex items-center justify-center rounded-full border border-ink/20 bg-white text-ink shadow-[0_0_0_3px_color-mix(in_oklab,white_70%,transparent)]",
-            hero ? "size-11" : "size-6",
-          )}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className={hero ? "size-5" : "size-3.5"}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="8" r="3.2" />
-            <path d="M5.5 19.2c1.4-3 3.7-4.5 6.5-4.5s5.1 1.5 6.5 4.5" />
-          </svg>
-        </span>
-
-        {/* Bridge */}
-        <span
-          className={cn(
-            "relative overflow-hidden rounded-full bg-ink/10",
-            hero ? "h-1.5 w-16" : "h-1 w-8",
-          )}
-        >
-          <span className="human-ai-pulse absolute inset-y-0 left-0 w-1/2 rounded-full bg-primary" />
-        </span>
-
-        {/* AI node */}
-        <span
-          className={cn(
-            "relative z-[1] inline-flex items-center justify-center rounded-full border border-primary/35 bg-primary text-primary-foreground",
-            hero ? "size-11" : "size-6",
-          )}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className={hero ? "size-5" : "size-3.5"}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="6.5" y="7" width="11" height="10" rx="2.2" />
-            <path d="M9.2 11.2h5.6M9.2 14.2h3.6" />
-            <circle cx="12" cy="5.2" r="1" fill="currentColor" stroke="none" />
-          </svg>
-        </span>
+      <span className="relative inline-flex h-5 w-11 items-center" aria-hidden>
+        <span className="absolute left-0 size-3.5 rounded-full border border-ink/30 bg-white" />
+        <span className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-ink/20" />
+        <span className="human-ai-dot absolute left-3 top-1/2 size-1 -translate-y-1/2 rounded-full bg-primary" />
+        <span className="absolute right-0 size-3.5 rounded-full bg-ink" />
       </span>
-
-      <span
-        className={cn(
-          "font-medium tracking-tight text-ink",
-          hero ? "text-base sm:text-lg" : "text-xs",
-        )}
-      >
-        {hero ? (
-          <>
-            <span className="text-muted-foreground">사람</span>
-            <span className="mx-1.5 text-primary">⟷</span>
-            <span className="text-muted-foreground">AI</span>
-            <span className="mx-2 text-border">·</span>
-            <span>뜻이 맞는 소통</span>
-          </>
-        ) : (
-          <>
-            사람<span className="mx-1 text-primary">⟷</span>AI
-          </>
-        )}
+      <span className="font-display text-[15px] leading-none tracking-tight">
+        사람 <span className="text-primary">⟷</span> AI
       </span>
     </span>
   );
