@@ -77,13 +77,13 @@
   --ink: #0d2c30;
   --mist: #e8f3f1;
   --signal: #d97706;
-  /* Teal ↔ coral, slate ↔ peach — tone lowered ~20% */
-  --wash-teal: #92b3ac;
-  --wash-coral: #bc9a90;
-  --wash-slate: #9ea8b6;
-  --wash-peach: #bfa686;
-  --glow-teal: #0c5650;
-  --glow-coral: #9d4a3b;
+  /* Teal ↔ coral, slate ↔ peach — whitened ~20% (less intense) */
+  --wash-teal: #d4ebe6;
+  --wash-coral: #f3ddd7;
+  --wash-slate: #dbe3ee;
+  --wash-peach: #f5e6d0;
+  --glow-teal: #0f6b63;
+  --glow-coral: #c45c4a;
   --ok: #15803d;
   --sky: #0284c7;
   --amber: #f59e0b;
@@ -117,45 +117,45 @@
       Dual-hue paper: teal ↔ coral (complement) and slate ↔ peach (complement).
       Many soft stops so the field reads layered, not flat monochrome.
     */
-    background-color: #d9e0e6;
+    background-color: #eef2f5;
     background-image:
       radial-gradient(
         1180px 760px at 6% -8%,
-        color-mix(in oklab, var(--wash-teal) 78%, white) 0%,
-        color-mix(in oklab, var(--wash-teal) 55%, var(--wash-coral)) 22%,
-        color-mix(in oklab, var(--wash-coral) 46%, transparent) 46%,
-        color-mix(in oklab, var(--wash-coral) 14%, transparent) 64%,
+        color-mix(in oklab, var(--wash-teal) 70%, white) 0%,
+        color-mix(in oklab, var(--wash-teal) 42%, var(--wash-coral)) 22%,
+        color-mix(in oklab, var(--wash-coral) 32%, transparent) 46%,
+        color-mix(in oklab, var(--wash-coral) 10%, transparent) 64%,
         transparent 78%
       ),
       radial-gradient(
         1040px 700px at 98% 0%,
-        color-mix(in oklab, var(--wash-slate) 76%, white) 0%,
-        color-mix(in oklab, var(--wash-slate) 48%, var(--wash-peach)) 24%,
-        color-mix(in oklab, var(--wash-peach) 42%, transparent) 48%,
-        color-mix(in oklab, var(--wash-peach) 12%, transparent) 66%,
+        color-mix(in oklab, var(--wash-slate) 68%, white) 0%,
+        color-mix(in oklab, var(--wash-slate) 40%, var(--wash-peach)) 24%,
+        color-mix(in oklab, var(--wash-peach) 30%, transparent) 48%,
+        color-mix(in oklab, var(--wash-peach) 10%, transparent) 66%,
         transparent 80%
       ),
       radial-gradient(
         780px 560px at 42% 22%,
-        color-mix(in oklab, var(--wash-coral) 36%, transparent) 0%,
-        color-mix(in oklab, var(--wash-teal) 26%, transparent) 36%,
-        color-mix(in oklab, var(--wash-peach) 11%, transparent) 58%,
+        color-mix(in oklab, var(--wash-coral) 28%, transparent) 0%,
+        color-mix(in oklab, var(--wash-teal) 20%, transparent) 36%,
+        color-mix(in oklab, var(--wash-peach) 10%, transparent) 58%,
         transparent 74%
       ),
       radial-gradient(
         700px 520px at 78% 92%,
-        color-mix(in oklab, var(--wash-peach) 38%, transparent) 0%,
-        color-mix(in oklab, var(--wash-slate) 24%, transparent) 40%,
-        color-mix(in oklab, var(--wash-coral) 10%, transparent) 62%,
+        color-mix(in oklab, var(--wash-peach) 30%, transparent) 0%,
+        color-mix(in oklab, var(--wash-slate) 18%, transparent) 40%,
+        color-mix(in oklab, var(--wash-coral) 8%, transparent) 62%,
         transparent 78%
       ),
       linear-gradient(
         162deg,
-        color-mix(in oklab, #dce6e5 55%, var(--wash-teal)) 0%,
-        color-mix(in oklab, #dae3e8 50%, var(--wash-slate)) 18%,
-        color-mix(in oklab, #e0dadd 48%, var(--wash-coral)) 42%,
-        color-mix(in oklab, #e3dbd3 52%, var(--wash-peach)) 68%,
-        color-mix(in oklab, #d7dee4 60%, var(--wash-slate)) 100%
+        color-mix(in oklab, #f4f8f8 70%, var(--wash-teal)) 0%,
+        color-mix(in oklab, #f2f5f8 68%, var(--wash-slate)) 18%,
+        color-mix(in oklab, #f6f2f3 66%, var(--wash-coral)) 42%,
+        color-mix(in oklab, #f7f4ef 68%, var(--wash-peach)) 68%,
+        color-mix(in oklab, #eef2f5 72%, var(--wash-slate)) 100%
       );
     background-attachment: fixed;
     font-family: var(--font-sans), "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -244,40 +244,40 @@
     background:
       radial-gradient(
         960px 680px at 10% 6%,
-        color-mix(in oklab, var(--wash-teal) 70%, white) 0%,
-        color-mix(in oklab, var(--wash-teal) 44%, var(--wash-coral)) 26%,
-        color-mix(in oklab, var(--wash-coral) 38%, transparent) 50%,
-        color-mix(in oklab, var(--wash-coral) 11%, transparent) 68%,
+        color-mix(in oklab, var(--wash-teal) 62%, white) 0%,
+        color-mix(in oklab, var(--wash-teal) 36%, var(--wash-coral)) 26%,
+        color-mix(in oklab, var(--wash-coral) 28%, transparent) 50%,
+        color-mix(in oklab, var(--wash-coral) 8%, transparent) 68%,
         transparent 82%
       ),
       radial-gradient(
         880px 620px at 90% 10%,
-        color-mix(in oklab, var(--wash-slate) 68%, white) 0%,
-        color-mix(in oklab, var(--wash-slate) 40%, var(--wash-peach)) 28%,
-        color-mix(in oklab, var(--wash-peach) 36%, transparent) 52%,
-        color-mix(in oklab, var(--wash-peach) 11%, transparent) 70%,
+        color-mix(in oklab, var(--wash-slate) 60%, white) 0%,
+        color-mix(in oklab, var(--wash-slate) 34%, var(--wash-peach)) 28%,
+        color-mix(in oklab, var(--wash-peach) 26%, transparent) 52%,
+        color-mix(in oklab, var(--wash-peach) 8%, transparent) 70%,
         transparent 84%
       ),
       radial-gradient(
         700px 520px at 48% 78%,
-        color-mix(in oklab, var(--wash-coral) 34%, transparent) 0%,
-        color-mix(in oklab, var(--wash-peach) 24%, transparent) 32%,
-        color-mix(in oklab, var(--wash-teal) 18%, transparent) 56%,
+        color-mix(in oklab, var(--wash-coral) 26%, transparent) 0%,
+        color-mix(in oklab, var(--wash-peach) 18%, transparent) 32%,
+        color-mix(in oklab, var(--wash-teal) 14%, transparent) 56%,
         transparent 78%
       ),
       radial-gradient(
         520px 400px at 62% 36%,
-        color-mix(in oklab, var(--wash-peach) 22%, transparent) 0%,
-        color-mix(in oklab, var(--wash-slate) 13%, transparent) 45%,
+        color-mix(in oklab, var(--wash-peach) 18%, transparent) 0%,
+        color-mix(in oklab, var(--wash-slate) 10%, transparent) 45%,
         transparent 70%
       ),
       linear-gradient(
         152deg,
-        color-mix(in oklab, var(--wash-teal) 27%, transparent) 0%,
-        color-mix(in oklab, var(--wash-coral) 14%, transparent) 28%,
+        color-mix(in oklab, var(--wash-teal) 22%, transparent) 0%,
+        color-mix(in oklab, var(--wash-coral) 12%, transparent) 28%,
         transparent 46%,
-        color-mix(in oklab, var(--wash-peach) 19%, transparent) 68%,
-        color-mix(in oklab, var(--wash-slate) 18%, transparent) 100%
+        color-mix(in oklab, var(--wash-peach) 16%, transparent) 68%,
+        color-mix(in oklab, var(--wash-slate) 14%, transparent) 100%
       );
   }
   .hero-bloom {
@@ -293,25 +293,25 @@
       /* Wave lobe 1: teal → coral */
       radial-gradient(
         circle 500px at var(--wx1) var(--wy1),
-        color-mix(in oklab, var(--wash-teal) 68%, transparent) 0%,
-        color-mix(in oklab, var(--wash-coral) 40%, transparent) 34%,
-        color-mix(in oklab, var(--wash-coral) 12%, transparent) 58%,
+        color-mix(in oklab, var(--wash-teal) 48%, transparent) 0%,
+        color-mix(in oklab, var(--wash-coral) 28%, transparent) 34%,
+        color-mix(in oklab, var(--wash-coral) 8%, transparent) 58%,
         transparent 76%
       ),
       /* Wave lobe 2: slate → peach */
       radial-gradient(
         circle 460px at var(--wx2) var(--wy2),
-        color-mix(in oklab, var(--wash-slate) 62%, transparent) 0%,
-        color-mix(in oklab, var(--wash-peach) 38%, transparent) 36%,
-        color-mix(in oklab, var(--wash-peach) 12%, transparent) 60%,
+        color-mix(in oklab, var(--wash-slate) 44%, transparent) 0%,
+        color-mix(in oklab, var(--wash-peach) 26%, transparent) 36%,
+        color-mix(in oklab, var(--wash-peach) 8%, transparent) 60%,
         transparent 78%
       ),
       /* Wave lobe 3: coral → teal (reversed complement) */
       radial-gradient(
         circle 440px at var(--wx3) var(--wy3),
-        color-mix(in oklab, var(--wash-coral) 56%, transparent) 0%,
-        color-mix(in oklab, var(--wash-teal) 34%, transparent) 40%,
-        color-mix(in oklab, var(--wash-peach) 10%, transparent) 62%,
+        color-mix(in oklab, var(--wash-coral) 40%, transparent) 0%,
+        color-mix(in oklab, var(--wash-teal) 24%, transparent) 40%,
+        color-mix(in oklab, var(--wash-peach) 8%, transparent) 62%,
         transparent 80%
       );
   }
