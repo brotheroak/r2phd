@@ -149,6 +149,25 @@
     opacity: 0.45;
     mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 10%, transparent 72%);
   }
+  .hero-grid-wave {
+    opacity: calc(var(--wave) + 0.15);
+    will-change: mask-image, opacity;
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--ink) 18%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--ink) 18%, transparent) 1px, transparent 1px);
+    -webkit-mask-image: radial-gradient(
+      circle 340px at var(--wx) var(--wy),
+      #000 0%,
+      rgba(0, 0, 0, 0.4) 42%,
+      transparent 74%
+    );
+    mask-image: radial-gradient(
+      circle 340px at var(--wx) var(--wy),
+      #000 0%,
+      rgba(0, 0, 0, 0.4) 42%,
+      transparent 74%
+    );
+  }
   .hero-grid-lit {
     opacity: 1;
     will-change: mask-image;
@@ -156,83 +175,37 @@
       linear-gradient(to right, color-mix(in oklab, var(--primary) 42%, transparent) 1px, transparent 1px),
       linear-gradient(to bottom, color-mix(in oklab, var(--primary) 42%, transparent) 1px, transparent 1px);
     -webkit-mask-image: radial-gradient(
-      circle 260px at var(--hx) var(--hy),
+      circle 240px at var(--hx) var(--hy),
       #000 0%,
-      rgba(0, 0, 0, 0.55) 38%,
+      rgba(0, 0, 0, 0.5) 40%,
       transparent 72%
     );
     mask-image: radial-gradient(
-      circle 260px at var(--hx) var(--hy),
+      circle 240px at var(--hx) var(--hy),
       #000 0%,
-      rgba(0, 0, 0, 0.55) 38%,
+      rgba(0, 0, 0, 0.5) 40%,
       transparent 72%
     );
   }
   .hero-bloom {
     will-change: background;
-    background: radial-gradient(
-      circle 320px at var(--hx) var(--hy),
-      color-mix(in oklab, var(--primary) 22%, transparent) 0%,
-      color-mix(in oklab, var(--ink) 6%, transparent) 40%,
-      transparent 68%
-    );
-  }
-  .hero-stage {
-    perspective: 900px;
-    perspective-origin: var(--hx) var(--hy);
-  }
-  .hero-plane {
-    position: absolute;
-    border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
-    background: linear-gradient(
-      145deg,
-      color-mix(in oklab, white 70%, transparent),
-      color-mix(in oklab, var(--ink) 6%, transparent)
-    );
-    border-radius: 1.25rem;
-    transform-style: preserve-3d;
-    transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-    transition: none;
-    will-change: transform;
-  }
-  .hero-plane-a {
-    width: min(52vw, 520px);
-    height: min(28vw, 280px);
-    opacity: 0.5;
-    transform: translate3d(-8%, -6%, 40px) rotateX(calc(var(--tilt-x) + 8deg))
-      rotateY(calc(var(--tilt-y) - 10deg));
-  }
-  .hero-plane-b {
-    width: min(40vw, 400px);
-    height: min(22vw, 220px);
-    opacity: 0.4;
-    transform: translate3d(18%, 10%, 80px) rotateX(calc(var(--tilt-x) - 6deg))
-      rotateY(calc(var(--tilt-y) + 14deg));
-  }
-  .hero-plane-c {
-    width: min(28vw, 280px);
-    height: min(16vw, 160px);
-    opacity: 0.34;
-    border-color: color-mix(in oklab, var(--primary) 22%, transparent);
-    background: linear-gradient(
-      160deg,
-      color-mix(in oklab, var(--primary) 10%, white),
-      color-mix(in oklab, var(--ink) 5%, transparent)
-    );
-    transform: translate3d(-4%, 22%, 120px) rotateX(calc(var(--tilt-x) + 12deg))
-      rotateY(calc(var(--tilt-y) + 4deg));
+    background:
+      radial-gradient(
+        circle 300px at var(--hx) var(--hy),
+        color-mix(in oklab, var(--primary) 20%, transparent) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        circle 380px at var(--wx) var(--wy),
+        color-mix(in oklab, var(--ink) 7%, transparent) 0%,
+        transparent 70%
+      );
   }
   @media (prefers-reduced-motion: reduce) {
+    .hero-grid-wave,
     .hero-grid-lit,
-    .hero-bloom,
-    .hero-plane {
+    .hero-bloom {
       transition: none;
-    }
-    .hero-plane-a,
-    .hero-plane-b,
-    .hero-plane-c {
-      transform: none;
-      opacity: 0.12;
     }
   }
   .pipe-flow {
@@ -245,29 +218,27 @@
     background-size: 220% 100%;
     animation: pipe-slide 3.2s ease-in-out infinite;
   }
-  .human-ai-dot {
-    left: 18%;
-    animation: human-ai-dot 2s ease-in-out infinite;
+  .human-ai-bridge-pulse {
+    animation: human-ai-bridge-pulse 1.7s linear infinite;
   }
-  @keyframes human-ai-dot {
+  @keyframes human-ai-bridge-pulse {
     0% {
-      left: 18%;
+      stroke-dashoffset: 0;
       opacity: 0.35;
     }
-    50% {
-      left: 50%;
+    40% {
       opacity: 1;
     }
     100% {
-      left: 78%;
-      opacity: 0.3;
+      stroke-dashoffset: -138;
+      opacity: 0.25;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .human-ai-dot {
+    .human-ai-bridge-pulse {
       animation: none;
-      left: 50%;
-      opacity: 0.9;
+      opacity: 0.7;
+      stroke-dashoffset: -40;
     }
   }
 

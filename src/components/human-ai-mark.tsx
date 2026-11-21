@@ -6,56 +6,61 @@ type Props = {
 };
 
 /**
- * Geometric human↔AI signal only — white disc, black disc, pulse between.
- * No “사람 AI” label (kept out of chrome on purpose).
+ * White disc → black disc with a pulse that travels on the bridge.
+ * Bridge endpoints sit on the circle edges only.
  */
 export function HumanAiMark({ size = "nav", className }: Props) {
   const hero = size === "hero";
-  const disc = hero ? "size-10 sm:size-12" : "size-3.5";
-  const bridge = hero ? "h-px w-24 sm:w-28" : "h-px w-8";
+
+  // Shared geometry in a fixed viewBox so ends land on circle rims.
+  // Circles at (28,40) r=20 and (172,40) r=20. Bridge from x=48 to x=152.
+  const vb = "0 0 200 80";
 
   return (
     <span
-      className={cn(
-        "inline-flex items-center justify-center",
-        hero ? "gap-0" : "gap-0",
-        className,
-      )}
+      className={cn("inline-flex items-center justify-center", className)}
       aria-label="사람과 AI의 소통"
       title="사람과 AI의 소통"
     >
-      <span
-        className={cn(
-          "relative inline-flex items-center",
-          hero ? "h-12 w-[9.5rem] sm:h-14 sm:w-44" : "h-5 w-11",
-        )}
+      <svg
+        viewBox={vb}
+        className={cn(hero ? "h-14 w-44 sm:h-16 sm:w-52" : "h-5 w-12")}
+        fill="none"
         aria-hidden
       >
-        <span
-          className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2 rounded-full border border-ink/25 bg-white",
-            disc,
-          )}
+        {/* Bridge baseline — rim to rim */}
+        <line
+          x1="48"
+          y1="40"
+          x2="152"
+          y2="40"
+          className="stroke-ink/20"
+          strokeWidth={hero ? 1.5 : 1.25}
+          strokeLinecap="round"
         />
-        <span
-          className={cn(
-            "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-ink/15",
-            bridge,
-          )}
+        {/* Traveling pulse — clipped to the bridge segment */}
+        <line
+          x1="48"
+          y1="40"
+          x2="152"
+          y2="40"
+          className="human-ai-bridge-pulse stroke-primary"
+          strokeWidth={hero ? 2.25 : 1.75}
+          strokeLinecap="round"
+          strokeDasharray={hero ? "18 120" : "10 94"}
         />
-        <span
-          className={cn(
-            "human-ai-dot absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-primary",
-            hero ? "size-2" : "size-1",
-          )}
+
+        {/* White disc (human) */}
+        <circle
+          cx="28"
+          cy="40"
+          r="20"
+          className="fill-white stroke-ink/25"
+          strokeWidth="1.25"
         />
-        <span
-          className={cn(
-            "absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-ink",
-            disc,
-          )}
-        />
-      </span>
+        {/* Black disc (AI) */}
+        <circle cx="172" cy="40" r="20" className="fill-ink" />
+      </svg>
     </span>
   );
 }
