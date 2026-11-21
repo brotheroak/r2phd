@@ -134,9 +134,7 @@ export function HeroAtmosphere() {
       <div className="hero-wash absolute inset-0" />
       <div className="hero-grid hero-grid-base absolute inset-0" />
       <div className="hero-grid hero-grid-wave absolute inset-0" />
-      {/* Soft under-glow still tracks cursor; orbit is the main highlighter */}
-      <div className="hero-grid hero-grid-lit absolute inset-0 opacity-35" />
-      <div className="hero-bloom absolute inset-0" />
+      {/* No cursor bloom cloud — highlighter is the sphere wireframe only */}
       <CursorOrbit />
     </div>
   );

@@ -270,23 +270,20 @@ export function CursorOrbit() {
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = 0.55 + depth * 0.35; // thin
+          ctx.lineWidth = 0.45 + depth * 0.2; // hairline
           ctx.stroke();
         }
       }
 
-      // —— Dots: a bit thicker than lines, still small ——
+      // —— Dots: only slightly thicker than hairline edges ——
       for (const idx of order) {
         const p = projected[idx];
         const depth = (p.z + 1.15) / 2.3;
-        const alpha = (0.4 + depth * 0.55) * v;
+        const alpha = (0.45 + depth * 0.5) * v;
         if (alpha < 0.04) continue;
         const persp = FOV / Math.max(0.4, FOV - p.z);
-        // slightly thicker than line (~1.8–2.6px feel)
-        const rad = Math.max(
-          1.35,
-          (1.55 + depth * 0.85) * persp * (0.9 + assemble * 0.15)
-        );
+        // ~0.9–1.25px radius — barely thicker than the thin lines
+        const rad = Math.max(0.85, (0.95 + depth * 0.25) * persp);
 
         const c = samplePalette(surfaceT(p.local, flow));
         const tone = mix({ r: 18, g: 36, b: 40 }, c, 0.78);
