@@ -238,7 +238,10 @@ export function CursorOrbit() {
           b: c.b * k,
         });
         const k = 0.4 + light * 0.75;
-        const tubePx = scale * tubeR * (FOV / (FOV - a.z)) * (1.15 + assemble * 0.95);
+        const tubePx = Math.max(
+          1.2,
+          scale * tubeR * (FOV / Math.max(0.35, FOV - a.z)) * (1.15 + assemble * 0.95)
+        );
 
         // Dark rim (volume)
         ctx.beginPath();
@@ -277,12 +280,14 @@ export function CursorOrbit() {
           const alpha = (0.5 + depth * 0.45) * v * (1 - assemble * 0.5);
           if (alpha < 0.05) continue;
           const c = samplePalette(i / SEGMENTS + flow);
-          const rad =
-            scale * tubeR * (FOV / (FOV - p.z)) * (1.7 + (1 - assemble) * 1.1);
+          const rad = Math.max(
+            1.5,
+            scale * tubeR * (FOV / Math.max(0.35, FOV - p.z)) * (1.7 + (1 - assemble) * 1.1)
+          );
           const g = ctx.createRadialGradient(
             p.x - rad * 0.35,
             p.y - rad * 0.4,
-            rad * 0.08,
+            Math.max(0.01, rad * 0.08),
             p.x,
             p.y,
             rad
