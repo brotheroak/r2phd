@@ -95,21 +95,21 @@ export default function HomePage() {
 
           {/* Big section title + white diagram card */}
           <div className="rise-in-delay-2 mt-14">
-            <h2 className="text-center font-display text-3xl tracking-tight text-ink sm:text-4xl lg:text-5xl">
+            <h2 className="text-center font-display text-4xl leading-tight tracking-tight text-ink sm:text-5xl lg:text-6xl">
               소통 → 합의 → 실행
             </h2>
-            <div className="mt-6 w-full rounded-2xl border border-border bg-white px-4 py-6 shadow-sm sm:px-6 sm:py-7">
-              <div className="flex flex-wrap items-center justify-between gap-y-3">
+            <div className="mt-7 w-full rounded-2xl border border-border bg-white px-5 py-7 shadow-sm sm:px-8 sm:py-8">
+              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-3 sm:gap-x-2.5">
                 {FLOW.map((n, i) => (
                   <span key={n.t} className="inline-flex items-center gap-2 sm:gap-2.5">
                     <span
-                      className={`rounded-full px-3.5 py-2 text-sm font-semibold sm:px-4 sm:py-2.5 sm:text-base ${n.c}`}
+                      className={`rounded-full px-4 py-2.5 text-[15px] font-semibold sm:px-5 sm:py-3 sm:text-lg ${n.c}`}
                     >
                       {n.t}
                     </span>
                     {i < FLOW.length - 1 ? (
                       <span
-                        className="text-base font-semibold text-muted-foreground sm:text-lg"
+                        className="text-lg font-semibold text-muted-foreground sm:text-xl"
                         aria-hidden
                       >
                         →
