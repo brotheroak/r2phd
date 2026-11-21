@@ -22,10 +22,13 @@ const PRESETS: Record<Size, { px: number; n: number; scale: number }> = {
   footer: { px: 32, n: 52, scale: 0.4 },
 };
 
+/** Same relative glyph size in every SphereMark — % of sphere diameter */
+const GLYPH_RATIO = 0.52;
+
 /**
- * Brand mark only — stable rotating sphere wireframe.
- * No shatter. Center holds the human↔AI communication discs.
- * (Cursor assemble/shatter lives in CursorOrbit, separately.)
+ * Brand mark — stable rotating sphere + centered human↔AI discs.
+ * Glyph uses one geometry scaled by sphere size (identical proportions).
+ * Cursor assemble/shatter is CursorOrbit only.
  */
 export function SphereMark({
   size = "nav",
@@ -36,6 +39,7 @@ export function SphereMark({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const preset = PRESETS[size];
+  const glyphW = Math.round(preset.px * GLYPH_RATIO);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -153,9 +157,9 @@ export function SphereMark({
       title="뜻이 모이는 소통"
     >
       <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden />
-      {/* Center glyph only — small so it never reads as a face */}
-      <span className="pointer-events-none relative z-[1] flex items-center justify-center rounded-full bg-white/55 px-1 py-0.5 backdrop-blur-[1px]">
-        <HumanAiMark size="compact" quiet />
+      {/* No white plate — glyph only, same geometry at every size */}
+      <span className="pointer-events-none relative z-[1] flex items-center justify-center">
+        <HumanAiMark width={glyphW} quiet />
       </span>
     </span>
   );

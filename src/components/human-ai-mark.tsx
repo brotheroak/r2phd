@@ -1,81 +1,75 @@
 import { cn } from "@/lib/utils";
 
 type Props = {
-  size?: "nav" | "hero" | "compact";
+  /** CSS width of the glyph — height follows viewBox aspect */
+  width?: number | string;
   className?: string;
-  /** Hide hover title when nested inside SphereMark */
   quiet?: boolean;
 };
 
 /**
- * White disc ↔ black disc — bidirectional bridge pulses.
- * compact: tiny center glyph for SphereMark (not face-sized).
+ * White disc ↔ black disc — one geometry, scaled only by width.
+ * Bridge is short; discs are large relative to the gap (rim-to-rim).
+ * viewBox 0 0 200 80 · discs r=24 at cx 40 / 160 · bridge 64→136
  */
-export function HumanAiMark({ size = "nav", className, quiet = false }: Props) {
-  const hero = size === "hero";
-  const compact = size === "compact";
-  const dash = hero ? 12 : compact ? 7 : 8;
-  const gap = compact ? 48 : hero ? 74 : 78;
+export function HumanAiMark({
+  width = 56,
+  className,
+  quiet = false,
+}: Props) {
+  const dash = 10;
+  const gap = 62;
 
   return (
     <span
       className={cn("inline-flex items-center justify-center", className)}
+      style={{ width }}
       aria-label={quiet ? undefined : "사람과 AI의 소통"}
       title={quiet ? undefined : "사람과 AI의 소통"}
     >
       <svg
         viewBox="0 0 200 80"
-        className={cn(
-          hero && "h-16 w-48 sm:h-[4.5rem] sm:w-56",
-          size === "nav" && "h-6 w-14",
-          compact && "h-5 w-11"
-        )}
+        className="h-auto w-full"
         fill="none"
         aria-hidden
       >
         <line
-          x1="62"
+          x1="64"
           y1="40"
-          x2="138"
+          x2="136"
           y2="40"
           className="stroke-ink/20"
-          strokeWidth={hero ? 1.5 : 1.1}
+          strokeWidth="1.25"
           strokeLinecap="round"
         />
         <line
-          x1="62"
+          x1="64"
           y1="40"
-          x2="138"
+          x2="136"
           y2="40"
           className="human-ai-bridge-pulse-fwd stroke-primary"
-          strokeWidth={hero ? 2.25 : compact ? 1.5 : 1.75}
+          strokeWidth="1.85"
           strokeLinecap="round"
           strokeDasharray={`${dash} ${gap}`}
         />
         <line
-          x1="62"
+          x1="64"
           y1="40"
-          x2="138"
+          x2="136"
           y2="40"
           className="human-ai-bridge-pulse-rev stroke-ink/70"
-          strokeWidth={hero ? 2 : compact ? 1.25 : 1.5}
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeDasharray={`${dash * 0.85} ${gap}`}
         />
-
         <circle
-          cx="36"
+          cx="40"
           cy="40"
-          r={compact ? 18 : 26}
-          className="fill-white stroke-ink/25"
+          r="24"
+          className="fill-white stroke-ink/30"
           strokeWidth="1.25"
         />
-        <circle
-          cx="164"
-          cy="40"
-          r={compact ? 18 : 26}
-          className="fill-ink"
-        />
+        <circle cx="160" cy="40" r="24" className="fill-ink" />
       </svg>
     </span>
   );
