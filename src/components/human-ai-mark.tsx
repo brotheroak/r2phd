@@ -6,15 +6,16 @@ type Props = {
 };
 
 /**
- * White disc → black disc with a pulse that travels on the bridge.
- * Bridge endpoints sit on the circle edges only.
+ * White disc → black disc. Larger discs, short rim-to-rim bridge.
+ * viewBox 0 0 200 80
+ * Circles: (36,40) r=26 and (164,40) r=26
+ * Bridge: x=62 → x=138 (only the gap between rims)
  */
 export function HumanAiMark({ size = "nav", className }: Props) {
   const hero = size === "hero";
-
-  // Shared geometry in a fixed viewBox so ends land on circle rims.
-  // Circles at (28,40) r=20 and (172,40) r=20. Bridge from x=48 to x=152.
-  const vb = "0 0 200 80";
+  const bridgeLen = 76; // 138 - 62
+  const dash = hero ? 14 : 9;
+  const gap = bridgeLen - dash;
 
   return (
     <span
@@ -23,43 +24,39 @@ export function HumanAiMark({ size = "nav", className }: Props) {
       title="사람과 AI의 소통"
     >
       <svg
-        viewBox={vb}
-        className={cn(hero ? "h-14 w-44 sm:h-16 sm:w-52" : "h-5 w-12")}
+        viewBox="0 0 200 80"
+        className={cn(hero ? "h-16 w-48 sm:h-[4.5rem] sm:w-56" : "h-6 w-14")}
         fill="none"
         aria-hidden
       >
-        {/* Bridge baseline — rim to rim */}
         <line
-          x1="48"
+          x1="62"
           y1="40"
-          x2="152"
+          x2="138"
           y2="40"
           className="stroke-ink/20"
           strokeWidth={hero ? 1.5 : 1.25}
           strokeLinecap="round"
         />
-        {/* Traveling pulse — clipped to the bridge segment */}
         <line
-          x1="48"
+          x1="62"
           y1="40"
-          x2="152"
+          x2="138"
           y2="40"
           className="human-ai-bridge-pulse stroke-primary"
           strokeWidth={hero ? 2.25 : 1.75}
           strokeLinecap="round"
-          strokeDasharray={hero ? "18 120" : "10 94"}
+          strokeDasharray={`${dash} ${gap + 8}`}
         />
 
-        {/* White disc (human) */}
         <circle
-          cx="28"
+          cx="36"
           cy="40"
-          r="20"
+          r="26"
           className="fill-white stroke-ink/25"
           strokeWidth="1.25"
         />
-        {/* Black disc (AI) */}
-        <circle cx="172" cy="40" r="20" className="fill-ink" />
+        <circle cx="164" cy="40" r="26" className="fill-ink" />
       </svg>
     </span>
   );

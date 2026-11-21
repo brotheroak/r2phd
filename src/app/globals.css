@@ -219,7 +219,7 @@
     animation: pipe-slide 3.2s ease-in-out infinite;
   }
   .human-ai-bridge-pulse {
-    animation: human-ai-bridge-pulse 1.7s linear infinite;
+    animation: human-ai-bridge-pulse 1.55s linear infinite;
   }
   @keyframes human-ai-bridge-pulse {
     0% {
@@ -230,7 +230,7 @@
       opacity: 1;
     }
     100% {
-      stroke-dashoffset: -138;
+      stroke-dashoffset: -92;
       opacity: 0.25;
     }
   }
