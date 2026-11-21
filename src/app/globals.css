@@ -117,17 +117,12 @@
 }
 
 @layer utilities {
+  /* Instrument Serif — upright display, not script/italic */
   .font-display {
-    font-family: var(--font-display), "Iowan Old Style", "Palatino Linotype", serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.03em;
-  }
-  .font-display-roman {
-    font-family: var(--font-display), "Iowan Old Style", "Palatino Linotype", serif;
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
     font-style: normal;
     font-weight: 400;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
   }
   .grid-atmosphere {
     background-image:
