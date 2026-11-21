@@ -118,14 +118,16 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-family: var(--font-display), "Iowan Old Style", "Palatino Linotype", serif;
     font-style: italic;
-    letter-spacing: -0.02em;
+    font-weight: 400;
+    letter-spacing: -0.03em;
   }
   .font-display-roman {
-    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-family: var(--font-display), "Iowan Old Style", "Palatino Linotype", serif;
     font-style: normal;
-    letter-spacing: -0.02em;
+    font-weight: 400;
+    letter-spacing: -0.025em;
   }
   .grid-atmosphere {
     background-image:
@@ -138,9 +140,8 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      color-mix(in oklab, var(--amber) 70%, white) 35%,
-      color-mix(in oklab, var(--sky) 55%, white) 65%,
-      transparent 100%
+      color-mix(in oklab, var(--signal) 55%, white) 40%,
+      transparent 80%
     );
     background-size: 220% 100%;
     animation: pipe-slide 3.2s ease-in-out infinite;

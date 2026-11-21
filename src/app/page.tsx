@@ -35,7 +35,7 @@ export default function HomePage() {
 
         <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
           <div className="flex items-baseline gap-2.5">
-            <span className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+            <span className="font-display italic text-3xl text-ink sm:text-4xl">
               IntentSpec
             </span>
             <span className="hidden text-sm text-muted-foreground sm:inline">
@@ -56,7 +56,7 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col justify-center px-4 pb-14 pt-8 sm:px-6 sm:pt-12 lg:min-h-[calc(88svh-5rem)] lg:pb-20">
           <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.18em] text-primary uppercase">
             <Sparkles className="size-3.5" />
-            <span className="font-display text-base tracking-normal normal-case">
+            <span className="font-display italic text-lg tracking-normal normal-case">
               IntentSpec
             </span>
           </p>
@@ -174,7 +174,7 @@ export default function HomePage() {
 
       <footer className="border-t border-border/70 bg-card/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="font-display text-base text-ink">IntentSpec</p>
+          <p className="font-display italic text-xl text-ink">IntentSpec</p>
           <p>인간 ↔ AI 소통 · 의도 확정 · .EXE-THON</p>
         </div>
       </footer>
