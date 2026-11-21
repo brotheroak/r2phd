@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       if (e instanceof Error && e.message === "NO_LINER_KEY") {
         return NextResponse.json({
           brief: mockClarifyBrief(body.question, body.domain),
-          notice: "API 키가 없어 질문 구체화 예제로 진행합니다.",
+          notice: "API 키가 없어 예제로 진행해요.",
         });
       }
       return NextResponse.json({

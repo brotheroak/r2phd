@@ -78,8 +78,8 @@ export function IntentAxisMap({
             { t: "식별", c: "bg-sky-400 text-sky-950" },
             { t: "측정", c: "bg-teal-500 text-white" },
             { t: "분모", c: "bg-emerald-500 text-white" },
-            { t: "잠금", c: "bg-violet-500 text-white" },
-            { t: "반출", c: "bg-rose-500 text-white" },
+            { t: "확정", c: "bg-violet-500 text-white" },
+            { t: "내보내기", c: "bg-rose-500 text-white" },
           ]}
         />
       </div>

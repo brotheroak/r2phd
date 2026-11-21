@@ -26,12 +26,12 @@ import { cn } from "@/lib/utils";
 
 const SAMPLES: Record<ClarifyDomain, string> = {
   analysis:
-    "이번 주 회의 전에, 최근 불량률이 왜 올랐는지 원인을 좁히고 싶어요. ‘최근’이랑 ‘불량’부터 맞춰 주세요",
+    "이번 주 회의 전에, 최근 불량률이 왜 올랐는지 원인만 좁히고 싶어요. 『최근』이랑 『불량』 뜻이 먼저 헷갈려요",
   research:
-    "고객 불만에 적힌 ‘품질’이 제품 문제인지, 배송인지, 응대인지 헷갈려요. 조사 범위를 먼저 정하고 싶어요",
+    "고객 불만에 적힌 『품질』이 제품인지, 배송인지, 응대인지 헷갈려요",
   everyday: "이번 주말, 두 시간 안에 할 만한 거 추천해 줘. 너무 피곤하지 않았으면 좋겠어요",
   collab:
-    "코딩 에이전트에게 「화면 좀 고쳐 줘」라고만 했더니 내가 원한 것과 다르게 바뀌었어요. 합의하기 전에는 손대지 말고, 선택지로 먼저 맞춰 주세요",
+    "코딩 에이전트한테 『화면 좀 고쳐 줘』라고만 했더니 내가 원한 거랑 다르게 바뀌었어요",
 };
 
 function chosenList(
@@ -111,28 +111,28 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
   const lockedCard = useMemo(() => {
     if (!clarifyBrief || !allDone) return "";
     const lines = [
-      `# IntentSpec 질문 잠금 카드`,
-      `도메인: ${CLARIFY_DOMAINS.find((d) => d.id === clarifyBrief.domain)?.label}`,
-      `상태: ${clarifyLocked ? "잠금" : "미잠금"}`,
+      `# IntentSpec 확정 카드`,
+      `종류: ${CLARIFY_DOMAINS.find((d) => d.id === clarifyBrief.domain)?.label}`,
+      `상태: ${clarifyLocked ? "확정됨" : "아직 미확정"}`,
       clarifyLockedAt ? `시각: ${clarifyLockedAt}` : "",
       ``,
       `## 원래 질문`,
       clarifyQuestion,
       ``,
-      `## 구체화된 질문`,
+      `## 당신이 한 말`,
       clarifyBrief.refinedQuestion,
       ``,
       `## 방향`,
       clarifyBrief.direction,
       ``,
-      `## 선택 (복수 가능)`,
+      `## 고른 것 (여러 개 가능)`,
       ...ambiguities.map((a) => {
         const axis = CLARIFY_AXIS_BY_ID[a.axis];
         const picked = chosenList(clarifyDecisions, a.id);
         return `- ${axis.emoji} ${axis.label}: ${picked.length ? picked.join(" · ") : "—"}`;
       }),
       ``,
-      `잠금 카드 없이 답을 확정하지 마세요.`,
+      `이 카드 없이 답을 확정하지 마세요.`,
     ];
     return lines.filter(Boolean).join("\n");
   }, [
@@ -158,7 +158,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "질문을 구체화하지 못했습니다.");
+        setError(json.error ?? "질문을 나누지 못했어요.");
         return;
       }
       setClarifyBrief(json.brief);
@@ -167,7 +167,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       setFocusIdx(0);
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "여러 개를 골라도 됩니다. 추천은 눌러야 선택됩니다.",
+          "여러 개 골라도 됩니다. 추천은 눌러야 선택돼요.",
       );
     });
   }
@@ -207,9 +207,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
     if (clarifyBrief.domain === "analysis") {
       setResearchQuestion(clarifyBrief.refinedQuestion);
     }
-    setNotice(
-      "질문이 잠겼습니다. 카드를 복사해 챗봇·동료에게 넘기세요.",
-    );
+    setNotice("질문이 확정됐어요. 카드를 복사해서 AI나 동료한테 넘기세요.");
   }
 
   async function copyCard() {
@@ -224,7 +222,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
     setClarifyBrief(null);
     setClarifyDecisions({});
     setClarifyLocked(false);
-    setNotice("예제 질문을 넣었습니다. 「애매한 점 찾기」를 눌러 주세요.");
+    setNotice("예제 질문을 넣었어요. 『애매한 점 찾기』를 눌러 주세요.");
   }
 
   return (
@@ -246,8 +244,8 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           />
           <span className="font-medium">
             {clarifyLocked
-              ? "질문 잠금 · 방향 카드 공유 가능"
-              : "질문 미잠금 · 분석·연구·일상·의도 설명 동일 패턴"}
+              ? "질문 확정됨 · 카드 공유 가능"
+              : "아직 미확정 · 분석·연구·일상·AI 설명 같은 흐름"}
           </span>
         </div>
         {ambiguities.length ? (
@@ -297,7 +295,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           rows={4}
           value={clarifyQuestion}
           onChange={(e) => setClarifyQuestion(e.target.value)}
-          placeholder="분석·연구·일상·의도 설명 무엇이든. 예: LLM이 내 뜻을 못 읽고 자기 마음대로 고친다"
+          placeholder="예: AI가 내 뜻을 못 읽고 멋대로 고쳤어요"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={loadSample}>
@@ -333,12 +331,22 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       {clarifyBrief ? (
         <>
           <div className="rounded-xl border border-violet-300 bg-violet-50 px-5 py-4 dark:border-violet-500/40 dark:bg-violet-500/10">
-            <p className="text-sm font-medium leading-relaxed">
-              {clarifyBrief.summary}
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              구체화 초안: {clarifyBrief.refinedQuestion}
-            </p>
+            <div>
+              <p className="text-[11px] font-semibold tracking-wide text-violet-700/80 dark:text-violet-200/70">
+                지금 상황
+              </p>
+              <p className="mt-1 text-sm font-medium leading-relaxed">
+                {clarifyBrief.summary}
+              </p>
+            </div>
+            <div className="mt-3 border-t border-violet-200/80 pt-3 dark:border-violet-500/30">
+              <p className="text-[11px] font-semibold tracking-wide text-violet-700/80 dark:text-violet-200/70">
+                당신이 한 말
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/85">
+                {clarifyBrief.refinedQuestion}
+              </p>
+            </div>
           </div>
 
           <AxisCardGrid
@@ -377,7 +385,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
               { t: "제약", c: "bg-amber-400 text-amber-950" },
               { t: "기준", c: "bg-sky-400 text-sky-950" },
               { t: "다음", c: "bg-teal-500 text-white" },
-              { t: "잠금", c: "bg-rose-500 text-white" },
+              { t: "확정", c: "bg-rose-500 text-white" },
             ]}
           />
 
@@ -470,7 +478,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                   className="gap-2"
                 >
                   {openCount <= 1 && focusChosen.length > 0
-                    ? "선택 완료 · 잠금으로"
+                    ? "선택 끝 · 확정으로"
                     : "다음 질문"}
                 </Button>
                 {focusChosen.length > 0 ? (
@@ -492,8 +500,8 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
             >
               <ClipboardCheck className="size-4" />
               {allDone
-                ? "질문 잠금 · 카드 만들기"
-                : `잠금 불가 · ${openCount}개 남음`}
+                ? "질문 확정 · 카드 만들기"
+                : `아직 확정 불가 · ${openCount}개 남음`}
             </Button>
             {clarifyLocked ? (
               <>
@@ -515,7 +523,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
                     href="/console/semantic?tab=analyze"
                     className="inline-flex h-9 items-center rounded-lg border border-border bg-secondary px-3 text-sm font-medium"
                   >
-                    분석 게이트로 이어가기
+                    분석 화면으로 이어가기
                   </Link>
                 ) : null}
               </>
@@ -531,9 +539,9 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
       ) : (
         <div className="rounded-xl border border-dashed border-border p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            질문을 넣고 「애매한 점 찾기」를 누르면
+            질문을 넣고 『애매한 점 찾기』를 누르면
             <br />
-            목적·제약·기준·다음을 색 선택지로 고르게 됩니다.
+            목적·제약·기준·다음을 골라 볼 수 있어요.
           </p>
           <button
             type="button"

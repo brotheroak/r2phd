@@ -8,7 +8,7 @@ export default function EverydayClarifyPage() {
     <ScopeShell
       eyebrow="Case · Everyday"
       title="일상 질문"
-      subtitle="여행·구매·일정처럼 애매한 요청도 목적·제약·기준·다음 행동을 고른 뒤에 추천합니다."
+      subtitle="주말·점심·선물처럼 막연한 말도, 목적·제약·기준·다음을 고른 뒤에 추천해요."
     >
       <ClarifyWorkspace fixedDomain="everyday" />
     </ScopeShell>

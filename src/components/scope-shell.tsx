@@ -109,7 +109,7 @@ export function ScopeShell({
           <div className="flex items-center gap-2 border-b border-border bg-mist/40 px-5 py-3 text-sm text-muted-foreground sm:px-6">
             <span className="size-2 shrink-0 rounded-full bg-primary" />
             <span className="leading-snug">
-              애매한 질문을 선택지로 구체화 · 잠금 전 확정 금지
+              애매한 질문을 선택지로 나누기 · 확정 전에는 실행 금지
             </span>
           </div>
           <div className="px-5 py-6 sm:px-6 sm:py-7">{children}</div>

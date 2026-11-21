@@ -22,10 +22,10 @@ export function buildIntentLockMarkdown(args: {
 }): string {
   const { researchQuestion, draft, decisions, spec, lockedAt } = args;
   const lines: string[] = [
-    `# IntentSpec 의도 잠금 카드`,
+    `# IntentSpec 기준 확정 카드`,
     ``,
-    `상태: ${spec ? "잠금됨 · SQL 반출 가능" : "미잠금 · SQL 반출 불가"}`,
-    lockedAt ? `잠근 시각: ${lockedAt}` : "",
+    `상태: ${spec ? "확정됨 · SQL 내보내기 가능" : "아직 미확정 · SQL 내보내기 불가"}`,
+    lockedAt ? `확정 시각: ${lockedAt}` : "",
     ``,
     `## 질문`,
     researchQuestion.trim(),
@@ -45,7 +45,7 @@ export function buildIntentLockMarkdown(args: {
   if (spec) {
     lines.push(
       ``,
-      `## 반출 명세 요약`,
+      `## 내보내기 요약`,
       `- 기간: ${spec.dateAnchor}`,
       `- 식별: ${spec.identifierScope}`,
       `- 분모/대상: ${spec.population}`,

@@ -23,7 +23,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "IntentSpec · 인간 ↔ AI 소통 | .EXE-THON",
   description:
-    "애매한 질문을 선택지로 구체화해 사람과 AI의 간극을 줄입니다. 분석·연구·일상에 같은 소통 에이전트를 붙입니다.",
+    "애매한 말을 고르기 쉬운 선택지로 나누고, 뜻이 맞은 뒤에야 분석·조사·추천·실행으로 넘어갑니다.",
 };
 
 export default function RootLayout({

@@ -333,7 +333,7 @@ function ConsoleShellInner({ children }: { children: React.ReactNode }) {
                   href="/clarify/collab"
                   className="block rounded-md px-2 py-1.5 text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10"
                 >
-                  LLM에게 의도 설명하기
+                  AI한테 원하는 거 말하기
                 </Link>
                 <Link
                   href="/clarify/everyday"

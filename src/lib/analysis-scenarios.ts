@@ -124,7 +124,7 @@ const QUALITY_DRAFT: AnalysisDraft = {
 const VAT_SCENARIO: AnalysisScenario = {
   id: "vat",
   label: "부가세 · SAP↔홈택스",
-  blurb: "전표 합과 신고액이 어긋날 때 — 날짜·세금코드·사업장을 잠그기 전엔 숫자를 확정하면 안 됩니다.",
+  blurb: "전표 합과 신고액이 어긋날 때 — 날짜·세금코드·사업장을 확정하기 전에는 숫자를 확정하면 안 돼요.",
   systems: "SAP FI 전표 · 홈택스 부가세",
   workspaceHint: "finance · vat",
   linkedTables: [
@@ -264,7 +264,7 @@ WHERE f.load_date >= DATE '2026-01-01'   -- ❌ 적재일
         options: [
           "최종 효력 전표만",
           "원전표+역분개 모두",
-          "아직 미정 (잠금 금지)",
+          "아직 모름 (지금은 확정 금지)",
         ],
         recommended: "최종 효력 전표만",
         evidence: ["정의서: reversal_of 있으면 원전표 제외"],
@@ -281,7 +281,7 @@ WHERE f.load_date >= DATE '2026-01-01'   -- ❌ 적재일
 const PAYROLL_SCENARIO: AnalysisScenario = {
   id: "payroll",
   label: "급여 · 원천세",
-  blurb: "급여대장과 원천세·홈택스가 어긋날 때 — 귀속월·인원 범위·임금항목을 잠그기 전엔 지급·신고하면 안 됩니다.",
+  blurb: "급여대장과 원천세·홈택스가 어긋날 때 — 귀속월·인원 범위·임금항목을 확정하기 전에는 지급·신고하면 안 돼요.",
   systems: "인사 급여 전산 · 원천세 · 홈택스",
   workspaceHint: "finance · payroll",
   linkedTables: [
@@ -360,7 +360,7 @@ WHERE r.load_date >= DATE '2026-01-01'  -- ❌ 적재월
   draft: {
     mode: "demo",
     summary:
-      "급여 원천세는 귀속월·확정 런·사업장·비과세 항목이 하나라도 어긋나면 홈택스와 갈라집니다. 잠그기 전에는 지급·신고 숫자를 확정할 수 없습니다.",
+      "급여 원천세는 귀속월·확정 런·사업장·비과세 항목이 하나라도 어긋나면 홈택스와 갈라집니다. 확정하기 전에는 지급·신고 숫자를 확정할 수 없어요.",
     concepts: [
       {
         concept: "원천징수세액",
@@ -415,7 +415,7 @@ WHERE r.load_date >= DATE '2026-01-01'  -- ❌ 적재월
         options: [
           "MEAL 제외",
           "MEAL 포함",
-          "아직 미정 (잠금 금지)",
+          "아직 모름 (지금은 확정 금지)",
         ],
         recommended: "MEAL 제외",
         evidence: ["정의서: 식대 비과세"],
@@ -463,7 +463,7 @@ const SAP_SCENARIO: AnalysisScenario = {
   id: "sap",
   label: "추가 예 · 연동 메타",
   blurb:
-    "인터페이스 메타가 안 맞을 때(문서화된 RFC 메타 미갱신 등) 의도만 잠그는 보조 예제.",
+    "인터페이스 메타가 안 맞을 때(문서화된 RFC 메타 미갱신 등) 의도만 먼저 확정하는 보조 예제.",
   systems: "데모 카탈로그 · RFC/PI 메타 이슈를 모형화",
   workspaceHint: "ops_lab · integration",
   linkedTables: [
@@ -495,7 +495,7 @@ EAI 맵
 
 동기 기준 시각
 - RFC 추출 시각(sync_runs.started_at) ≠ SAP 전기일(BUDAT/posting_date) ≠ 창고 load_date.
-- “최신 데이터”가 어느 시각인지 잠그지 않으면 홈택스·급여 대조가 틀린다.
+- “최신 데이터”가 어느 시각인지 확정하지 않으면 홈택스·급여 대조가 틀린다.
 
 진실 원천
 - 신고·지급 전 숫자의 기준 시스템(SAP / 웨어하우스 / 홈택스 화면)을 하나로 고른다.`,
@@ -510,7 +510,7 @@ sync_runs(run_id, iface_id, started_at, finished_at, row_count, status)
 주의
 - 시스템마다 스키마·메타가 분리되어 있고, managed=false / stale=true 가 흔하다
 - 필드 이름만 같다고 뜻이 같지 않음 (BUDAT ≠ load_date)
-- RFC·EAI 실호출 데모 없음 — 의도·매핑 잠금만`,
+- RFC·EAI 실호출 데모 없음 — 의도·매핑 확정만`,
   naiveSql: `-- ⚠ 메타를 무시하고 이름만으로 조인한 연동 점검
 SELECT
   s.field_name AS sap_field,
@@ -553,7 +553,7 @@ PERNR,employee_id,true,false,인사 키 설명 공란`,
   draft: {
     mode: "demo",
     summary:
-      "SAP↔EAI↔창고는 스키마가 갈라져 있고 메타가 헐거운 경우가 많습니다. RFC 통로·필드 뜻·진실 원천을 잠그기 전에는 부가세·급여 숫자를 확정하면 안 됩니다.",
+      "SAP↔EAI↔창고는 스키마가 갈라져 있고 메타가 헐거운 경우가 많습니다. RFC 통로·필드 뜻·진실 원천을 확정하기 전에는 부가세·급여 숫자를 확정하면 안 돼요.",
     concepts: [
       {
         concept: "연동 통로",
@@ -598,7 +598,7 @@ PERNR,employee_id,true,false,인사 키 설명 공란`,
           "SAP 원천 (RFC 직후)",
           "웨어하우스 적재본",
           "홈택스/급여 화면",
-          "아직 미정 (잠금 금지)",
+          "아직 모름 (지금은 확정 금지)",
         ],
         recommended: "SAP 원천 (RFC 직후)",
         evidence: ["연동 정의: 신고 전 대조는 SAP 기준"],
@@ -626,10 +626,10 @@ PERNR,employee_id,true,false,인사 키 설명 공란`,
           "managed=false 필드는 분석 제외",
           "담당자가 설명을 채운 뒤만 사용",
           "이름 유사도로 임시 매핑",
-          "아직 미정 (잠금 금지)",
+          "아직 모름 (지금은 확정 금지)",
         ],
         recommended: "담당자가 설명을 채운 뒤만 사용",
-        evidence: ["방치 메타는 잠금 전 금지"],
+        evidence: ["방치 메타는 확정 전 금지"],
       },
       {
         id: "amb-sap-clock",

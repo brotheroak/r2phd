@@ -260,7 +260,7 @@ export function buildSchemaFromTables(tableNames: string[]): string {
   lines.push(
     "",
     "주의",
-    "- 날짜·키·세금코드/임금유형을 잠그기 전에 합계를 확정하지 말 것",
+    "- 날짜·키·세금코드/임금유형을 확정하기 전에 합계를 확정하지 말 것",
   );
   return lines.join("\n");
 }
@@ -372,7 +372,7 @@ export function metricsFromSpec(spec: AnalysisSpec | null): SemanticMetric[] {
         id: "m-pending",
         name: "지표 (미확정)",
         expression: "아직 기준이 정해지지 않음",
-        grain: "잠금 전",
+        grain: "확정 전",
         filters: [],
         locked: false,
       },

@@ -17,7 +17,7 @@ import type {
   ScholarHit,
 } from "@/lib/types";
 
-const STORAGE_KEY = "intentspec-console-v3";
+const STORAGE_KEY = "intentspec-console-v4";
 
 type ChoiceMap = Record<string, { chosenOptions: string[]; note?: string }>;
 

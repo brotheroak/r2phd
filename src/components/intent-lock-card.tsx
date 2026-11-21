@@ -66,14 +66,14 @@ export function IntentLockCard({
           )}
           <div>
             <p className="text-sm font-semibold text-foreground">
-              의도 잠금 카드
+              기준 확정 카드
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {locked
-                ? "기준이 고정됐습니다. 이 카드와 함께 SQL·숫자를 공유하세요."
+                ? "기준이 고정됐어요. 이 카드랑 같이 SQL·숫자를 공유하세요."
                 : undecided
-                  ? `아직 ${undecided}개 기준이 비어 있습니다. 잠그기 전에는 SQL을 반출할 수 없습니다.`
-                  : "선택은 끝났습니다. 「의도 잠금」을 눌러야 SQL이 나갑니다."}
+                  ? `아직 ${undecided}개 기준이 비어 있어요. 확정 전에는 SQL을 내보낼 수 없어요.`
+                  : "선택은 끝났어요. 「기준 확정」을 눌러야 SQL이 나가요."}
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export function IntentLockCard({
                 : "border-signal/40 text-signal",
             )}
           >
-            {locked ? "잠금 · 반출 가능" : "미잠금 · 반출 불가"}
+            {locked ? "확정됨 · 내보내기 가능" : "아직 미확정 · 내보내기 불가"}
           </Badge>
           <Button type="button" size="sm" variant="outline" onClick={copyCard}>
             {copied ? (
@@ -127,7 +127,7 @@ export function IntentLockCard({
 
       {locked && lockedAt ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          잠근 시각 · {lockedAt}
+          확정 시각 · {lockedAt}
         </p>
       ) : null}
     </div>

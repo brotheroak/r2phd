@@ -60,7 +60,7 @@ export default function HomePage() {
           </h1>
 
           <p className="rise-in-delay-2 mt-5 max-w-xl text-pretty text-base leading-relaxed text-foreground/80 sm:max-w-2xl sm:text-lg">
-            애매한 말을 선택지로 구체화하고, 같은 뜻을 맞춘 뒤에야
+            애매한 말을 고르기 쉬운 선택지로 나누고, 뜻이 맞은 뒤에야
             분석·조사·추천·실행으로 넘어갑니다.
           </p>
 
@@ -104,8 +104,8 @@ export default function HomePage() {
               같은 소통, 여러 케이스
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-              사람↔AI · 조사·분석 · 운영·연동. 카드를 열어 선택·잠금까지
-              바로 시험할 수 있습니다.
+              사람↔AI · 조사·분석 · 운영·연동. 카드를 열어 선택부터 확정까지
+              바로 시험해 볼 수 있어요.
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function HomePage() {
                             {s.blurb}
                           </p>
                           <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-                            간극 · {s.gap}
+                            안 맞는 지점 · {s.gap}
                           </p>
                           <p className="mt-3 flex-1 rounded-lg bg-mist/70 px-4 py-3 text-sm leading-relaxed text-foreground">
                             <span className="font-semibold">예 · </span>
@@ -179,8 +179,8 @@ export default function HomePage() {
             뜻이 안 맞은 겁니다
           </h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            모델이 더 똑똑해져도, 사람이 맞추지 않은 애매함은 조용히 채워집니다.
-            IntentSpec은 그 채움을 멈추고, 대화를 합의로 바꿉니다.
+            모델이 더 똑똑해져도, 사람이 안 맞춘 애매함은 조용히 채워져요.
+            IntentSpec은 그걸 멈추고, 대화를 합의로 바꿉니다.
           </p>
         </div>
       </section>

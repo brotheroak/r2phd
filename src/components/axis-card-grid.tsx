@@ -46,7 +46,7 @@ export function AxisCardGrid({ cards }: { cards: AxisCardModel[] }) {
               {card.emoji}
             </span>
             <span className="text-[11px] font-semibold tracking-tight opacity-80">
-              {card.done ? "✓ 골랐음" : "고르기"}
+              {card.done ? "✓ 골랐어요" : "고르기"}
             </span>
           </div>
           <p className="mt-3 text-base font-bold leading-snug">{card.label}</p>

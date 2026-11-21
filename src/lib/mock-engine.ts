@@ -85,7 +85,7 @@ WHERE f.company_code = 'KR01'
   -- ${dateAnchor} / ${measure} / ${identifierScope} / ${population}
 ;`
         : scenario.id === "sap"
-          ? `-- IntentSpec 확정 명세 (RFC/EAI 메타 잠금 데모)
+          ? `-- IntentSpec 확정 명세 (RFC/EAI 메타 확정 데모)
 SELECT
   s.table_name, s.field_name, s.data_element,
   m.target_field, m.transform

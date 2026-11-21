@@ -47,9 +47,9 @@ type EntryMode = "verify" | "fresh";
 
 const STEPS: { id: Step; label: string; gate?: boolean }[] = [
   { id: "input", label: "1 입력" },
-  { id: "confirm", label: "2 기준 잠금", gate: true },
-  { id: "spec", label: "3 반출 명세" },
-  { id: "audit", label: "4 반출 전 점검" },
+  { id: "confirm", label: "2 기준 확정", gate: true },
+  { id: "spec", label: "3 내보내기 요약" },
+  { id: "audit", label: "4 내보내기 전 점검" },
 ];
 
 type WorkspaceProps = {
@@ -181,7 +181,7 @@ export function Workspace({
     setMode("verify");
     setStep("input");
     setNotice(
-      `${scenario.label} 예제를 넣었습니다. 기준을 확정하기 전에는 반출할 수 없습니다.`,
+      `${scenario.label} 예제를 넣었어요. 기준을 확정하기 전에는 내보낼 수 없어요.`,
     );
   }
 
@@ -251,7 +251,7 @@ export function Workspace({
       setStep("confirm");
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "헷갈리는 기준을 하나씩 고르세요. 잠그기 전에는 SQL을 반출하지 않습니다.",
+          "헷갈리는 기준을 하나씩 골라 주세요. 확정 전에는 SQL을 내보내지 않아요.",
       );
     });
   }
@@ -273,7 +273,7 @@ export function Workspace({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "의도를 잠그지 못했습니다.");
+        setError(json.error ?? "기준을 확정하지 못했어요.");
         return;
       }
       const when = new Date().toLocaleString("ko-KR", {
@@ -283,7 +283,7 @@ export function Workspace({
       setIntentLocked(true, `${when} (Asia/Seoul)`);
       setNotice(
         (json.notice ? json.notice + " · " : "") +
-          "의도가 잠겼습니다. 잠금 카드와 함께 SQL·결과를 공유하세요.",
+          "기준이 확정됐어요. 확정 카드와 함께 SQL·결과를 공유하세요.",
       );
       setStep("spec");
     });
@@ -323,7 +323,7 @@ export function Workspace({
     }
     if (next === "spec") {
       if (!intentLocked || !spec) {
-        setError("의도를 잠가야 반출 명세·SQL을 볼 수 있습니다.");
+        setError("기준을 확정해야 요약·SQL을 볼 수 있어요.");
         setStep(draft ? "confirm" : "input");
         return;
       }
@@ -333,7 +333,7 @@ export function Workspace({
     if (next === "audit") {
       if (!intentLocked || !report) {
         if (intentLocked && spec) setStep("spec");
-        else setError("잠금 후 결과 점검을 먼저 실행하세요.");
+        else setError("확정한 뒤 결과 점검을 먼저 실행하세요.");
         return;
       }
       setStep("audit");
@@ -360,8 +360,8 @@ export function Workspace({
           />
           <span className="font-medium text-foreground">
             {intentLocked
-              ? "의도 잠금 · SQL·숫자 반출 가능"
-              : "의도 미잠금 · SQL·숫자 반출 불가"}
+              ? "기준 확정 · SQL·숫자 내보내기 가능"
+              : "아직 미확정 · SQL·숫자 내보내기 불가"}
           </span>
           {draft && !intentLocked ? (
             <span className="text-xs text-muted-foreground">
@@ -370,15 +370,15 @@ export function Workspace({
           ) : null}
         </div>
         <span className="text-xs text-muted-foreground">
-          선택지로 기준을 구체화한 뒤에만 반출합니다
+          선택지로 기준을 고른 뒤에만 내보냅니다
         </span>
       </div>
 
       {!isConsole ? (
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground">의도 게이트</p>
+          <p className="text-sm text-muted-foreground">기준 확정</p>
           <h2 className="font-display text-3xl text-ink sm:text-4xl">
-            애매한 기준을 고르게 한 뒤, 잠그고 내보냅니다
+            애매한 기준을 고른 뒤, 확정하고 내보냅니다
           </h2>
         </div>
       ) : null}
@@ -506,7 +506,7 @@ export function Workspace({
                   mono
                 />
                 <Field
-                  label="결과 CSV (반출 직전 표)"
+                  label="결과 CSV (내보내기 직전 표)"
                   value={resultCsv}
                   onChange={setResultCsv}
                   rows={6}
@@ -535,19 +535,19 @@ export function Workspace({
           <aside className="space-y-4">
             <div className="rounded-lg border border-border bg-muted p-4">
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                게이트 규칙
+                확정 규칙
               </p>
               <ul className="mt-3 space-y-2 text-sm text-foreground">
                 <li>1. 애매한 축만 선택지로 묻습니다.</li>
                 <li>2. 추천은 보이되, 자동으로 고르지 않습니다.</li>
-                <li>3. 전부 고르고 「의도 잠금」해야 SQL이 나갑니다.</li>
-                <li>4. 기준을 바꾸면 잠금·SQL·점검이 무효가 됩니다.</li>
+                <li>3. 전부 고르고 「기준 확정」해야 SQL이 나가요.</li>
+                <li>4. 기준을 바꾸면 확정·SQL·점검이 무효가 돼요.</li>
               </ul>
             </div>
             {mode === "verify" && candidateSql ? (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <p className="text-sm font-medium text-foreground">
-                  반출 직전 쿼리 (잠금 전 신뢰 금지)
+                  내보내기 직전 쿼리 (확정 전엔 믿지 마세요)
                 </p>
                 <pre className="mt-2 max-h-48 overflow-auto font-mono text-[11px] text-muted-foreground">
                   {candidateSql.slice(0, 900)}
@@ -628,7 +628,7 @@ export function Workspace({
               <ClipboardCheck className="size-4" />
             )}
             {allAmbiguitiesDecided
-              ? "의도 잠금 · SQL 만들기"
+              ? "기준 확정 · SQL 만들기"
               : `아직 ${openCount}개 · 색 카드에서 골라 주세요`}
           </Button>
         </div>
@@ -655,7 +655,7 @@ export function Workspace({
             <div className="flex flex-wrap gap-2">
               <Badge>{spec.mode === "live" ? "Liner" : "Demo"}</Badge>
               <Badge variant="outline" className="border-ok/40 text-ok">
-                잠금 반영
+                확정 반영
               </Badge>
             </div>
             <h3 className="mt-3 text-xl font-semibold">{spec.title}</h3>
@@ -673,7 +673,7 @@ export function Workspace({
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-lg border border-border bg-muted p-4">
               <h4 className="mb-2 text-sm font-medium text-muted-foreground">
-                잠금 기준 SQL
+                확정 기준 SQL
               </h4>
               <pre className="max-h-[360px] overflow-auto font-mono text-[11px] text-foreground">
                 {spec.sql}
@@ -682,7 +682,7 @@ export function Workspace({
             {candidateSql ? (
               <div className="rounded-lg border border-destructive/25 bg-destructive/5 p-4">
                 <h4 className="mb-2 text-sm font-medium text-foreground">
-                  잠금 전 의심 SQL (비교)
+                  확정 전 의심 SQL (비교)
                 </h4>
                 <pre className="max-h-[360px] overflow-auto font-mono text-[11px] text-muted-foreground">
                   {candidateSql}
@@ -706,7 +706,7 @@ export function Workspace({
           </div>
 
           <div className="rounded-lg border border-border bg-card p-4">
-            <h4 className="font-medium">결과 CSV · 반출 전 점검</h4>
+            <h4 className="font-medium">결과 CSV · 내보내기 전 점검</h4>
             <Textarea
               className="mt-3 font-mono text-xs"
               rows={7}
@@ -725,7 +725,7 @@ export function Workspace({
               ) : (
                 <ShieldAlert className="size-4" />
               )}
-              잠금 기준과 결과가 맞는지 보기
+              확정 기준과 결과가 맞는지 보기
             </Button>
           </div>
         </div>
@@ -733,9 +733,9 @@ export function Workspace({
 
       {step === "spec" && !intentLocked ? (
         <div className="rounded-lg border border-signal/40 bg-signal/5 p-5">
-          <p className="font-medium text-foreground">반출 차단</p>
+          <p className="font-medium text-foreground">내보내기 차단</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            의도가 잠기지 않아 SQL·명세를 보여 주지 않습니다. 기준 잠금 단계로
+            기준이 아직 확정되지 않아 SQL·요약을 보여 주지 않아요. 기준 확정 단계로
             돌아가세요.
           </p>
           <Button
@@ -743,7 +743,7 @@ export function Workspace({
             className="mt-3"
             onClick={() => setStep(draft ? "confirm" : "input")}
           >
-            기준 잠금으로
+            기준 확정으로
           </Button>
         </div>
       ) : null}

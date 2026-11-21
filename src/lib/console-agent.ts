@@ -48,11 +48,11 @@ actions type:
 - {"type":"seed_demo_workspace"}  // 예제 질문·용어·스키마·초안 채우기
 - {"type":"seed_ontology_draft"}  // 온톨로지/매핑 초안만 채우기
 - {"type":"navigate","tab":"catalog"|"ontology"|"metrics"|"lineage"|"analyze"}
-- {"type":"open_collab"}  // LLM에게 의도 설명하기 페이지로 이동
+- {"type":"open_collab"}  // AI한테 원하는 거 말하기 페이지로 이동
 
 규칙:
 - 사용자가 테이블 연결·스키마 반영·예제 로드·매핑 초안을 원하면 해당 action을 넣으세요.
-- 사용자가 “자기 마음대로 / 의도 못 읽음 / 합의 전에 고치지 마 / 의도 설명”을 말하면 콘솔 작업을 멈추고 open_collab을 넣으세요.
+- 사용자가 “자기 마음대로 / 의도 못 읽음 / 합의 전에 고치지 마 / 원하는 거 말하기”를 말하면 콘솔 작업을 멈추고 open_collab을 넣으세요.
 - 단순 질문이면 actions는 [] 이고 reply로만 답하세요.
 - 없는 테이블 이름을 만들지 마세요. 카탈로그에 있는 이름만.
 - 번역투 금지. 쉬운 한국어.`;
@@ -69,7 +69,7 @@ export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
     return {
       mode: "demo",
       reply:
-        "지금은 콘솔을 더 건드리면 안 됩니다. 뜻이 어긋난 상태입니다. 「LLM에게 의도 설명하기」케이스로 가서 목적·제약·기준·다음을 잠근 뒤, 잠금 카드를 지시서로 쓰세요.",
+        "지금은 콘솔을 더 건드리면 안 돼요. 뜻이 아직 안 맞아요. 「AI한테 원하는 거 말하기」로 가서 목적·제약·기준·다음을 고른 뒤, 확정 카드를 지시로 쓰세요.",
       actions: [{ type: "open_collab" }],
     };
   }
@@ -151,7 +151,7 @@ export function mockConsoleAgent(ctx: ConsoleAgentContext): ConsoleAgentReply {
           : "품질·로트 실패율";
     return {
       mode: "demo",
-      reply: `${which} 예제를 워크스페이스에 넣습니다. Analyze에서 기준을 잠그기 전에는 반출하지 마세요.`,
+      reply: `${which} 예제를 워크스페이스에 넣어요. Analyze에서 기준을 확정하기 전에는 내보내지 마세요.`,
       actions: [
         { type: "seed_demo_workspace" },
         { type: "navigate", tab: "analyze" },
