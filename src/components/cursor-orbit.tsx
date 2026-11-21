@@ -2,38 +2,35 @@
 
 import { useEffect, useRef } from "react";
 
-type Node = {
-  /** rest scatter in local 3D */
-  sx: number;
-  sy: number;
-  sz: number;
-  /** ring angle */
-  theta: number;
-  /** size */
-  r: number;
-};
+/**
+ * Self-tracking 3D torus orbit on the hero.
+ * Assembles → holds → shatters → reassembles forever while the pointer is over.
+ */
 
-const N = 28;
-const CYCLE = 4.2;
-const R = 1; // unit ring radius in local space
+const SEGMENTS = 72;
+const CYCLE_MS = 4000;
+const FOV = 2.55;
 
-/** Palette stops — whitened washes (~20% softer) */
 const PALETTE = [
-  { r: 15, g: 107, b: 99 }, // primary teal
-  { r: 212, g: 235, b: 230 }, // wash-teal
-  { r: 243, g: 221, b: 215 }, // wash-coral
-  { r: 196, g: 92, b: 74 }, // glow-coral
-  { r: 219, g: 227, b: 238 }, // wash-slate
-  { r: 245, g: 230, b: 208 }, // wash-peach
-  { r: 217, g: 119, b: 6 }, // signal
-  { r: 13, g: 44, b: 48 }, // ink
+  { r: 15, g: 107, b: 99 },
+  { r: 70, g: 150, b: 140 },
+  { r: 196, g: 110, b: 95 },
+  { r: 190, g: 145, b: 95 },
+  { r: 100, g: 135, b: 165 },
+  { r: 15, g: 107, b: 99 },
 ];
+
+type Vec3 = { x: number; y: number; z: number };
 
 function easeInOut(t: number) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
-function mixColor(a: (typeof PALETTE)[0], b: (typeof PALETTE)[0], t: number) {
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function mix(a: (typeof PALETTE)[0], b: (typeof PALETTE)[0], t: number) {
   return {
     r: a.r + (b.r - a.r) * t,
     g: a.g + (b.g - a.g) * t,
@@ -43,62 +40,63 @@ function mixColor(a: (typeof PALETTE)[0], b: (typeof PALETTE)[0], t: number) {
 
 function samplePalette(t: number) {
   const x = ((t % 1) + 1) % 1;
-  const scaled = x * PALETTE.length;
-  const i = Math.floor(scaled) % PALETTE.length;
-  const j = (i + 1) % PALETTE.length;
-  const f = scaled - Math.floor(scaled);
-  return mixColor(PALETTE[i], PALETTE[j], f);
+  const s = x * (PALETTE.length - 1);
+  const i = Math.floor(s);
+  return mix(PALETTE[i], PALETTE[Math.min(i + 1, PALETTE.length - 1)], s - i);
 }
 
 function rgba(c: { r: number; g: number; b: number }, a: number) {
   return `rgba(${c.r | 0},${c.g | 0},${c.b | 0},${Math.max(0, Math.min(1, a))})`;
 }
 
-/**
- * True 3D assemble/shatter orbit locked to the cursor.
- * Palette colors flow as a gradient along dots & edges.
- */
-export function CursorOrbit({
-  active,
-  nx,
-  ny,
-}: {
-  active: number;
-  nx: number; // 0..1 within hero
-  ny: number;
-}) {
+function rotXYZ(p: Vec3, rx: number, ry: number, rz: number): Vec3 {
+  let { x, y, z } = p;
+  const xz = x * Math.cos(rz) - y * Math.sin(rz);
+  const yz = x * Math.sin(rz) + y * Math.cos(rz);
+  x = xz;
+  y = yz;
+  const yx = y * Math.cos(rx) - z * Math.sin(rx);
+  const zx = y * Math.sin(rx) + z * Math.cos(rx);
+  y = yx;
+  z = zx;
+  const xy = x * Math.cos(ry) + z * Math.sin(ry);
+  const zy = -x * Math.sin(ry) + z * Math.cos(ry);
+  return { x: xy, y, z: zy };
+}
+
+/** Continuous loop that always returns to assemble=1 */
+function assembleAmount(u: number) {
+  // assemble 0–0.30, hold 0.30–0.50, shatter 0.50–0.80, gather prep 0.80–1.00
+  if (u < 0.3) return easeInOut(u / 0.3);
+  if (u < 0.5) return 1;
+  if (u < 0.8) return 1 - easeInOut((u - 0.5) / 0.3);
+  // brief rest at 0, then next cycle reassembles from 0
+  return 0;
+}
+
+export function CursorOrbit() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const nodes = useRef<Node[]>([]);
+  const scatter = useRef<Vec3[]>([]);
   const raf = useRef<number | null>(null);
   const start = useRef(0);
-  const target = useRef({ x: 0.5, y: 0.42 });
+  const target = useRef({ x: 0.5, y: 0.42, over: false });
   const current = useRef({ x: 0.5, y: 0.42 });
   const vis = useRef(0);
-  const visTarget = useRef(0);
 
   useEffect(() => {
-    if (nodes.current.length) return;
-    const list: Node[] = [];
-    for (let i = 0; i < N; i++) {
-      const theta = (i / N) * Math.PI * 2;
-      const scatter = 1.4 + Math.random() * 1.8;
-      const lat = (Math.random() - 0.5) * Math.PI;
+    const pts: Vec3[] = [];
+    for (let i = 0; i < SEGMENTS; i++) {
       const lon = Math.random() * Math.PI * 2;
-      list.push({
-        theta,
-        sx: Math.cos(lon) * Math.cos(lat) * scatter,
-        sy: Math.sin(lat) * scatter,
-        sz: Math.sin(lon) * Math.cos(lat) * scatter,
-        r: 1.6 + Math.random() * 2.2,
+      const lat = (Math.random() - 0.5) * Math.PI;
+      const d = 1.5 + Math.random() * 2.4;
+      pts.push({
+        x: Math.cos(lon) * Math.cos(lat) * d,
+        y: Math.sin(lat) * d,
+        z: Math.sin(lon) * Math.cos(lat) * d,
       });
     }
-    nodes.current = list;
+    scatter.current = pts;
   }, []);
-
-  useEffect(() => {
-    target.current = { x: nx, y: ny };
-    visTarget.current = active;
-  }, [nx, ny, active]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -125,6 +123,23 @@ export function CursorOrbit({
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
+    const onMove = (e: PointerEvent) => {
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      const over =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+      target.current.over = over;
+      if (!over) return;
+      target.current.x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      target.current.y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+
     const tick = (now: number) => {
       const parent = canvas.parentElement;
       if (!parent) {
@@ -135,221 +150,164 @@ export function CursorOrbit({
       const h = parent.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
-      // Smooth follow + fade
-      current.current.x += (target.current.x - current.current.x) * 0.22;
-      current.current.y += (target.current.y - current.current.y) * 0.22;
-      vis.current += (visTarget.current - vis.current) * 0.14;
+      current.current.x += (target.current.x - current.current.x) * 0.3;
+      current.current.y += (target.current.y - current.current.y) * 0.3;
+      const visTarget = target.current.over ? 1 : 0;
+      vis.current += (visTarget - vis.current) * 0.18;
       const v = vis.current;
-      if (v < 0.012) {
+      if (v < 0.015) {
         raf.current = requestAnimationFrame(tick);
         return;
       }
 
       const cx = current.current.x * w;
       const cy = current.current.y * h;
-      const scale = Math.min(w, h) * 0.11;
+      const scale = Math.min(w, h) * 0.145;
 
-      // Assemble / shatter cycle
-      const elapsed = reduced ? CYCLE * 0.42 : ((now - start.current) / 1000) % CYCLE;
-      const u = elapsed / CYCLE;
-      let assemble = 0;
-      if (u < 0.36) assemble = easeInOut(u / 0.36);
-      else if (u < 0.5) assemble = 1;
-      else if (u < 0.86) assemble = 1 - easeInOut((u - 0.5) / 0.36);
-      else assemble = 0;
+      const u = reduced ? 0.4 : ((now - start.current) % CYCLE_MS) / CYCLE_MS;
+      const assemble = assembleAmount(u);
 
-      // 3D orientation — continuous tumble
-      const t = reduced ? 0 : now * 0.001;
-      const rotY = t * 0.85;
-      const rotX = Math.sin(t * 0.55) * 0.55 + 0.35;
-      const rotZ = Math.cos(t * 0.4) * 0.25;
-      const flow = t * 0.22; // palette flow along ring
-
-      const cosX = Math.cos(rotX);
-      const sinX = Math.sin(rotX);
-      const cosY = Math.cos(rotY);
-      const sinY = Math.sin(rotY);
-      const cosZ = Math.cos(rotZ);
-      const sinZ = Math.sin(rotZ);
+      const t = now * 0.001;
+      const rotY = t * 1.05;
+      const rotX = 0.62 + Math.sin(t * 0.48) * 0.38;
+      const rotZ = Math.cos(t * 0.33) * 0.22;
+      const flow = t * 0.2;
+      const tubeR = 0.1;
 
       type Proj = {
         x: number;
         y: number;
         z: number;
         i: number;
-        r: number;
-        colorT: number;
+        nz: number;
       };
-      const projected: Proj[] = [];
+      const projected: Proj[] = new Array(SEGMENTS);
 
-      for (let i = 0; i < nodes.current.length; i++) {
-        const n = nodes.current[i];
-        // Target on ring in XY plane
-        const rx = Math.cos(n.theta) * R;
-        const ry = Math.sin(n.theta) * R;
-        const rz = 0;
-
-        const m = assemble;
-        let x = n.sx + (rx - n.sx) * m;
-        let y = n.sy + (ry - n.sy) * m;
-        let z = n.sz + (rz - n.sz) * m;
-
-        // Rotate Z → X → Y (true 3D tumble)
-        let x1 = x * cosZ - y * sinZ;
-        let y1 = x * sinZ + y * cosZ;
-        let z1 = z;
-
-        let y2 = y1 * cosX - z1 * sinX;
-        let z2 = y1 * sinX + z1 * cosX;
-        let x2 = x1;
-
-        const x3 = x2 * cosY + z2 * sinY;
-        const z3 = -x2 * sinY + z2 * cosY;
-        const y3 = y2;
-
-        // Perspective
-        const persp = 2.4 / (2.4 - z3);
-        const px = cx + x3 * scale * persp;
-        const py = cy + y3 * scale * persp;
-
-        projected.push({
-          x: px,
-          y: py,
-          z: z3,
+      for (let i = 0; i < SEGMENTS; i++) {
+        const theta = (i / SEGMENTS) * Math.PI * 2;
+        const ring: Vec3 = { x: Math.cos(theta), y: Math.sin(theta), z: 0 };
+        const sc = scatter.current[i];
+        const local: Vec3 = {
+          x: lerp(sc.x, ring.x, assemble),
+          y: lerp(sc.y, ring.y, assemble),
+          z: lerp(sc.z, ring.z, assemble),
+        };
+        const p = rotXYZ(local, rotX, rotY, rotZ);
+        const n = rotXYZ({ x: Math.cos(theta), y: Math.sin(theta), z: 0 }, rotX, rotY, rotZ);
+        const persp = FOV / (FOV - p.z);
+        projected[i] = {
+          x: cx + p.x * scale * persp,
+          y: cy + p.y * scale * persp,
+          z: p.z,
           i,
-          r: n.r * persp,
-          colorT: n.theta / (Math.PI * 2) + flow,
-        });
+          nz: n.z,
+        };
       }
 
-      projected.sort((a, b) => a.z - b.z);
-
-      // Index map for edge drawing in ring order
-      const byIndex = new Array<Proj>(N);
-      for (const p of projected) byIndex[p.i] = p;
-
-      // Soft depth fog disc under structure
-      const fog = ctx.createRadialGradient(cx, cy, 4, cx, cy, scale * 1.8);
-      fog.addColorStop(0, rgba(samplePalette(flow), 0.14 * v));
-      fog.addColorStop(0.45, rgba(samplePalette(flow + 0.35), 0.07 * v));
-      fog.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = fog;
+      // Under glow
+      const bloom = ctx.createRadialGradient(cx, cy, 4, cx, cy, scale * 1.85);
+      bloom.addColorStop(0, rgba(samplePalette(flow), 0.22 * v));
+      bloom.addColorStop(0.55, rgba(samplePalette(flow + 0.35), 0.08 * v));
+      bloom.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bloom;
       ctx.beginPath();
       ctx.arc(cx, cy, scale * 1.85, 0, Math.PI * 2);
       ctx.fill();
 
-      // Edges — ring neighbors + a few chords (gradient flowing)
-      ctx.lineCap = "round";
-      for (let i = 0; i < N; i++) {
-        const a = byIndex[i];
-        const b = byIndex[(i + 1) % N];
-        if (!a || !b) continue;
-        const depth = ((a.z + b.z) / 2 + 1.2) / 2.4;
-        const alpha = (0.12 + depth * 0.55) * (0.25 + assemble * 0.75) * v;
-        if (alpha < 0.02) continue;
+      const order = projected
+        .map((_, i) => i)
+        .sort((a, b) => projected[a].z - projected[b].z);
 
-        const midT = (a.colorT + b.colorT) / 2;
-        const c0 = samplePalette(midT);
-        const c1 = samplePalette(midT + 0.12);
-        const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-        grad.addColorStop(0, rgba(c0, alpha));
-        grad.addColorStop(1, rgba(c1, alpha));
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      for (const i of order) {
+        const a = projected[i];
+        const next = projected[(i + 1) % SEGMENTS];
+        const midZ = (a.z + next.z) * 0.5;
+        const depth = (midZ + 1.2) / 2.4;
+        const light = Math.max(0.2, Math.min(1, 0.4 + a.nz * 0.55));
+        const alpha = (0.45 + depth * 0.5) * v * (0.4 + assemble * 0.6);
+        if (alpha < 0.04) continue;
+
+        const c0 = samplePalette(i / SEGMENTS + flow);
+        const c1 = samplePalette((i + 1) / SEGMENTS + flow);
+        const shade = (c: { r: number; g: number; b: number }, k: number) => ({
+          r: c.r * k,
+          g: c.g * k,
+          b: c.b * k,
+        });
+        const k = 0.4 + light * 0.75;
+        const tubePx = scale * tubeR * (FOV / (FOV - a.z)) * (1.15 + assemble * 0.95);
+
+        // Dark rim (volume)
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
+        ctx.lineTo(next.x, next.y);
+        ctx.strokeStyle = rgba(shade(c0, 0.28), alpha * 0.7);
+        ctx.lineWidth = tubePx * 2.6;
+        ctx.stroke();
+
+        // Lit tube body with flowing gradient
+        const grad = ctx.createLinearGradient(a.x, a.y, next.x, next.y);
+        grad.addColorStop(0, rgba(shade(c0, k), alpha));
+        grad.addColorStop(1, rgba(shade(c1, k), alpha));
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(next.x, next.y);
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 0.85 + depth * 1.1;
+        ctx.lineWidth = tubePx * 1.65;
+        ctx.stroke();
+
+        // Specular ridge
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(next.x, next.y);
+        ctx.strokeStyle = rgba({ r: 255, g: 255, b: 255 }, alpha * light * 0.4);
+        ctx.lineWidth = tubePx * 0.42;
         ctx.stroke();
       }
 
-      // Structural spokes when mostly assembled
-      if (assemble > 0.4) {
-        const spokeA = (assemble - 0.4) * 0.9 * v;
-        for (let s = 0; s < 4; s++) {
-          const i = Math.floor((s * N) / 4);
-          const j = (i + Math.floor(N / 2)) % N;
-          const a = byIndex[i];
-          const b = byIndex[j];
-          if (!a || !b) continue;
-          const c = samplePalette(flow + s * 0.18);
+      // Shatter beads when not fully assembled
+      if (assemble < 0.95) {
+        for (const i of order) {
+          const p = projected[i];
+          const depth = (p.z + 1.2) / 2.4;
+          const light = Math.max(0.25, 0.45 + p.nz * 0.5);
+          const alpha = (0.5 + depth * 0.45) * v * (1 - assemble * 0.5);
+          if (alpha < 0.05) continue;
+          const c = samplePalette(i / SEGMENTS + flow);
+          const rad =
+            scale * tubeR * (FOV / (FOV - p.z)) * (1.7 + (1 - assemble) * 1.1);
+          const g = ctx.createRadialGradient(
+            p.x - rad * 0.35,
+            p.y - rad * 0.4,
+            rad * 0.08,
+            p.x,
+            p.y,
+            rad
+          );
+          g.addColorStop(0, rgba({ r: 255, g: 255, b: 255 }, alpha * 0.95));
+          g.addColorStop(
+            0.38,
+            rgba(
+              {
+                r: c.r * (0.5 + light * 0.55),
+                g: c.g * (0.5 + light * 0.55),
+                b: c.b * (0.5 + light * 0.55),
+              },
+              alpha
+            )
+          );
+          g.addColorStop(
+            1,
+            rgba({ r: c.r * 0.25, g: c.g * 0.25, b: c.b * 0.25 }, alpha * 0.9)
+          );
           ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = rgba(c, spokeA * 0.35);
-          ctx.lineWidth = 0.7;
-          ctx.stroke();
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = g;
+          ctx.fill();
         }
-      }
-
-      // Nodes with flowing palette + depth
-      for (const p of projected) {
-        const depth = (p.z + 1.2) / 2.4;
-        const alpha = (0.35 + depth * 0.6) * v;
-        const c = samplePalette(p.colorT);
-        const cEdge = samplePalette(p.colorT + 0.2);
-
-        // Glow halo
-        const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3.2);
-        halo.addColorStop(0, rgba(c, alpha * 0.45));
-        halo.addColorStop(1, rgba(c, 0));
-        ctx.fillStyle = halo;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 3.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Sphere-ish body with gradient
-        const body = ctx.createRadialGradient(
-          p.x - p.r * 0.35,
-          p.y - p.r * 0.4,
-          p.r * 0.1,
-          p.x,
-          p.y,
-          p.r * 1.3
-        );
-        body.addColorStop(0, rgba({ r: 255, g: 255, b: 255 }, alpha * 0.85));
-        body.addColorStop(0.35, rgba(c, alpha));
-        body.addColorStop(1, rgba(cEdge, alpha * 0.9));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * (0.85 + depth * 0.35), 0, Math.PI * 2);
-        ctx.fillStyle = body;
-        ctx.fill();
-      }
-
-      // Assembled ring ghost with flowing stroke
-      if (assemble > 0.55) {
-        const ga = (assemble - 0.55) * 1.6 * v;
-        const g0 = samplePalette(flow);
-        const g1 = samplePalette(flow + 0.33);
-        const g2 = samplePalette(flow + 0.66);
-        // Approximate ellipse from current orientation: sample many points
-        ctx.beginPath();
-        for (let k = 0; k <= 48; k++) {
-          const th = (k / 48) * Math.PI * 2;
-          let x = Math.cos(th) * R;
-          let y = Math.sin(th) * R;
-          let z = 0;
-          let x1 = x * cosZ - y * sinZ;
-          let y1 = x * sinZ + y * cosZ;
-          let z1 = z;
-          let y2 = y1 * cosX - z1 * sinX;
-          let z2 = y1 * sinX + z1 * cosX;
-          let x2 = x1;
-          const x3 = x2 * cosY + z2 * sinY;
-          const z3 = -x2 * sinY + z2 * cosY;
-          const y3 = y2;
-          const persp = 2.4 / (2.4 - z3);
-          const px = cx + x3 * scale * persp;
-          const py = cy + y3 * scale * persp;
-          if (k === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        const ringGrad = ctx.createLinearGradient(cx - scale, cy, cx + scale, cy);
-        ringGrad.addColorStop(0, rgba(g0, ga * 0.55));
-        ringGrad.addColorStop(0.5, rgba(g1, ga * 0.7));
-        ringGrad.addColorStop(1, rgba(g2, ga * 0.55));
-        ctx.strokeStyle = ringGrad;
-        ctx.lineWidth = 1.25;
-        ctx.stroke();
       }
 
       raf.current = requestAnimationFrame(tick);
@@ -357,6 +315,7 @@ export function CursorOrbit({
 
     raf.current = requestAnimationFrame(tick);
     return () => {
+      window.removeEventListener("pointermove", onMove);
       if (raf.current != null) cancelAnimationFrame(raf.current);
       ro.disconnect();
     };
@@ -365,7 +324,7 @@ export function CursorOrbit({
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 z-[2]"
+      className="pointer-events-none absolute inset-0 z-[3]"
       aria-hidden
     />
   );
