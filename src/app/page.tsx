@@ -48,28 +48,28 @@ export default function HomePage() {
       {/* Centered hero — equal vertical air */}
       <header className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 grid-atmosphere" />
-        <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-24 text-center sm:px-8 sm:py-28 lg:py-32">
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-5 py-20 text-center sm:px-8 sm:py-24">
           <p className="rise-in inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.14em] text-primary uppercase">
             <Sparkles className="size-4" />
             Communication first
           </p>
 
-          <h1 className="rise-in-delay-1 mt-6 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
+          <h1 className="rise-in-delay-1 mt-5 max-w-4xl font-display text-4xl leading-[1.2] text-ink sm:text-5xl sm:leading-[1.18] lg:text-6xl lg:leading-[1.15]">
             결국 문제는 소통입니다.
             <br />
             뜻이 맞으면 일이 풀립니다
           </h1>
 
-          <p className="rise-in-delay-2 mt-6 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
-            애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
+          <p className="rise-in-delay-2 mt-5 max-w-xl text-pretty text-base leading-relaxed text-foreground/80 sm:max-w-2xl sm:text-lg">
+            애매한 말을 선택지로 구체화하고, 같은 뜻을 맞춘 뒤에야
             분석·조사·추천·실행으로 넘어갑니다.
           </p>
 
-          <div className="rise-in-delay-2 mt-16 w-full max-w-5xl">
+          <div className="rise-in-delay-2 mt-14 w-full max-w-5xl">
             <h2 className="font-display text-3xl leading-snug text-ink sm:text-4xl">
               소통 → 합의 → 실행
             </h2>
-            <div className="mt-8 rounded-xl border border-border bg-white px-5 py-8 sm:px-8 sm:py-10">
+            <div className="mt-6 rounded-xl border border-border bg-white px-5 py-7 sm:px-8 sm:py-8">
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
                 {FLOW.map((n, i) => (
                   <span key={n.t} className="inline-flex items-center gap-3">
