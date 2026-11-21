@@ -3,17 +3,20 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Grid spotlight that follows the pointer, plus a soft randomized wave
- * even when the cursor is idle. No floating rectangles.
+ * Two independent layers:
+ * 1) Full-field randomized wave — always runs, never follows the cursor
+ * 2) Pointer highlighter — only tracks the mouse, fades when it leaves
  */
 export function HeroAtmosphere() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const target = useRef({ x: 0.5, y: 0.42 });
-  const current = useRef({ x: 0.5, y: 0.42 });
-  const wave = useRef({ x: 0.35, y: 0.45, tx: 0.7, ty: 0.35, t: 0 });
+  const pointer = useRef({ x: 0.5, y: 0.42, visible: 0, targetVisible: 0 });
+  const lobes = useRef([
+    { x: 0.22, y: 0.38, tx: 0.55, ty: 0.28, phase: 0 },
+    { x: 0.68, y: 0.52, tx: 0.3, ty: 0.62, phase: 2.1 },
+    { x: 0.48, y: 0.7, tx: 0.78, ty: 0.4, phase: 4.2 },
+  ]);
   const raf = useRef<number | null>(null);
-  const pointerActive = useRef(false);
-  const idleSince = useRef(0);
+  const tRef = useRef(0);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -24,76 +27,88 @@ export function HeroAtmosphere() {
       root.dataset.ready = "1";
       root.style.setProperty("--hx", "50%");
       root.style.setProperty("--hy", "42%");
-      root.style.setProperty("--wx", "50%");
-      root.style.setProperty("--wy", "42%");
-      root.style.setProperty("--wave", "0.35");
+      root.style.setProperty("--lit", "0");
+      root.style.setProperty("--wx1", "28%");
+      root.style.setProperty("--wy1", "36%");
+      root.style.setProperty("--wx2", "72%");
+      root.style.setProperty("--wy2", "58%");
+      root.style.setProperty("--wx3", "48%");
+      root.style.setProperty("--wy3", "70%");
+      root.style.setProperty("--wave", "0.4");
       return;
     }
 
-    const pickWaveTarget = () => {
-      wave.current.tx = 0.12 + Math.random() * 0.76;
-      wave.current.ty = 0.18 + Math.random() * 0.64;
+    const retarget = (i: number) => {
+      const l = lobes.current[i];
+      l.tx = 0.08 + Math.random() * 0.84;
+      l.ty = 0.12 + Math.random() * 0.76;
     };
-    pickWaveTarget();
+    lobes.current.forEach((_, i) => retarget(i));
 
     const onMove = (e: PointerEvent) => {
       const rect = root.getBoundingClientRect();
       if (rect.height <= 0 || rect.width <= 0) return;
       const over =
-        e.clientY >= rect.top - 24 &&
-        e.clientY <= rect.bottom + 24 &&
-        e.clientX >= rect.left - 24 &&
-        e.clientX <= rect.right + 24;
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom &&
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right;
       if (!over) {
-        pointerActive.current = false;
+        pointer.current.targetVisible = 0;
         return;
       }
-      pointerActive.current = true;
-      idleSince.current = performance.now();
-      target.current = {
-        x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
-        y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
-      };
+      pointer.current.targetVisible = 1;
+      pointer.current.x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      pointer.current.y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
     };
 
-    const tick = (now: number) => {
-      const c = current.current;
-      const t = target.current;
-      const w = wave.current;
+    const onLeave = () => {
+      pointer.current.targetVisible = 0;
+    };
 
-      // Idle randomized wave always drifts
-      w.t += 0.016;
-      const dx = w.tx - w.x;
-      const dy = w.ty - w.y;
-      w.x += dx * 0.018 + Math.sin(w.t * 0.7) * 0.0015;
-      w.y += dy * 0.018 + Math.cos(w.t * 0.55) * 0.0012;
-      if (Math.hypot(dx, dy) < 0.04) pickWaveTarget();
+    const tick = () => {
+      tRef.current += 0.016;
+      const t = tRef.current;
+      const p = pointer.current;
 
-      // Pointer spotlight: follow when active, else ease toward wave
-      if (pointerActive.current && now - idleSince.current < 1600) {
-        c.x += (t.x - c.x) * 0.14;
-        c.y += (t.y - c.y) * 0.14;
-      } else {
-        pointerActive.current = false;
-        c.x += (w.x - c.x) * 0.04;
-        c.y += (w.y - c.y) * 0.04;
-      }
+      // Full-field wave: three independent drifting lobes + global breath
+      lobes.current.forEach((l, i) => {
+        l.phase += 0.016;
+        const dx = l.tx - l.x;
+        const dy = l.ty - l.y;
+        l.x += dx * 0.012 + Math.sin(l.phase * 0.55 + i) * 0.0018;
+        l.y += dy * 0.012 + Math.cos(l.phase * 0.42 + i * 1.3) * 0.0015;
+        if (Math.hypot(dx, dy) < 0.05) retarget(i);
+      });
 
-      const pulse = 0.28 + 0.12 * Math.sin(w.t * 1.1);
-      root.style.setProperty("--hx", `${(c.x * 100).toFixed(2)}%`);
-      root.style.setProperty("--hy", `${(c.y * 100).toFixed(2)}%`);
-      root.style.setProperty("--wx", `${(w.x * 100).toFixed(2)}%`);
-      root.style.setProperty("--wy", `${(w.y * 100).toFixed(2)}%`);
-      root.style.setProperty("--wave", pulse.toFixed(3));
+      const breath = 0.38 + 0.14 * Math.sin(t * 0.85);
+
+      // Pointer highlighter: cursor only — never snaps to wave
+      p.visible += (p.targetVisible - p.visible) * 0.12;
+
+      const [a, b, c] = lobes.current;
+      root.style.setProperty("--wx1", `${(a.x * 100).toFixed(2)}%`);
+      root.style.setProperty("--wy1", `${(a.y * 100).toFixed(2)}%`);
+      root.style.setProperty("--wx2", `${(b.x * 100).toFixed(2)}%`);
+      root.style.setProperty("--wy2", `${(b.y * 100).toFixed(2)}%`);
+      root.style.setProperty("--wx3", `${(c.x * 100).toFixed(2)}%`);
+      root.style.setProperty("--wy3", `${(c.y * 100).toFixed(2)}%`);
+      root.style.setProperty("--wave", breath.toFixed(3));
+      root.style.setProperty("--hx", `${(p.x * 100).toFixed(2)}%`);
+      root.style.setProperty("--hy", `${(p.y * 100).toFixed(2)}%`);
+      root.style.setProperty("--lit", p.visible.toFixed(3));
+
       raf.current = requestAnimationFrame(tick);
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
     raf.current = requestAnimationFrame(tick);
     root.dataset.ready = "1";
 
     return () => {
       window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", onLeave);
       if (raf.current != null) cancelAnimationFrame(raf.current);
     };
   }, []);
@@ -107,12 +122,18 @@ export function HeroAtmosphere() {
         {
           "--hx": "50%",
           "--hy": "42%",
-          "--wx": "35%",
-          "--wy": "48%",
-          "--wave": "0.35",
+          "--lit": "0",
+          "--wx1": "22%",
+          "--wy1": "38%",
+          "--wx2": "68%",
+          "--wy2": "52%",
+          "--wx3": "48%",
+          "--wy3": "70%",
+          "--wave": "0.4",
         } as React.CSSProperties
       }
     >
+      <div className="hero-wash absolute inset-0" />
       <div className="hero-grid hero-grid-base absolute inset-0" />
       <div className="hero-grid hero-grid-wave absolute inset-0" />
       <div className="hero-grid hero-grid-lit absolute inset-0" />
