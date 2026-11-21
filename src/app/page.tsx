@@ -25,13 +25,13 @@ const SCOPES = [
 ] as const;
 
 const FLOW = [
-  { emoji: "💬", label: "사람의 말", tint: "bg-zinc-800 text-white" },
-  { emoji: "🎯", label: "목적", tint: "bg-violet-500 text-white" },
-  { emoji: "🧱", label: "제약", tint: "bg-amber-400 text-amber-950" },
-  { emoji: "⚖️", label: "기준", tint: "bg-sky-400 text-sky-950" },
-  { emoji: "🧭", label: "다음", tint: "bg-teal-500 text-white" },
-  { emoji: "🔒", label: "같은 뜻", tint: "bg-rose-500 text-white" },
-  { emoji: "⚡", label: "AI 실행", tint: "bg-primary text-primary-foreground" },
+  { t: "사람의 말", c: "bg-zinc-700 text-white" },
+  { t: "🎯 목적", c: "bg-violet-400 text-violet-950" },
+  { t: "🧱 제약", c: "bg-amber-400 text-amber-950" },
+  { t: "⚖️ 기준", c: "bg-sky-400 text-sky-950" },
+  { t: "🧭 다음", c: "bg-teal-500 text-white" },
+  { t: "🔒 같은 뜻", c: "bg-rose-500 text-white" },
+  { t: "AI 실행", c: "bg-primary text-primary-foreground" },
 ] as const;
 
 export default function HomePage() {
@@ -39,7 +39,7 @@ export default function HomePage() {
     <main>
       <header className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 grid-atmosphere" />
-        <div className="pointer-events-none absolute inset-x-0 top-[36%] h-px pipe-flow opacity-70" />
+        <div className="pointer-events-none absolute inset-x-0 top-[40%] h-px pipe-flow opacity-70" />
 
         <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
           <div className="flex items-baseline gap-2.5">
@@ -61,70 +61,64 @@ export default function HomePage() {
           </div>
         </nav>
 
-        {/* Copy band */}
-        <div className="relative z-10 mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12">
           <p className="rise-in inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.18em] text-primary uppercase">
             <Sparkles className="size-3.5" />
             Communication first
           </p>
-          <div className="mt-4 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <h1 className="rise-in-delay-1 max-w-3xl font-display text-[2.5rem] leading-[1.1] text-ink sm:text-6xl sm:leading-[1.05] lg:text-7xl">
-              결국 문제는 소통입니다.
-              <br />
-              뜻이 맞으면 일이 풀립니다
-            </h1>
-            <div className="rise-in-delay-2 max-w-md shrink-0 space-y-5 lg:pb-2">
-              <p className="text-base leading-relaxed text-foreground/80 sm:text-lg">
-                애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
-                분석·조사·추천으로 넘어갑니다.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/console/semantic?tab=analyze&case=quality"
-                  className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  분석 콘솔 열기
-                  <ArrowRight className="size-4" />
-                </Link>
-                <Link
-                  href="/clarify/research"
-                  className="inline-flex h-11 items-center rounded-lg border border-border bg-card/80 px-5 text-sm font-medium text-foreground backdrop-blur-sm hover:bg-card"
-                >
-                  연구 구체화
-                </Link>
+
+          {/* Single left column — keep title line rhythm intact */}
+          <h1 className="rise-in-delay-1 mt-4 font-display text-[2.5rem] leading-[1.15] text-ink sm:text-6xl sm:leading-[1.12] lg:text-7xl lg:leading-[1.1]">
+            결국 문제는 소통입니다.
+            <br />
+            뜻이 맞으면 일이 풀립니다
+          </h1>
+          <p className="rise-in-delay-2 mt-5 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
+            애매한 말을 선택지로 구체화하고, 서로 같은 뜻을 맞춘 뒤에야
+            분석·조사·추천으로 넘어갑니다.
+          </p>
+          <div className="rise-in-delay-2 mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/console/semantic?tab=analyze&case=quality"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              분석 콘솔 열기
+              <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              href="/clarify/research"
+              className="inline-flex h-11 items-center rounded-lg border border-border bg-card/80 px-5 text-sm font-medium text-foreground backdrop-blur-sm hover:bg-card"
+            >
+              연구 구체화
+            </Link>
+          </div>
+
+          {/* Big section title + white diagram card */}
+          <div className="rise-in-delay-2 mt-14">
+            <h2 className="text-center font-display text-3xl tracking-tight text-ink sm:text-4xl lg:text-5xl">
+              소통 → 합의 → 실행
+            </h2>
+            <div className="mt-6 w-full rounded-2xl border border-border bg-white px-4 py-6 shadow-sm sm:px-6 sm:py-7">
+              <div className="flex flex-wrap items-center justify-between gap-y-3">
+                {FLOW.map((n, i) => (
+                  <span key={n.t} className="inline-flex items-center gap-2 sm:gap-2.5">
+                    <span
+                      className={`rounded-full px-3.5 py-2 text-sm font-semibold sm:px-4 sm:py-2.5 sm:text-base ${n.c}`}
+                    >
+                      {n.t}
+                    </span>
+                    {i < FLOW.length - 1 ? (
+                      <span
+                        className="text-base font-semibold text-muted-foreground sm:text-lg"
+                        aria-hidden
+                      >
+                        →
+                      </span>
+                    ) : null}
+                  </span>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Full-bleed flow — nearly edge-to-edge */}
-        <div className="relative z-10 mt-14 w-full px-2 pb-16 sm:px-3 sm:pb-20">
-          <p className="mb-5 text-center text-sm font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-            소통 → 합의 → 실행
-          </p>
-          <div className="rise-in-delay-2 grid w-full grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5 lg:grid-cols-7 lg:gap-2">
-            {FLOW.map((step, i) => (
-              <div key={step.label} className="relative min-w-0">
-                <div
-                  className={`flex h-full min-h-[9.5rem] flex-col items-center justify-center rounded-2xl px-1.5 py-6 text-center shadow-sm sm:min-h-[11rem] lg:min-h-[12rem] ${step.tint}`}
-                >
-                  <span className="text-3xl sm:text-4xl" aria-hidden>
-                    {step.emoji}
-                  </span>
-                  <span className="mt-4 font-display text-[1.65rem] leading-none tracking-tight sm:text-3xl lg:text-[2.15rem]">
-                    {step.label}
-                  </span>
-                </div>
-                {i < FLOW.length - 1 ? (
-                  <span
-                    className="pointer-events-none absolute top-1/2 -right-1.5 z-10 hidden -translate-y-1/2 text-xl font-bold text-ink/35 lg:block"
-                    aria-hidden
-                  >
-                    →
-                  </span>
-                ) : null}
-              </div>
-            ))}
           </div>
         </div>
       </header>
