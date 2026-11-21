@@ -62,11 +62,12 @@ export function HumanAiMark({
           strokeLinecap="round"
           strokeDasharray={`${dash * 0.85} ${gap}`}
         />
+        {/* Coral complement to teal/ink — readable when small */}
         <circle
           cx="40"
           cy="40"
           r="24"
-          className="fill-white stroke-ink/30"
+          className="fill-[var(--glow-coral)] stroke-ink/20"
           strokeWidth="1.25"
         />
         <circle cx="160" cy="40" r="24" className="fill-ink" />
