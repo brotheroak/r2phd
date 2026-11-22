@@ -15,14 +15,20 @@ export function mockClarifyBrief(
       q,
     );
   const collabAsk =
-    /의도|자기\s*마음대로|LLM|합의|고쳐\s*줘|에이전트|화면\s*좀|코딩/i.test(q);
+    /고쳐\s*줘|화면\s*좀|레이아웃|UI\s*고쳐|버튼\s*고쳐|에이전트|코딩\s*에이전트|자기\s*마음대로/i.test(
+      q,
+    );
+  const researchAsk =
+    /품질|불만|후기|리뷰|배송|응대|환불|별로|안\s*살|논문|연구|문헌|조사|가설/i.test(
+      q,
+    );
   const domain =
     domainHint ??
     (collabAsk
       ? "collab"
       : financeAsk || /sql|실패율|로트|스키마|지표|집계|csv|불량/i.test(q)
         ? "analysis"
-        : /논문|연구|문헌|조사|가설|불만/i.test(q)
+        : researchAsk
           ? "research"
           : "everyday");
 
@@ -115,10 +121,8 @@ export function mockClarifyBrief(
       mode: "demo",
       domain,
       summary:
-        "『최근 불량률』처럼 말이 넓어서, 기간·제품·불량 뜻이 아직 안 맞아요.",
-      refinedQuestion:
-        q ||
-        "이번 주 회의 전에, 최근 불량률이 왜 올랐는지 원인만 좁히고 싶어요",
+        "『최근·불량률』이 어느 기간·어느 제품·어떤 정의를 말하는지 아직 안 맞아요.",
+      refinedQuestion: q || "최근 불량률이 왜 올랐어?",
       direction: "고른 내용을 분석 화면 입력으로 넘김.",
       ambiguities: [
         {
@@ -183,10 +187,9 @@ export function mockClarifyBrief(
       mode: "demo",
       domain,
       summary:
-        "고객 불만의 『품질』이 제품·배송·응대 중 뭘 말하는지 아직 안 정해졌어요.",
+        "원문에 나온 『품질』이 제품·배송·응대 중 뭘 말하는지 아직 안 정해졌어요.",
       refinedQuestion:
-        q ||
-        "고객 불만에 적힌 『품질』이 제품인지, 배송인지, 응대인지 헷갈려요",
+        q || "배송은 빨리 왔는데 품질이 너무 별로예요. 다시는 안 살 것 같아요.",
       direction: "고른 범위로 조사 질문이랑 다음에 남길 걸 확정.",
       ambiguities: [
         {
@@ -252,10 +255,8 @@ export function mockClarifyBrief(
       mode: "demo",
       domain: "collab",
       summary:
-        "『고쳐 줘』만 말했더니 AI가 원한 것과 다른 쪽으로 바뀐 상황이에요.",
-      refinedQuestion:
-        q ||
-        "코딩 에이전트한테 『화면 좀 고쳐 줘』라고만 했더니 내가 원한 거랑 다르게 바뀌었어요",
+        "『고쳐 줘』만 있어서 어디를·어떻게·어디까지 고칠지가 비어 있어요.",
+      refinedQuestion: q || "화면 좀 고쳐 줘",
       direction: "확정 카드가 나온 뒤에만 수정 시작. 카드가 AI에 넘길 지시.",
       ambiguities: [
         {
@@ -323,8 +324,11 @@ export function mockClarifyBrief(
   return {
     mode: "demo",
     domain: "everyday",
-    summary: "『주말에 뭐 하지?』처럼 막연해서, 시간·돈·누구랑 가는지가 비어 있어요.",
-    refinedQuestion: q || "이번 주말, 두 시간 안에 할 만한 거 추천해 줘",
+    summary:
+      "추천 요청은 있는데 시간·돈·누구랑·피곤하지 않을 기준이 아직 비어 있어요.",
+    refinedQuestion:
+      q ||
+      "이번 주말, 두 시간 안에 할 만한 거 추천해 줘. 너무 피곤하지 않았으면 좋겠어",
     direction: "고른 조건으로 바로 쓸 다음 행동 확정.",
     ambiguities: [
       {

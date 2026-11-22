@@ -8,7 +8,7 @@ export default function CollabClarifyPage() {
     <ScopeShell
       eyebrow="Case · Explain intent to LLM"
       title="AI한테 원하는 거 말하기"
-      subtitle="『고쳐 줘』만 말했더니 엉뚱하게 바뀌었을 때. 목적·제약·기준을 고른 뒤에야 실행해요. 확정 카드가 나오기 전에는 손대지 않아요."
+      subtitle="『화면 좀 고쳐 줘』처럼 짧은 지시를 그대로 넣으면, 어디서 헷갈리는지 나눠서 고른 뒤에야 실행해요."
     >
       <ClarifyWorkspace fixedDomain="collab" />
     </ScopeShell>

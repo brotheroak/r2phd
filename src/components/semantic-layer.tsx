@@ -11,7 +11,6 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { AXIS_BY_ID, INTENT_AXES } from "@/lib/intent-axes";
 import {
   ENTITY_GRAPH,
   PHYSICAL_CATALOG,
@@ -20,6 +19,15 @@ import {
   mappingsFromDraft,
   metricsFromSpec,
 } from "@/lib/semantic-model";
+import {
+  ONTOLOGY_SECTIONS,
+  buildOntologyActions,
+  buildOntologyKnowledge,
+  buildOntologyLinks,
+  buildOntologyObjects,
+  buildOntologyProperties,
+  type OntologySection,
+} from "@/lib/ontology-manager";
 import type { AnalysisDraft, AnalysisSpec } from "@/lib/types";
 import type { ConsoleTab } from "@/components/console-shell";
 import { useConsoleStore } from "@/lib/console-store";
@@ -41,6 +49,7 @@ export function SemanticLayer({
   tab = "ontology",
 }: Props) {
   const { isDark } = useConsoleTheme();
+  const { linkedTables, glossary, intentLocked } = useConsoleStore();
   const mappings = mappingsFromDraft(draft, decisions);
   const metrics = metricsFromSpec(spec);
   const tableCount = PHYSICAL_CATALOG.schemas.reduce(
@@ -50,6 +59,11 @@ export function SemanticLayer({
   const lockedMaps = mappings.filter((m) => m.locked).length;
   const mappedCols = mappings.reduce((n, m) => n + m.physical.length, 0);
   const lockedMetrics = metrics.filter((m) => m.locked).length;
+  const objects = buildOntologyObjects(linkedTables, draft, spec);
+  const properties = buildOntologyProperties(objects, draft, decisions);
+  const links = buildOntologyLinks();
+  const actions = buildOntologyActions(Boolean(spec) || intentLocked);
+  const knowledge = buildOntologyKnowledge(draft, spec, glossary);
 
   const statusLabel = spec
     ? "기준 반영됨"
@@ -70,12 +84,12 @@ export function SemanticLayer({
         />
         <KpiCard
           isDark={isDark}
-          label="온톨로지 매핑"
-          value={`${lockedMaps}/${mappings.length}`}
+          label="온톨로지"
+          value={`${objects.filter((o) => o.linked).length}`}
           hint={
             draft
-              ? "의도 → 용어 → 컬럼 연결"
-              : "Agent에게 「온톨로지 초안」또는 Analyze에서 채우기"
+              ? `대상 ${objects.filter((o) => o.linked).length} · 속성 ${properties.length} · 관계 ${links.length}`
+              : "대상·속성·관계·규칙으로 뜻을 정리해요"
           }
           badge={
             lockedMaps === mappings.length && draft ? (
@@ -171,7 +185,14 @@ export function SemanticLayer({
         <div className="p-4">
           {tab === "catalog" ? <CatalogPanel /> : null}
           {tab === "ontology" ? (
-            <OntologyPanel mappings={mappings} isDark={isDark} />
+            <OntologyPanel
+              isDark={isDark}
+              objects={objects}
+              properties={properties}
+              links={links}
+              actions={actions}
+              knowledge={knowledge}
+            />
           ) : null}
           {tab === "metrics" ? (
             <MetricsPanel metrics={metrics} isDark={isDark} />
@@ -205,7 +226,7 @@ function tabSubtitle(tab: ConsoleTab) {
     case "catalog":
       return "테이블을 선택해 분석 스키마에 연결합니다";
     case "ontology":
-      return "의도 → 용어 → 컬럼을 한 줄로 고정";
+      return "대상·속성·관계·할 일·규칙을 한곳에서 봐요";
     case "metrics":
       return "시맨틱 레이어에 올린 측정값";
     case "lineage":
@@ -418,146 +439,397 @@ function CatalogPanel() {
 }
 
 function OntologyPanel({
-  mappings,
   isDark,
+  objects,
+  properties,
+  links,
+  actions,
+  knowledge,
 }: {
-  mappings: ReturnType<typeof mappingsFromDraft>;
   isDark: boolean;
+  objects: ReturnType<typeof buildOntologyObjects>;
+  properties: ReturnType<typeof buildOntologyProperties>;
+  links: ReturnType<typeof buildOntologyLinks>;
+  actions: ReturnType<typeof buildOntologyActions>;
+  knowledge: ReturnType<typeof buildOntologyKnowledge>;
 }) {
+  const [section, setSection] = useState<OntologySection>("objects");
+  const counts: Record<OntologySection, number> = {
+    objects: objects.filter((o) => o.linked).length,
+    properties: properties.length,
+    links: links.length,
+    actions: actions.length,
+    knowledge: knowledge.length,
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {INTENT_AXES.map((axis) => (
-          <span
-            key={axis.id}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs",
-              isDark
-                ? "border-white/10 bg-white/[0.03] text-zinc-300"
-                : "border-border/70 bg-secondary/40 text-foreground",
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                axis.id === "time" && "bg-amber-400",
-                axis.id === "identity" && "bg-sky-400",
-                axis.id === "measure" && "bg-teal-500",
-                axis.id === "population" && "bg-emerald-500",
-              )}
-            />
-            {axis.label}
-          </span>
-        ))}
+      <div
+        className={cn(
+          "rounded-lg border px-3.5 py-3 text-sm leading-relaxed",
+          isDark
+            ? "border-white/10 bg-white/[0.03] text-zinc-300"
+            : "border-border/70 bg-mist/50 text-foreground/85",
+        )}
+      >
+        <p className="font-medium">온톨로지 매니저</p>
+        <p
+          className={cn(
+            "mt-1 text-xs leading-relaxed",
+            isDark ? "text-zinc-500" : "text-muted-foreground",
+          )}
+        >
+          흩어진 표를 「대상 · 속성 · 관계 · 할 일 · 규칙」으로 정리하는
+          화면이에요. Foundry Ontology Manager와 Enhans Ontology Manager의
+          뼈대를 따랐고, 말은 쉽게 썼습니다.
+        </p>
       </div>
 
-      <div className="space-y-2.5">
-        {mappings.map((m) => {
-          const axis = AXIS_BY_ID[m.axis];
-          return (
-            <div
-              key={m.id}
-              className={cn(
-                "rounded-lg border p-3",
-                isDark ? "bg-black/20" : "bg-card",
-                m.axis === "time" &&
-                  (isDark ? "border-amber-500/30" : "border-amber/40"),
-                m.axis === "identity" &&
-                  (isDark ? "border-sky-500/30" : "border-sky/40"),
-                m.axis === "measure" &&
-                  (isDark ? "border-teal-500/30" : "border-primary/35"),
-                m.axis === "population" &&
-                  (isDark ? "border-emerald-500/30" : "border-ok/40"),
-              )}
-            >
-              <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px]",
-                    isDark
-                      ? "bg-white/[0.06] text-zinc-200"
-                      : "bg-secondary text-foreground",
-                  )}
-                >
-                  {axis.label}
-                </span>
-                {m.locked ? (
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <nav
+          className={cn(
+            "flex shrink-0 flex-row gap-1.5 overflow-x-auto lg:w-44 lg:flex-col",
+          )}
+        >
+          {ONTOLOGY_SECTIONS.map((s) => {
+            const on = section === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSection(s.id)}
+                className={cn(
+                  "rounded-lg border px-3 py-2.5 text-left transition",
+                  on
+                    ? isDark
+                      ? "border-teal-500/40 bg-teal-500/10 text-teal-200"
+                      : "border-primary/40 bg-primary/10 text-foreground"
+                    : isDark
+                      ? "border-transparent bg-transparent text-zinc-400 hover:bg-white/[0.04]"
+                      : "border-transparent text-muted-foreground hover:bg-secondary/60",
+                )}
+              >
+                <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                  {s.label}
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 text-[11px]",
-                      isDark ? "text-emerald-400" : "text-ok",
-                    )}
-                  >
-                    <Lock className="size-3" />
-                    확정
-                  </span>
-                ) : (
-                  <span
-                    className={cn(
-                      "text-[11px]",
+                      "tabular-nums text-[11px]",
                       isDark ? "text-zinc-500" : "text-muted-foreground",
                     )}
                   >
-                    미확정
+                    {counts[s.id]}
                   </span>
-                )}
-              </div>
-
-              <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
-                <LayerNode
-                  isDark={isDark}
-                  tone="intent"
-                  title="의도"
-                  body={m.intentConcept}
-                />
-                <Arrow isDark={isDark} />
-                <LayerNode
-                  isDark={isDark}
-                  tone="glossary"
-                  title="용어"
-                  body={m.glossaryTerm}
-                />
-                <Arrow isDark={isDark} />
-                <LayerNode
-                  isDark={isDark}
-                  tone="physical"
-                  title="물리"
-                  body={
-                    m.physical.length ? m.physical.join(", ") : "연결 대기"
-                  }
-                />
-              </div>
-
-              <p
-                className={cn(
-                  "mt-2.5 text-xs leading-relaxed",
-                  isDark ? "text-zinc-400" : "text-muted-foreground",
-                )}
-              >
-                {m.chosen ? (
-                  <>
-                    <span className={isDark ? "text-zinc-200" : "text-foreground"}>
-                      선택:{" "}
-                    </span>
-                    {m.chosen}
-                  </>
-                ) : (
-                  m.condition
-                )}
-              </p>
-              {m.exceptions.length ? (
-                <p
+                </span>
+                <span
                   className={cn(
-                    "mt-1 text-[11px]",
-                    isDark ? "text-amber-400/90" : "text-signal",
+                    "mt-0.5 block text-[11px] leading-snug",
+                    isDark ? "text-zinc-500" : "text-muted-foreground",
                   )}
                 >
-                  제외: {m.exceptions.join(", ")}
-                </p>
-              ) : null}
-            </div>
-          );
-        })}
+                  {s.blurb}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="min-w-0 flex-1 space-y-2.5">
+          {section === "objects"
+            ? objects
+                .filter((o) => o.linked)
+                .map((o) => (
+                  <div
+                    key={o.id}
+                    className={cn(
+                      "rounded-lg border p-3.5",
+                      isDark
+                        ? "border-white/10 bg-black/20"
+                        : "border-border/70 bg-card",
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          isDark ? "text-zinc-100" : "text-ink",
+                        )}
+                      >
+                        {o.name}
+                      </p>
+                      <span
+                        className={cn(
+                          "rounded-md px-2 py-0.5 text-[11px]",
+                          o.status === "locked"
+                            ? isDark
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : "bg-ok/10 text-ok"
+                            : o.status === "mapped"
+                              ? isDark
+                                ? "bg-sky-500/15 text-sky-400"
+                                : "bg-sky/10 text-sky"
+                              : isDark
+                                ? "bg-white/[0.06] text-zinc-400"
+                                : "bg-secondary text-muted-foreground",
+                        )}
+                      >
+                        {o.status === "locked"
+                          ? "확정"
+                          : o.status === "mapped"
+                            ? "초안"
+                            : "연결됨"}
+                      </span>
+                    </div>
+                    <p
+                      className={cn(
+                        "mt-1 text-xs leading-relaxed",
+                        isDark ? "text-zinc-400" : "text-muted-foreground",
+                      )}
+                    >
+                      {o.description}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-2 font-mono text-[11px]",
+                        isDark ? "text-zinc-500" : "text-muted-foreground",
+                      )}
+                    >
+                      {o.schema} · 키 {o.primaryKey} · 속성 {o.propertyCount}개 ·{" "}
+                      {o.role}
+                    </p>
+                  </div>
+                ))
+            : null}
+
+          {section === "properties"
+            ? properties.slice(0, 40).map((p) => (
+                <div
+                  key={p.id}
+                  className={cn(
+                    "rounded-lg border p-3.5",
+                    isDark
+                      ? "border-white/10 bg-black/20"
+                      : "border-border/70 bg-card",
+                  )}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p
+                      className={cn(
+                        "text-sm font-semibold",
+                        isDark ? "text-zinc-100" : "text-ink",
+                      )}
+                    >
+                      {p.name}
+                    </p>
+                    <span
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[10px]",
+                        isDark
+                          ? "bg-white/[0.06] text-zinc-400"
+                          : "bg-secondary text-muted-foreground",
+                      )}
+                    >
+                      {p.objectName}
+                    </span>
+                    {p.kind !== "physical" ? (
+                      <span
+                        className={cn(
+                          "rounded px-1.5 py-0.5 text-[10px]",
+                          isDark
+                            ? "bg-violet-500/15 text-violet-300"
+                            : "bg-violet-100 text-violet-800",
+                        )}
+                      >
+                        {p.kind === "intent" ? "의도 연결" : "파생"}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-1 text-xs",
+                      isDark ? "text-zinc-400" : "text-muted-foreground",
+                    )}
+                  >
+                    {p.meaning}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1.5 font-mono text-[11px]",
+                      isDark ? "text-sky-400/80" : "text-sky",
+                    )}
+                  >
+                    {p.sourceColumn}
+                  </p>
+                </div>
+              ))
+            : null}
+
+          {section === "links"
+            ? links.map((l) => (
+                <div
+                  key={l.id}
+                  className={cn(
+                    "flex flex-wrap items-center gap-2 rounded-lg border px-3.5 py-3 text-sm",
+                    isDark
+                      ? "border-white/10 bg-black/20"
+                      : "border-border/70 bg-card",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      isDark ? "text-sky-400" : "text-sky",
+                    )}
+                  >
+                    {l.from}
+                  </span>
+                  <span
+                    className={isDark ? "text-zinc-500" : "text-muted-foreground"}
+                  >
+                    —{l.label}→
+                  </span>
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      isDark ? "text-teal-400" : "text-primary",
+                    )}
+                  >
+                    {l.to}
+                  </span>
+                  <span
+                    className={cn(
+                      "w-full font-mono text-[11px] sm:ml-auto sm:w-auto",
+                      isDark ? "text-zinc-500" : "text-muted-foreground",
+                    )}
+                  >
+                    연결 키 · {l.on}
+                  </span>
+                </div>
+              ))
+            : null}
+
+          {section === "actions"
+            ? actions.map((a) => (
+                <div
+                  key={a.id}
+                  className={cn(
+                    "rounded-lg border p-3.5",
+                    isDark
+                      ? "border-white/10 bg-black/20"
+                      : "border-border/70 bg-card",
+                    !a.available && "opacity-55",
+                  )}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p
+                      className={cn(
+                        "text-sm font-semibold",
+                        isDark ? "text-zinc-100" : "text-ink",
+                      )}
+                    >
+                      {a.name}
+                    </p>
+                    <span
+                      className={cn(
+                        "text-[11px]",
+                        a.available
+                          ? isDark
+                            ? "text-emerald-400"
+                            : "text-ok"
+                          : isDark
+                            ? "text-zinc-500"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {a.available
+                        ? "사용 가능"
+                        : a.requiresLock
+                          ? "확정 후 가능"
+                          : "준비 중"}
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-1 text-xs leading-relaxed",
+                      isDark ? "text-zinc-400" : "text-muted-foreground",
+                    )}
+                  >
+                    {a.description}
+                  </p>
+                </div>
+              ))
+            : null}
+
+          {section === "knowledge"
+            ? knowledge.map((k) => (
+                <div
+                  key={k.id}
+                  className={cn(
+                    "rounded-lg border p-3.5",
+                    isDark
+                      ? "border-white/10 bg-black/20"
+                      : "border-border/70 bg-card",
+                  )}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[10px] font-medium",
+                        isDark
+                          ? "bg-amber-500/15 text-amber-300"
+                          : "bg-amber-100 text-amber-900",
+                      )}
+                    >
+                      {k.kind === "glossary"
+                        ? "용어"
+                        : k.kind === "constraint"
+                          ? "제약"
+                          : k.kind === "exclusion"
+                            ? "제외"
+                            : "규칙"}
+                    </span>
+                    <p
+                      className={cn(
+                        "text-sm font-semibold",
+                        isDark ? "text-zinc-100" : "text-ink",
+                      )}
+                    >
+                      {k.title}
+                    </p>
+                    {k.locked ? (
+                      <Lock
+                        className={cn(
+                          "size-3.5",
+                          isDark ? "text-emerald-400" : "text-ok",
+                        )}
+                      />
+                    ) : null}
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-1.5 text-xs leading-relaxed whitespace-pre-wrap",
+                      isDark ? "text-zinc-400" : "text-muted-foreground",
+                    )}
+                  >
+                    {k.body}
+                  </p>
+                </div>
+              ))
+            : null}
+
+          {section === "objects" &&
+          objects.filter((o) => o.linked).length === 0 ? (
+            <p
+              className={cn(
+                "rounded-lg border border-dashed px-4 py-8 text-center text-sm",
+                isDark
+                  ? "border-white/10 text-zinc-500"
+                  : "border-border text-muted-foreground",
+              )}
+            >
+              Catalog에서 테이블을 고르면 대상이 여기에 나타납니다.
+            </p>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -691,65 +963,3 @@ function LineagePanel({ isDark }: { isDark: boolean }) {
   );
 }
 
-function LayerNode({
-  title,
-  body,
-  tone,
-  isDark,
-}: {
-  title: string;
-  body: string;
-  tone: "intent" | "glossary" | "physical";
-  isDark: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-md border px-2.5 py-2",
-        tone === "intent" &&
-          (isDark
-            ? "border-teal-500/25 bg-teal-500/5"
-            : "border-primary/25 bg-primary/5"),
-        tone === "glossary" &&
-          (isDark
-            ? "border-sky-500/25 bg-sky-500/5"
-            : "border-sky/30 bg-sky/5"),
-        tone === "physical" &&
-          (isDark
-            ? "border-amber-500/25 bg-amber-500/5"
-            : "border-amber/35 bg-amber/10"),
-      )}
-    >
-      <p
-        className={cn(
-          "flex items-center gap-1 text-[10px] tracking-wide",
-          isDark ? "text-zinc-500" : "text-muted-foreground",
-        )}
-      >
-        {tone === "glossary" ? <Link2 className="size-3" /> : null}
-        {title}
-      </p>
-      <p
-        className={cn(
-          "mt-0.5 text-sm font-medium leading-snug",
-          isDark ? "text-zinc-100" : "text-foreground",
-        )}
-      >
-        {body}
-      </p>
-    </div>
-  );
-}
-
-function Arrow({ isDark }: { isDark: boolean }) {
-  return (
-    <div
-      className={cn(
-        "hidden justify-center md:flex",
-        isDark ? "text-zinc-600" : "text-muted-foreground",
-      )}
-    >
-      →
-    </div>
-  );
-}

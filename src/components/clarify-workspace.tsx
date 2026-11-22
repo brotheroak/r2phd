@@ -25,14 +25,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { appFetch } from "@/lib/app-fetch";
 
+/** Raw prompts people actually paste — our agent finds what's fuzzy next. */
 const SAMPLES: Record<ClarifyDomain, string> = {
-  analysis:
-    "이번 주 회의 전에, 최근 불량률이 왜 올랐는지 원인만 좁히고 싶어요. 『최근』이랑 『불량』 뜻이 먼저 헷갈려요",
+  analysis: "최근 불량률이 왜 올랐어?",
   research:
-    "고객 불만에 적힌 『품질』이 제품인지, 배송인지, 응대인지 헷갈려요",
-  everyday: "이번 주말, 두 시간 안에 할 만한 거 추천해 줘. 너무 피곤하지 않았으면 좋겠어요",
-  collab:
-    "코딩 에이전트한테 『화면 좀 고쳐 줘』라고만 했더니 내가 원한 거랑 다르게 바뀌었어요",
+    "배송은 빨리 왔는데 품질이 너무 별로예요. 다시는 안 살 것 같아요.",
+  everyday:
+    "이번 주말, 두 시간 안에 할 만한 거 추천해 줘. 너무 피곤하지 않았으면 좋겠어",
+  collab: "화면 좀 고쳐 줘",
 };
 
 function chosenList(
@@ -298,7 +298,7 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
           rows={4}
           value={clarifyQuestion}
           onChange={(e) => setClarifyQuestion(e.target.value)}
-          placeholder="예: 화면 좀 고쳐 줘"
+          placeholder="예: 화면 좀 고쳐 줘 / 고객 후기 원문 / 주말 추천 요청"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={loadSample}>

@@ -8,7 +8,7 @@ export default function ResearchClarifyPage() {
     <ScopeShell
       eyebrow="Case · Research"
       title="연구 · 조사"
-      subtitle="자료 찾기 전에 범위·근거·다음에 남길 걸 골라요. 뜻이 맞기 전에는 조사 결과를 확정하지 않아요."
+      subtitle="고객 불만·후기 글을 그대로 넣으면, 『품질』처럼 애매한 말부터 나눠서 조사 범위를 정해요."
     >
       <ClarifyWorkspace fixedDomain="research" />
     </ScopeShell>
