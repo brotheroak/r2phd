@@ -4,30 +4,59 @@ import { chatJson, scholarSearch } from "@/lib/liner";
 import { mockAnalyzeDraft, mockScholarHits } from "@/lib/mock-engine";
 import { ANALYZE_SYSTEM } from "@/lib/prompts";
 import type { AnalysisDraft, ScholarHit } from "@/lib/types";
+import {
+  guardLinerRoute,
+  publicNoticeForLiveFailure,
+  readJsonCapped,
+  safeHttpUrl,
+  sanitizeError,
+} from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
-  researchQuestion: z.string().min(10),
-  glossary: z.string().min(10),
-  schema: z.string().min(10),
+  researchQuestion: z.string().min(10).max(4000),
+  glossary: z.string().min(10).max(8000),
+  schema: z.string().min(10).max(8000),
   includeScholar: z.boolean().optional().default(true),
 });
 
+function sanitizeHits(hits: ScholarHit[]): ScholarHit[] {
+  return hits
+    .map((h) => {
+      const url = safeHttpUrl(h.url);
+      if (!url) return null;
+      return { ...h, url };
+    })
+    .filter((h): h is ScholarHit => Boolean(h));
+}
+
 export async function POST(req: Request) {
+  const gate = await guardLinerRoute(req);
+  if (!gate.ok) return gate.response;
+
   try {
-    const json = await req.json();
-    const body = bodySchema.parse(json);
+    const raw = await readJsonCapped(req);
+    if (!raw.ok) return raw.response;
+    const body = bodySchema.parse(raw.data);
+
+    if (!gate.allowLive) {
+      return NextResponse.json({
+        draft: mockAnalyzeDraft(body.researchQuestion),
+        scholar: body.includeScholar
+          ? sanitizeHits(mockScholarHits(body.researchQuestion))
+          : [],
+        notice: "예제 모드로 진행해요.",
+      });
+    }
 
     let scholar: ScholarHit[] = [];
-    let mode: "live" | "demo" = "demo";
 
     try {
       if (body.includeScholar) {
         const q = `${body.researchQuestion}\nkey terms from glossary for methodology`;
         const result = await scholarSearch(q, 5);
-        scholar = result.hits;
-        mode = result.mode;
+        scholar = sanitizeHits(result.hits);
       }
 
       const scholarBlock =
@@ -40,7 +69,9 @@ export async function POST(req: Request) {
               .join("\n")}`
           : "";
 
-      const { data, mode: chatMode } = await chatJson<Omit<AnalysisDraft, "mode">>({
+      const { data, mode: chatMode } = await chatJson<
+        Omit<AnalysisDraft, "mode">
+      >({
         system: ANALYZE_SYSTEM,
         user: `# Research question\n${body.researchQuestion}\n\n# Glossary\n${body.glossary}\n\n# Schema\n${body.schema}${scholarBlock}`,
       });
@@ -49,34 +80,24 @@ export async function POST(req: Request) {
         ...data,
         mode: chatMode,
         sourcesUsed: Array.from(
-          new Set([...(data.sourcesUsed ?? []), "Liner Model API", "Liner Scholar Search"]),
+          new Set([
+            ...(data.sourcesUsed ?? []),
+            "Liner Model API",
+            "Liner Scholar Search",
+          ]),
         ),
       };
 
       return NextResponse.json({ draft, scholar });
     } catch (e) {
-      if (e instanceof Error && e.message === "NO_LINER_KEY") {
-        const draft = mockAnalyzeDraft(body.researchQuestion);
-        scholar = body.includeScholar ? mockScholarHits(body.researchQuestion) : [];
-        return NextResponse.json({
-          draft,
-          scholar,
-          notice: "API 키가 없어 예제 추론으로 진행합니다.",
-        });
-      }
-      // Live call failed — fall back so the demo never bricks
       const draft = mockAnalyzeDraft(body.researchQuestion);
       return NextResponse.json({
         draft: { ...draft, mode: "demo" as const },
-        scholar: mockScholarHits(body.researchQuestion),
-        notice: `Liner 호출에 실패해 예제로 진행합니다. (${e instanceof Error ? e.message : "unknown"})`,
-        mode,
+        scholar: sanitizeHits(mockScholarHits(body.researchQuestion)),
+        notice: publicNoticeForLiveFailure(e),
       });
     }
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "invalid_request" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: sanitizeError(e) }, { status: 400 });
   }
 }

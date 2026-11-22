@@ -13,6 +13,7 @@ import { useConsoleStore } from "@/lib/console-store";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { appFetch } from "@/lib/app-fetch";
 
 type ChatMsg = {
   id: string;
@@ -167,9 +168,8 @@ export function ConsoleAgentChat({
         .slice(-8)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const res = await fetch("/api/console-chat", {
+      const res = await appFetch("/api/console-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         signal: ac.signal,
         body: JSON.stringify({
           message,

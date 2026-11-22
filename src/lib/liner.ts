@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { ScholarHit } from "./types";
+import { safeHttpUrl } from "./safe-url";
 
 const BASE_URL = "https://platform.liner.com/api/v1";
 
@@ -66,8 +67,7 @@ export async function scholarSearch(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Scholar search failed (${res.status}): ${text.slice(0, 400)}`);
+    throw new Error(`Scholar search failed (${res.status})`);
   }
 
   const json = (await res.json()) as {
@@ -82,15 +82,20 @@ export async function scholarSearch(
     }>;
   };
 
-  const hits: ScholarHit[] = (json.results ?? []).map((r) => ({
-    title: r.title,
-    url: r.url,
-    description: r.description,
-    date: r.date,
-    authors: r.authors,
-    journal: r.journal,
-    citationCount: r.citationCount,
-  }));
+  const hits: ScholarHit[] = [];
+  for (const r of json.results ?? []) {
+    const url = safeHttpUrl(r.url);
+    if (!url) continue;
+    hits.push({
+      title: r.title,
+      url,
+      description: r.description,
+      date: r.date,
+      authors: r.authors,
+      journal: r.journal,
+      citationCount: r.citationCount,
+    });
+  }
 
   return { hits, mode: "live" };
 }

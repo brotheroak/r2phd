@@ -7,21 +7,27 @@ import {
   type ConsoleAgentReply,
 } from "@/lib/console-agent";
 import { chatJson } from "@/lib/liner";
+import {
+  guardLinerRoute,
+  publicNoticeForLiveFailure,
+  readJsonCapped,
+  sanitizeError,
+} from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
   message: z.string().min(1).max(4000),
-  tab: z.string(),
-  linkedTables: z.array(z.string()).default([]),
+  tab: z.string().max(64),
+  linkedTables: z.array(z.string().max(120)).max(40).default([]),
   hasDraft: z.boolean().default(false),
   hasSpec: z.boolean().default(false),
-  schemaPreview: z.string().default(""),
+  schemaPreview: z.string().max(4000).default(""),
   history: z
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string(),
+        content: z.string().max(4000),
       }),
     )
     .max(12)
@@ -29,8 +35,13 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const gate = await guardLinerRoute(req);
+  if (!gate.ok) return gate.response;
+
   try {
-    const body = bodySchema.parse(await req.json());
+    const raw = await readJsonCapped(req);
+    if (!raw.ok) return raw.response;
+    const body = bodySchema.parse(raw.data);
     const ctx = {
       message: body.message,
       tab: body.tab,
@@ -41,13 +52,19 @@ export async function POST(req: Request) {
       history: body.history,
     };
 
+    if (!gate.allowLive) {
+      return NextResponse.json({
+        ...mockConsoleAgent(ctx),
+        notice: "예제 모드로 진행해요.",
+      });
+    }
+
     try {
-      const historyBlock =
-        body.history?.length
-          ? `\n\n# Recent turns\n${body.history
-              .map((h) => `${h.role}: ${h.content}`)
-              .join("\n")}`
-          : "";
+      const historyBlock = body.history?.length
+        ? `\n\n# Recent turns\n${body.history
+            .map((h) => `${h.role}: ${h.content}`)
+            .join("\n")}`
+        : "";
 
       const { data, mode } = await chatJson<{
         reply: string;
@@ -64,20 +81,13 @@ export async function POST(req: Request) {
       };
       return NextResponse.json(reply);
     } catch (e) {
-      if (e instanceof Error && e.message === "NO_LINER_KEY") {
-        return NextResponse.json(mockConsoleAgent(ctx));
-      }
+      const demo = mockConsoleAgent(ctx);
       return NextResponse.json({
-        ...mockConsoleAgent(ctx),
-        reply:
-          mockConsoleAgent(ctx).reply +
-          `\n\n(라이브 에이전트 호출 실패 → 예시 응답. ${e instanceof Error ? e.message : "unknown"})`,
+        ...demo,
+        reply: `${demo.reply}\n\n(${publicNoticeForLiveFailure(e)})`,
       });
     }
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "invalid_request" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: sanitizeError(e) }, { status: 400 });
   }
 }

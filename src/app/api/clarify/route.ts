@@ -7,18 +7,36 @@ import {
 } from "@/lib/clarify";
 import { mockClarifyBrief } from "@/lib/clarify-mock";
 import { chatJson } from "@/lib/liner";
+import {
+  guardLinerRoute,
+  publicNoticeForLiveFailure,
+  readJsonCapped,
+  sanitizeError,
+} from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
   question: z.string().min(3).max(4000),
   domain: z.enum(["analysis", "research", "everyday", "collab"]).optional(),
-  context: z.string().max(8000).optional(),
+  context: z.string().max(4000).optional(),
 });
 
 export async function POST(req: Request) {
+  const gate = await guardLinerRoute(req);
+  if (!gate.ok) return gate.response;
+
   try {
-    const body = bodySchema.parse(await req.json());
+    const raw = await readJsonCapped(req);
+    if (!raw.ok) return raw.response;
+    const body = bodySchema.parse(raw.data);
+
+    if (!gate.allowLive) {
+      return NextResponse.json({
+        brief: mockClarifyBrief(body.question, body.domain),
+        notice: "예제 모드로 진행해요.",
+      });
+    }
 
     try {
       const { data, mode } = await chatJson<Omit<ClarifyBrief, "mode">>({
@@ -32,23 +50,17 @@ export async function POST(req: Request) {
       };
       return NextResponse.json({ brief });
     } catch (e) {
-      if (e instanceof Error && e.message === "NO_LINER_KEY") {
-        return NextResponse.json({
-          brief: mockClarifyBrief(body.question, body.domain),
-          notice: "API 키가 없어 예제로 진행해요.",
-        });
-      }
       return NextResponse.json({
         brief: {
           ...mockClarifyBrief(body.question, body.domain),
           mode: "demo" as const,
         },
-        notice: `라이브 호출 실패 → 예제. (${e instanceof Error ? e.message : "unknown"})`,
+        notice: publicNoticeForLiveFailure(e),
       });
     }
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "invalid_request" },
+      { error: sanitizeError(e) === "NO_LINER_KEY" ? "invalid_request" : sanitizeError(e) },
       { status: 400 },
     );
   }

@@ -4,17 +4,35 @@ import { chatJson } from "@/lib/liner";
 import { mockAudit } from "@/lib/mock-engine";
 import { AUDIT_SYSTEM } from "@/lib/prompts";
 import type { AnalysisSpec, AuditReport } from "@/lib/types";
+import {
+  guardLinerRoute,
+  publicNoticeForLiveFailure,
+  readJsonCapped,
+  sanitizeError,
+} from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
   spec: z.custom<AnalysisSpec>(),
-  resultRowsCsv: z.string().min(5),
+  resultRowsCsv: z.string().min(5).max(20_000),
 });
 
 export async function POST(req: Request) {
+  const gate = await guardLinerRoute(req);
+  if (!gate.ok) return gate.response;
+
   try {
-    const body = bodySchema.parse(await req.json());
+    const raw = await readJsonCapped(req);
+    if (!raw.ok) return raw.response;
+    const body = bodySchema.parse(raw.data);
+
+    if (!gate.allowLive) {
+      return NextResponse.json({
+        report: mockAudit(body.spec, body.resultRowsCsv),
+        notice: "예제 모드로 진행해요.",
+      });
+    }
 
     try {
       const { data, mode } = await chatJson<Omit<AuditReport, "mode">>({
@@ -32,16 +50,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ report });
     } catch (e) {
       const report = mockAudit(body.spec, body.resultRowsCsv);
-      const notice =
-        e instanceof Error && e.message === "NO_LINER_KEY"
-          ? "예제 결과로 기준과 맞는지 점검했습니다."
-          : `Liner 호출에 실패해 예제로 진행합니다. (${e instanceof Error ? e.message : "unknown"})`;
-      return NextResponse.json({ report, notice });
+      return NextResponse.json({
+        report,
+        notice: publicNoticeForLiveFailure(e),
+      });
     }
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "invalid_request" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: sanitizeError(e) }, { status: 400 });
   }
 }

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { appFetch } from "@/lib/app-fetch";
 
 const SAMPLES: Record<ClarifyDomain, string> = {
   analysis:
@@ -148,9 +149,8 @@ export function ClarifyWorkspace({ fixedDomain }: Props) {
   function runClarify() {
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/clarify", {
+      const res = await appFetch("/api/clarify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: clarifyQuestion,
           domain,

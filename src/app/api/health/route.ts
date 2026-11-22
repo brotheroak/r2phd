@@ -1,31 +1,33 @@
 import { NextResponse } from "next/server";
-import { creditsBalance, hasLinerKey } from "@/lib/liner";
+import { hasLinerKey } from "@/lib/liner";
+import { getIdentity } from "../../../../cursor/identity";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+/**
+ * Public health — never expose balance or other paid-account details.
+ * Live mode is only reported when a verified viewer is present and a key is configured.
+ */
+export async function GET(req: Request) {
   const keyed = hasLinerKey();
-  if (!keyed) {
+  const identity = await getIdentity(req);
+  const liveEligible = keyed && identity.verified === true;
+
+  if (!liveEligible) {
     return NextResponse.json({
       ok: true,
       mode: "demo",
-      liner: { configured: false },
-      message: "API 키가 없어 예제 모드로 동작합니다.",
+      liner: { configured: keyed },
+      message: keyed
+        ? "예시 모드예요. 로그인된 환경에서만 라이브 호출을 씁니다."
+        : "API 키가 없어 예제 모드로 동작합니다.",
     });
   }
 
-  const balance = await creditsBalance();
   return NextResponse.json({
     ok: true,
     mode: "live",
-    liner: {
-      configured: true,
-      balanceOk: balance.ok,
-      balanceUsd: balance.balanceUsd,
-      error: balance.error,
-    },
-    message: balance.ok
-      ? "Liner API에 연결되었습니다."
-      : "키는 있지만 잔액 조회에 실패했습니다. 요청 시 오류가 날 수 있습니다.",
+    liner: { configured: true },
+    message: "Liner API에 연결되었습니다.",
   });
 }

@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { appFetch } from "@/lib/app-fetch";
+import { safeHttpUrl } from "@/lib/safe-url";
 
 const STATUS_LABEL = {
   pass: "문제 없음",
@@ -225,9 +227,8 @@ export function Workspace({
   function runAnalyze() {
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/analyze", {
+      const res = await appFetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           researchQuestion,
           glossary,
@@ -260,9 +261,8 @@ export function Workspace({
     if (!draft || !allAmbiguitiesDecided) return;
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/confirm", {
+      const res = await appFetch("/api/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           researchQuestion,
           glossary,
@@ -293,9 +293,8 @@ export function Workspace({
     if (!spec || !intentLocked) return;
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/audit", {
+      const res = await appFetch("/api/audit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           spec,
           resultRowsCsv: resultCsv,
@@ -599,18 +598,22 @@ export function Workspace({
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-sm font-medium">참고 자료 (Scholar)</p>
               <ul className="mt-2 space-y-2 text-sm">
-                {scholar.slice(0, 3).map((h) => (
-                  <li key={h.url}>
-                    <a
-                      href={h.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {h.title}
-                    </a>
-                  </li>
-                ))}
+                {scholar.slice(0, 3).map((h) => {
+                  const href = safeHttpUrl(h.url);
+                  if (!href) return null;
+                  return (
+                    <li key={href}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-primary hover:underline"
+                      >
+                        {h.title}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : null}
