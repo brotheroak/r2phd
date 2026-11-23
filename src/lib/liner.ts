@@ -17,6 +17,27 @@ export function getLinerClient(): OpenAI | null {
   });
 }
 
+/**
+ * Models sometimes wrap JSON in a markdown code fence (```json … ```).
+ * Strip the fence before JSON.parse so a single formatting habit
+ * does not turn a good answer into a live-call failure.
+ */
+export function stripJsonFence(raw: string): string {
+  const text = raw.trim();
+  if (!text.startsWith("```")) return text;
+
+  const fenced = text.match(
+    /^```[\w-]*[ \t]*\r?\n([\s\S]*?)\r?\n?[ \t]*```$/,
+  );
+  if (fenced) return fenced[1].trim();
+
+  // Unterminated fence: drop the opening line and any dangling closer.
+  return text
+    .replace(/^```[\w-]*[ \t]*\r?\n?/, "")
+    .replace(/\r?\n?[ \t]*```$/, "")
+    .trim();
+}
+
 /** Liner Model API via OpenAI-compatible chat completions. */
 export async function chatJson<T>(args: {
   system: string;
@@ -39,7 +60,7 @@ export async function chatJson<T>(args: {
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
-  const data = JSON.parse(raw) as T;
+  const data = JSON.parse(stripJsonFence(raw)) as T;
   return { data, mode: "live", raw };
 }
 
